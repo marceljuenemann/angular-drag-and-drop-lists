@@ -19,7 +19,7 @@ angular.module("demo", ["ngRoute", "dndLists"])
                       '</li>',
             link: function (scope, element, attr) {
                 scope.options = [
-                    {label: "Nested Lists", href: "#/nested"},
+                    {label: "Nested Containers", href: "#/nested"},
                     {label: "Simple Demo", href: "#/simple"},
                     {label: "Github", href: "https://github.com/marceljuenemann/angular-drag-and-drop-lists"}
                 ];

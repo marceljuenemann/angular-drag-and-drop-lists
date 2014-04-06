@@ -94,8 +94,7 @@
     filter: grayscale(100%);
 }
 
-/* TODO: this should be dndDragover */
-.nestedDemo .trashcan .dragover img {
+.nestedDemo .trashcan .dndDragover img {
     width: 100%;
     -webkit-filter: none;
     -moz-filter: none;
