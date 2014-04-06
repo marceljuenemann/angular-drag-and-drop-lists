@@ -24,6 +24,21 @@
 }
 
 /**
+ * The dnd-lists's child elements currently MUST have
+ * position: relative. Otherwise we can not determine
+ * whether the mouse pointer is in the upper or lower
+ * half of the element we are dragging over. In other
+ * browsers we can use event.offsetY for this.
+ */
+.nestedDemo .dropzone li {
+    position: relative;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    display: block;
+    padding: 0px;
+}
+
+/**
  * Reduce opacity of elements during the drag operation. This allows the user
  * to see where he is dropping his element, even if the element is huge. The
  * .dndDragging class is automatically set during the drag operation.
@@ -70,15 +85,7 @@
     border-color: #d6e9c6;
 }
 
-/***************************** Some more styling *****************************/
-
-.nestedDemo .dropzone li {
-    padding: 0px;
-    position: relative;
-    display: block;
-    background-color: #fff;
-    border: 1px solid #ddd;
-}
+/***************************** Element type specific styles *****************************/
 
 .nestedDemo .dropzone .item {
     padding: 10px 15px;
