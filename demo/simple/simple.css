@@ -1,0 +1,14 @@
+ul[dnd-list] {
+    min-height: 42px;
+}
+
+ul[dnd-list] .dndDraggingSource {
+    display: none;
+}
+
+ul[dnd-list] .dndPlaceholder {
+    position: relative;
+    display: block;
+    background-color: #ddd;
+    min-height: 42px;
+}

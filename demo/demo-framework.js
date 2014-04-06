@@ -1,4 +1,4 @@
-angular.module("demo", ["ngRoute"]).config(function($routeProvider) {
+angular.module("demo", ["ngRoute", "dndLists"]).config(function($routeProvider) {
     $routeProvider
         .when('/simple', {
             templateUrl: 'simple/simple.html',

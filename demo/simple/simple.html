@@ -1,2 +1,96 @@
-Hello World!
+<h1>Simple List Demo</h1>
 
+<div class="alert alert-success">
+    <strong>Welcome!</strong>
+    Drag and drop the list items or click to select them. Press the Ctrl key to copy items.
+</div>
+
+<div class="row">
+
+    <div ng-repeat="(listName, list) in models.lists" class="col-md-4">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">List {{listName}}</h3>
+            </div>
+            <div class="panel-body">
+                <ul class="list-group"
+                    dnd-list="list">
+                    <!-- Make element draggable with item as data -->
+                    <li ng-repeat="item in list"
+                        class="list-group-item"
+                        dnd-draggable="item"
+                        dnd-moved="list.splice($index, 1)"
+                        dnd-effectAllowed="copyMove"
+                        dnd-selected="models.selected = item.label"
+                        ng-class="{'list-group-item-success': models.selected === item.label}"
+                            >
+                        {{item.label}}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Generated Model</h3>
+            </div>
+            <div class="panel-body">
+                <pre class="code">{{modelAsJson}}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <!--
+
+                        <div id="experiment">
+
+
+    <ul class="toolbox">
+        <li ng-repeat="item in toolbox"
+            dnd-draggable="item"
+            dnd-effect-allowed="copy"
+            dnd-copied="item.id = item.id + 1">
+            {{item.type}}
+        </li>
+    </ul>
+
+    <div class="dropzone" ng-repeat="list in lists" ng-include="'list.html'"></div>
+
+    <script type="text/ng-template" id="list.html">
+        <ul dnd-dropzone="list">
+            <li ng-repeat="item in list"
+                ng-class="{selected: model.selected === item}"
+                dnd-selected="model.selected = item"
+                dnd-draggable="item"
+                dnd-effectAllowed="copyMove"
+                dnd-moved="list.splice($index, 1)"
+                ng-include="item.type + '.html'">
+            </li>
+        </ul>
+    </script>
+
+    <script type="text/ng-template" id="item.html">
+        <div class="item">
+            {{item.type}} {{item.id}}
+        </div>
+    </script>
+
+    <script type="text/ng-template" id="container.html">
+        <div class="container">
+            <div class="column" ng-repeat="list in item.columns" ng-include="'list.html'"></div>
+            <div style="clear: both"></div>
+        </div>
+    </script>
+
+
+    <div style="clear:both"></div>
+
+    Selected: {{model.selected}}
+    <pre>{{result}}</pre>
+
+
+</div>
+-->

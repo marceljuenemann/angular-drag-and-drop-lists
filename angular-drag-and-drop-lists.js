@@ -1,7 +1,4 @@
-'use strict';
-
-/* Controllers */
-angular.module('myApp.controllers', [])
+angular.module('dndLists', [])
     .directive('dndDraggable', function($parse, $timeout) {
         return function(scope, element, attr) {
             var model = attr.dndDraggable;
@@ -52,12 +49,12 @@ angular.module('myApp.controllers', [])
         };
     })
 
-    .directive('dndDropzone', function($timeout) {
+    .directive('dndList', function($timeout) {
         return function(scope, element, attr) {
             var listNode = element[0];
             var placeholder = angular.element("<li class='dndPlaceholder'></li>");
             var placeholderNode = placeholder[0];
-            var dropzoneList = attr.dndDropzone;
+            var dropzoneList = attr.dndList;
 
             element.on('dragover', function(event) {
                 // convert type list to real array
@@ -118,8 +115,8 @@ angular.module('myApp.controllers', [])
 
             });
         };
-    })
-
+    });
+/*
     .controller('MyCtrl1', ['$scope', function($scope) {
         $scope.toolbox = [
             {
@@ -153,3 +150,4 @@ angular.module('myApp.controllers', [])
     .controller('MyCtrl2', [function() {
 
     }]);
+*/
