@@ -30,20 +30,25 @@
 }
 
 /**
- * Some boring styling...
+ * The dnd-lists's child elements currently MUST have
+ * position: relative. Otherwise we can not determine
+ * whether the mouse pointer is in the upper or lower
+ * half of the element we are dragging over. In other
+ * browsers we can use event.offsetY for this.
  */
 .simpleDemo ul[dnd-list] li {
-    display: block;
-    padding: 10px 15px;
-    margin-bottom: -1px;
+    position: relative;
     background-color: #fff;
     border: 1px solid #ddd;
     border-top-right-radius: 4px;
     border-top-left-radius: 4px;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: -1px;
 }
 
 /**
- * Do you like green?
+ * Show selected elements in green
  */
 .simpleDemo ul[dnd-list] li.selected {
     background-color: #dff0d8;

@@ -134,18 +134,23 @@ angular.module('dndLists', [])
                     return true;
                 }
 
-                if (event.target.parentNode === listNode) {
-                    // The element is being dragged over one of our child nodes. Now we have
-                    // to decide at which position to show the placeholder: If the mouse pointer
-                    // is in the upper half of the child element, we place it before the child
-                    // element, otherwise below it
-                    var beforeOrAfter = event.offsetY < event.target.offsetHeight / 2;
-                    listNode.insertBefore(placeholderNode, beforeOrAfter ? event.target : event.target.nextSibling);
-                } else if (placeholderNode.parentNode != listNode) {
-                    // This branch is reached when the element is being dragged directly over the
-                    // list element, and not over a child. This should mostly happen if the list
-                    // is empty. In this case we just put the placeholder in the end.
-                    element.append(placeholder);
+                // If we are dragging over the placeholder element everything is already fine
+                if (event.target !== placeholderNode) {
+                    if (event.target.parentNode === listNode) {
+                        // The element is being dragged over one of our child nodes. Now we have
+                        // to decide at which position to show the placeholder: If the mouse pointer
+                        // is in the upper half of the child element, we place it before the child
+                        // element, otherwise below it. In Chrome we can just use offsetY, but in
+                        // Firefox we have to use layerY, which only works if the child element has
+                        // position relateive
+                        var beforeOrAfter = (event.offsetY || event.layerY) < event.target.offsetHeight / 2;
+                        listNode.insertBefore(placeholderNode, beforeOrAfter ? event.target : event.target.nextSibling);
+                    } else if (placeholderNode.parentNode != listNode) {
+                        // This branch is reached when the element is being dragged directly over the
+                        // list element, and not over a child. This should mostly happen if the list
+                        // is empty. In this case we just put the placeholder in the end.
+                        element.append(placeholder);
+                    }
                 }
 
                 element.addClass("dndDragover");
