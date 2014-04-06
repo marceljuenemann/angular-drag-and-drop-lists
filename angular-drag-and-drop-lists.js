@@ -57,17 +57,13 @@ angular.module('dndLists', [])
             var dropzoneList = attr.dndList;
 
             element.on('dragover', function(event) {
-                // convert type list to real array
                 if (Array.prototype.indexOf.call(event.dataTransfer.types, "json") === -1) {
                     return true;
                 }
 
                 if (event.target.parentNode === listNode) {
-                    // This would be easier with index() and before() methods
-                    var targetIndex = Array.prototype.indexOf.call(listNode.children, event.target);
-                    var placeholderIndex = Array.prototype.indexOf.call(listNode.children, placeholderNode);
-                    var insertBefore = targetIndex < placeholderIndex ? event.target : event.target.nextSibling;
-                    listNode.insertBefore(placeholderNode, insertBefore);
+                    var beforeOrAfter = event.offsetY < event.target.offsetHeight / 2;
+                    listNode.insertBefore(placeholderNode, beforeOrAfter ? event.target : event.target.nextSibling);
                 }
 
                 element.addClass("dragover");
@@ -110,6 +106,7 @@ angular.module('dndLists', [])
 
                 placeholder.remove();
 
+                element.removeClass("dragover");
                 event.preventDefault();
                 event.stopPropagation();
 

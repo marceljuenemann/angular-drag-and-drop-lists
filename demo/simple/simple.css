@@ -1,12 +1,12 @@
-ul[dnd-list] {
+.simpleDemo ul[dnd-list] {
     min-height: 42px;
 }
 
-ul[dnd-list] .dndDraggingSource {
+.simpleDemo ul[dnd-list] .dndDraggingSource {
     display: none;
 }
 
-ul[dnd-list] .dndPlaceholder {
+.simpleDemo ul[dnd-list] .dndPlaceholder {
     position: relative;
     display: block;
     background-color: #ddd;

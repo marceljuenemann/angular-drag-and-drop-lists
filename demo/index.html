@@ -13,15 +13,17 @@
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
     <link rel="stylesheet" type="text/css" href="simple/simple.css" />
+    <link rel="stylesheet" type="text/css" href="nested/nested.css" />
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-route.min.js"></script>
     <script src="demo-framework.js"></script>
     <script src="simple/simple.js"></script>
+    <script src="nested/nested.js"></script>
 
 </head>
 <body ng-app="demo" style="padding-top: 70px; padding-bottom: 30px">
 
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="container">
             <div class="navbar-header">
                 <a class="navbar-brand" href="#">angular-drag-and-drop-lists</a>
@@ -37,16 +39,13 @@
     </div>
 
     <div class="container">
-
-    <!-- TODO
-
-    <div class="jumbotron">
-        <h1>Hello, world!</h1>
-        <p>This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
-        <p><a href="#" class="btn btn-primary btn-lg" role="button">Learn more &raquo;</a></p>
-    </div>
-    -->
-
+<!--
+        <div class="jumbotron">
+            <h1>Hello, world!</h1>
+            <p>This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
+            <p><a href="#" class="btn btn-success btn-lg" role="button">Learn more &raquo;</a></p>
+        </div>
+-->
         <div ng-view></div>
 
     </div>

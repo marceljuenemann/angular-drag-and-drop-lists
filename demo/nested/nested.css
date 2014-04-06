@@ -1,0 +1,108 @@
+.nestedDemo .dropzone li[dnd-draggable] * {
+    pointer-events: none;
+}
+
+.nestedDemo .dropzone ul[dnd-list],
+.nestedDemo .dropzone li[dnd-draggable] {
+    pointer-events: auto;
+}
+
+
+.nestedDemo .dropzone ul[dnd-list] {
+    min-height: 42px;
+    margin: 0px;
+}
+
+.nestedDemo .dropzone .panel-body {
+    padding: 0px;
+}
+
+.nestedDemo .dropzone .dndDragging {
+    opacity: 0.7;
+}
+
+.nestedDemo .dropzone .dndDraggingSource {
+    display: none;
+}
+
+.nestedDemo .dropzone .dndPlaceholder {
+    position: relative;
+    display: block;
+    background-color: #ddd;
+    min-height: 42px;
+}
+
+.nestedDemo .dropzone .list-group-item {
+    padding: 0px;
+}
+
+.nestedDemo .dropzone .item {
+    padding: 10px 15px;
+}
+
+.nestedDemo .dropzone .panel-info {
+    margin: 10px;
+
+}
+
+.nestedDemo .dropzone .selected .item {
+    color: #3c763d;
+    background-color: #dff0d8;
+}
+
+.nestedDemo .dropzone .selected .panel {
+    border-color: #d6e9c6;
+}
+
+.nestedDemo .dropzone .selected .panel-heading {
+    color: #3c763d;
+    background-color: #dff0d8;
+    background-image: linear-gradient(to bottom,#dff0d8 0,#d0e9c6 100%) !important;
+    border-color: #d6e9c6;
+}
+
+
+.nestedDemo .toolbox {
+    list-style: none;
+    padding-left: 0px;
+    cursor: move;
+}
+
+.nestedDemo .toolbox button {
+    margin: 5px;
+    width: 123px;
+    opacity: 1.0;
+}
+
+.nestedDemo .toolbox .dndDragging {
+    opacity: 0.5;
+}
+
+.nestedDemo .toolbox .dndDraggingSource {
+    opacity: 1.0;
+}
+
+.nestedDemo .trashcan ul {
+    list-style: none;
+    padding-left: 0px;
+}
+
+.nestedDemo .trashcan img {
+    width: 100%;
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    filter: grayscale(100%);
+}
+
+/* TODO: this should be dndDragover */
+.nestedDemo .trashcan .dragover img {
+    width: 100%;
+    -webkit-filter: none;
+    -moz-filter: none;
+    filter: none;
+}
+
+.nestedDemo .trashcan .dndPlaceholder {
+    display: none;
+}
+
