@@ -2,7 +2,7 @@ angular.module("demo").directive('viewSource', function($http, $timeout) {
     return {
         scope: {
             demoName: "@viewSource",
-            highlightLines: "@"
+            highlightLines: "="
         },
         templateUrl: 'framework/view-source.html',
         link: function (scope, element, attr) {

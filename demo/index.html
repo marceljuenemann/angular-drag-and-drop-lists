@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="framework/vendor/bootstrap.min.css">
     <link rel="stylesheet" href="framework/vendor/bootstrap-theme.min.css">
     <link rel="stylesheet" href="framework/vendor/prism.css">
+    <link rel="stylesheet" href="framework/demo-framework.css">
     <link rel="stylesheet" type="text/css" href="simple/simple.css" />
     <link rel="stylesheet" type="text/css" href="nested/nested.css" />
 
@@ -23,7 +24,7 @@
     <script src="nested/nested.js"></script>
 
 </head>
-<body ng-app="demo" style="padding-top: 70px; padding-bottom: 30px">
+<body ng-app="demo">
 
     <div class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="container">
@@ -37,16 +38,19 @@
     </div>
 
     <div class="container">
-<!--
+
         <div class="jumbotron">
-            <h1>Hello, world!</h1>
-            <p>This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
-            <p><a href="#" class="btn btn-success btn-lg" role="button">Learn more &raquo;</a></p>
+            <h1>Angular drag & drop with HTML5</h1>
+            <p>
+                Directives for modifying lists with the HTML5 drag & drop API.
+                Supports nested lists for building trees and other fancy structures.
+                No boilerplate code, no jQuery, just a few KB!
+            </p>
+            <p><a href="https://github.com/marceljuenemann/angular-drag-and-drop-lists" class="btn btn-success btn-lg" role="button">Code on github &raquo;</a></p>
         </div>
--->
+
         <div ng-view></div>
 
     </div>
-
 
 </body>

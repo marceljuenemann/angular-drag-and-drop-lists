@@ -12,6 +12,6 @@
     <div ng-repeat="type in models.types"
          ng-class="{active: models.activeTab === type.language}"
          class="tab-pane" >
-        <pre class="line-numbers" data-line="{{highlightLines}}"><code class="language-{{type.language}}">{{type.source}}</code></pre>
+        <pre class="line-numbers" data-line="{{highlightLines[type.language]}}"><code class="language-{{type.language}}">{{type.source}}</code></pre>
     </div>
 </div>
