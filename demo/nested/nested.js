@@ -23,7 +23,7 @@ angular.module("demo").controller("NestedListsDemoController", function($scope) 
     };
 
     // Model to JSON for demo purpose
-    $scope.$watch('models', function(model) {
+    $scope.$watch('models.dropzones', function(model) {
         $scope.modelAsJson = angular.toJson(model, true);
     }, true);
 

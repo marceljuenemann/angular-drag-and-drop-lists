@@ -8,15 +8,17 @@
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
     <script src="../angular-drag-and-drop-lists.js"></script>
 
-
     <!-- Stuff that is only required in this demo (no need to copy) -->
-    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="framework/vendor/bootstrap.min.css">
+    <link rel="stylesheet" href="framework/vendor/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="framework/vendor/prism.css">
     <link rel="stylesheet" type="text/css" href="simple/simple.css" />
     <link rel="stylesheet" type="text/css" href="nested/nested.css" />
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-route.min.js"></script>
-    <script src="demo-framework.js"></script>
+    <script src="framework/vendor/prism.js"></script>
+    <script src="framework/demo-framework.js"></script>
+    <script src="framework/view-source.js"></script>
     <script src="simple/simple.js"></script>
     <script src="nested/nested.js"></script>
 
@@ -29,12 +31,8 @@
                 <a class="navbar-brand" href="#">angular-drag-and-drop-lists</a>
             </div>
             <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li class="active"><a href="#">Simple</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </div><!--/.nav-collapse -->
+                <ul class="nav navbar-nav" navigation></ul>
+            </div>
         </div>
     </div>
 
@@ -52,4 +50,3 @@
 
 
 </body>
-</html>

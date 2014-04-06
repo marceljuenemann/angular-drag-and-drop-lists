@@ -1,110 +1,92 @@
-<h1>Nested Lists Demo</h1>
+<script type="text/ng-template" id="list.html">
+    <ul dnd-list="list"
+        class="list-group">
+        <li ng-repeat="item in list"
+            ng-include="item.type + '.html'"
+            dnd-draggable="item"
+            dnd-effectAllowed="copyMove"
+            dnd-moved="list.splice($index, 1)"
+            class="list-group-item"
+            dnd-selected="models.selected = item"
+            ng-class="{selected: models.selected === item}">
+        </li>
 
-<div class="alert alert-success">
-    <strong>Welcome!</strong>
-    TODO
-</div>
+    </ul>
+</script>
 
-<div class="nestedDemo row">
+<script type="text/ng-template" id="item.html">
+    <div class="item">
+        Item {{item.id}}
+    </div>
+</script>
 
-    <div class="dropzone col-md-5" ng-repeat="(zone, list) in models.dropzones">
-        <div class="panel panel-warning">
-            <div class="panel-heading">
-                <h3 class="panel-title">Dropzone {{zone}}</h3>
-            </div>
-            <div class="panel-body" ng-include="'list.html'"></div>
+<script type="text/ng-template" id="container.html">
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">Container {{item.id}}</h3>
+        </div>
+        <div class="panel-body">
+            <div style="float: left; width: 50%" ng-repeat="list in item.columns" ng-include="'list.html'"></div>
         </div>
     </div>
+</script>
 
-    <script type="text/ng-template" id="list.html">
-        <ul dnd-list="list"
-            class="list-group">
-            <li ng-repeat="item in list"
-                ng-include="item.type + '.html'"
-                dnd-draggable="item"
-                dnd-effectAllowed="copyMove"
-                dnd-moved="list.splice($index, 1)"
-                class="list-group-item"
-                dnd-selected="models.selected = item"
-                ng-class="{selected: models.selected === item}">
-            </li>
+<div class="col-md-10">
 
-        </ul>
-    </script>
-
-    <script type="text/ng-template" id="item.html">
-        <div class="item">
-            Item {{item.id}}
-        </div>
-    </script>
-
-    <script type="text/ng-template" id="container.html">
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <h3 class="panel-title">Container {{item.id}}</h3>
-            </div>
-            <div class="panel-body">
-                <div style="float: left; width: 50%" ng-repeat="list in item.columns" ng-include="'list.html'"></div>
-            </div>
-        </div>
-    </script>
-
-    <div class="col-md-2">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">New Elements</h3>
-            </div>
-            <div class="panel-body">
-                <ul class="toolbox">
-                    <li ng-repeat="item in models.templates"
-                        dnd-draggable="item"
-                        dnd-effect-allowed="copy"
-                        dnd-copied="item.id = item.id + 1">
-                        <button type="button" class="btn btn-default btn-lg" disabled="disabled">{{item.type}}</button>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Trashcan</h3>
-            </div>
-            <div class="trashcan panel-body">
-                <ul dnd-list="[]">
-                    <li><img src="nested/trashcan.jpg"></li>
-                </ul>
+    <div class="row">
+        <div class="dropzone col-md-6" ng-repeat="(zone, list) in models.dropzones">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Dropzone {{zone}}</h3>
+                </div>
+                <div class="panel-body" ng-include="'list.html'"></div>
             </div>
         </div>
     </div>
 
-<!--
+    <div view-source="nested" highlight-lines="1-2, 5, 9-20"></div>
 
-    <div class="col-md-2">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Generated Model</h3>
-            </div>
-            <div class="panel-body">
-                <pre class="code">{{modelAsJson}}</pre>
-            </div>
+    <h2>Generated Model</h2>
+    <pre>{{modelAsJson}}</pre>
+
+</div>
+
+<div class="col-md-2">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">New Elements</h3>
+        </div>
+        <div class="panel-body">
+            <ul class="toolbox">
+                <li ng-repeat="item in models.templates"
+                    dnd-draggable="item"
+                    dnd-effect-allowed="copy"
+                    dnd-copied="item.id = item.id + 1">
+                    <button type="button" class="btn btn-default btn-lg" disabled="disabled">{{item.type}}</button>
+                </li>
+            </ul>
         </div>
     </div>
+
+    <div class="panel panel-default" ng-if="models.selected">
+        <div class="panel-heading">
+            <h3 class="panel-title">Selected</h3>
+        </div>
+        <div class="trashcan panel-body">
+            <strong>Type: </strong> {{models.selected.type}}<br>
+            <input type="text" ng-model="models.selected.id" class="form-control" style="margin-top: 5px" />
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Trashcan</h3>
+        </div>
+        <div class="trashcan panel-body">
+            <ul dnd-list="[]">
+                <li><img src="nested/trashcan.jpg"></li>
+            </ul>
+        </div>
+    </div>
+
 </div>
--->
-        <!--
-
-                        <div id="experiment">
-
-
-
-
-
-    <div style="clear:both"></div>
-
-    Selected: {{model.selected}}
-    <pre>{{result}}</pre>
-
-
-</div>
--->
