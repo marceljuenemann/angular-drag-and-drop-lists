@@ -1,5 +1,5 @@
 /**
- * angular-drag-and-drop-lists v1.0.0-beta
+ * angular-drag-and-drop-lists v1.0.0
  *
  * Copyright (c) 2014 Marcel Juenemann mail@marcel-junemann.de
  * https://github.com/marceljuenemann/angular-drag-and-drop-lists
@@ -42,7 +42,8 @@ angular.module('dndLists', [])
      *                      meaning it only affects the original element that is still at it's source
      *                      position, and not the "element" that the user is dragging with his mouse pointer
      */
-    .directive('dndDraggable', function($parse, $timeout, dndDropEffectWorkaround, dndDragTypeWorkaround) {
+    .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                        function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
         return function(scope, element, attr) {
             // Set the HTML5 draggable attribute on the element
             element.attr("draggable", "true");
@@ -121,7 +122,7 @@ angular.module('dndLists', [])
                 return false;
             });
         };
-    })
+    }])
 
     /**
      * Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single li
@@ -141,7 +142,8 @@ angular.module('dndLists', [])
      *                      added. This element is of type li and has the class dndPlaceholder set.
      * - dndDragover        This class will be added to the list while an element is being dragged over the list.
      */
-    .directive('dndList', function($timeout, dndDropEffectWorkaround, dndDragTypeWorkaround) {
+    .directive('dndList', ['$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                   function($timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
         return function(scope, element, attr) {
             // While an element is dragged over the list, this placeholder element is inserted
             // at the location where the element would be inserted after dropping
@@ -279,7 +281,7 @@ angular.module('dndLists', [])
                 return false;
             }
         };
-    })
+    }])
 
     /**
      * This workaround handles the fact that Internet Explorer does not support drag types other than "Text"
