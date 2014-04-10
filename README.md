@@ -31,7 +31,7 @@ Tested in recent versions of
 ## Usage
 
 ### Download & Installation
-Download `angular-drag-and-drop-lists.js` (or the minified version) and include it in your application. Add the `dndLists` module as dependency to your angular app.
+Download `angular-drag-and-drop-lists.js` (or the minified version) and include it in your application. If you use bower, you can of course just add it via bower. Add the `dndLists` module as dependency to your angular app.
 
 ### dnd-draggable directive
 Use the dnd-draggable directive to make your element draggable
