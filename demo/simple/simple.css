@@ -1,4 +1,21 @@
 /**
+ * With nested lists it's very important that only the droplist and the
+ * draggable elements react to mouse events. This can be achieved as follows:
+ */
+ul[dnd-list] * {
+	pointer-events: none;
+}
+
+/**
+ * For the correct positioning of the placeholder element, the dnd-list and
+ * it's children must have position: relative
+ */
+ul[dnd-list], ul[dnd-list] > li { 
+    pointer-events: auto;
+	position: relative;
+}
+
+/**
  * The dnd-list should always have a min-height,
  * otherwise you can't drop to it once it's empty
  */
@@ -23,7 +40,6 @@
  * over it.
  */
 .simpleDemo ul[dnd-list] .dndPlaceholder {
-    position: relative;
     display: block;
     background-color: #ddd;
     min-height: 42px;
@@ -37,7 +53,6 @@
  * browsers we can use event.offsetY for this.
  */
 .simpleDemo ul[dnd-list] li {
-    position: relative;
     background-color: #fff;
     border: 1px solid #ddd;
     border-top-right-radius: 4px;
