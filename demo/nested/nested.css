@@ -1,17 +1,23 @@
-/***************************** Dropzones *****************************/
+/***************************** Required styles *****************************/
 
 /**
  * With nested lists it's very important that only the droplist and the
  * draggable elements react to mouse events. This can be achieved as follows:
  */
-.nestedDemo .dropzone li[dnd-draggable] * {
-    pointer-events: none;
+ul[dnd-list] * { 
+	pointer-events: none; 
 }
 
-.nestedDemo .dropzone ul[dnd-list],
-.nestedDemo .dropzone li[dnd-draggable] {
+/**
+ * For the correct positioning of the placeholder element, the dnd-list and
+ * it's children must have position: relative
+ */
+ul[dnd-list], ul[dnd-list] > li { 
     pointer-events: auto;
+	position: relative;
 }
+
+/***************************** Dropzone Styling *****************************/
 
 /**
  * The dnd-list should always have a min-height,
@@ -31,7 +37,6 @@
  * browsers we can use event.offsetY for this.
  */
 .nestedDemo .dropzone li {
-    position: relative;
     background-color: #fff;
     border: 1px solid #ddd;
     display: block;

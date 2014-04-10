@@ -5,7 +5,7 @@
     "repository": "https://github.com/marceljuenemann/angular-drag-and-drop-lists",
     "license": "MIT",
     "devDependencies": {
-        "http-server": "^0.6.1"
+        "http-server": "~0.6.1"
     },
     "scripts": {
         "start": "http-server -p 8000"
