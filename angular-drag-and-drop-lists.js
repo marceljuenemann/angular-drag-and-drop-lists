@@ -155,14 +155,16 @@ angular.module('dndLists', [])
      * - dnd-list           Required attribute. The value has to be the array in which the data of the
      *                      dropped element should be inserted.
      *
+     * - dnd-dropped        Callback that is invoked when the element was dropped in this list.
+     *
      * CSS classes:
      * - dndPlaceholder     When an element is dragged over the list, a new placeholder child element will be
      *                      added. This element is of type li and has the class dndPlaceholder set.
      * - dndDragover        This class will be added to the list while an element is being dragged over the list.
      * - dndDropZone        This class will be added to the list while it is able to accept current dragged element.
      */
-    .directive('dndList', ['$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                   function($timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+    .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                   function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
         return function(scope, element, attr) {
             // While an element is dragged over the list, this placeholder element is inserted
             // at the location where the element would be inserted after dropping
@@ -268,6 +270,8 @@ angular.module('dndLists', [])
                 scope.$apply(function() {
                     targetArray.splice(placeholderIndex, 0, transferredObject);
                 });
+
+                $parse(attr.dndDropped)(scope);
 
                 // In Chrome on Windows the dropEffect will always be none...
                 // We have to determine the actual effect manually from the allowed effects
