@@ -15,6 +15,7 @@ angular.module('dndLists', [])
      * - dnd-draggable      Required attribute. The value has to be an object that represents the data
      *                      of the element. In case of a drag and drop operation the object will be
      *                      serialized and unserialized on the receiving end.
+     * - dnd-droppable-in   Required attribute. Selector to filter drop zone.
      * - dnd-selected       Callback that is invoked when the element was clicked but not dragged
      * - dnd-effect-allowed Use this attribute to limit the operations that can be performed. Options are:
      *                      - "move": The drag operation will move the element. This is the default
@@ -40,7 +41,8 @@ angular.module('dndLists', [])
      *                      with this class, because that will abort the drag operation.
      * - dndDraggingSource  This class will be added to the element after the drag operation was started,
      *                      meaning it only affects the original element that is still at it's source
-     *                      position, and not the "element" that the user is dragging with his mouse pointer
+     *                      position, and not the "element" that the user is dragging with his mouse pointer.
+     * - dndDropZone        This class will be added to elements able to accept current dragged element.
      */
     .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
                         function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
@@ -48,11 +50,21 @@ angular.module('dndLists', [])
             // Set the HTML5 draggable attribute on the element
             element.attr("draggable", "true");
 
+            var fixEvent = function(event) {
+                if (event.dataTransfer === undefined && event.originalEvent) {
+                    event = event.originalEvent;
+                }
+
+                return event;
+            };
+
             /**
              * When the drag operation is started we have to prepare the dataTransfer object,
              * which is the primary way we communicate with the target element
              */
             element.on('dragstart', function(event) {
+                event = fixEvent(event);
+
                 // Serialize the data associated with this element. IE only supports the Text drag type
                 event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
 
@@ -67,6 +79,9 @@ angular.module('dndLists', [])
                 dndDropEffectWorkaround.dropEffect = "none";
                 dndDragTypeWorkaround.isDragging = true;
 
+                // add a class to specify all allowed drop zone
+                angular.element(attr.dndDroppableIn).addClass('dndDropZone');
+
                 event.stopPropagation();
             });
 
@@ -76,6 +91,8 @@ angular.module('dndLists', [])
              * we will invoke the callbacks specified with the dnd-moved or dnd-copied attribute.
              */
             element.on('dragend', function(event) {
+                event = fixEvent(event);
+
                 // If the dropEffect is none it means that the drag action was aborted or
                 // that the browser does not support this field. In either case we use
                 // the fallback which was initialized to none
@@ -98,6 +115,7 @@ angular.module('dndLists', [])
                 // Clean up
                 element.removeClass("dndDragging");
                 element.removeClass("dndDraggingSource");
+                angular.element(attr.dndDroppableIn).removeClass('dndDropZone');
                 dndDragTypeWorkaround.isDragging = false;
                 event.stopPropagation();
             });
@@ -137,13 +155,16 @@ angular.module('dndLists', [])
      * - dnd-list           Required attribute. The value has to be the array in which the data of the
      *                      dropped element should be inserted.
      *
+     * - dnd-dropped        Callback that is invoked when the element was dropped in this list.
+     *
      * CSS classes:
      * - dndPlaceholder     When an element is dragged over the list, a new placeholder child element will be
      *                      added. This element is of type li and has the class dndPlaceholder set.
      * - dndDragover        This class will be added to the list while an element is being dragged over the list.
+     * - dndDropZone        This class will be added to the list while it is able to accept current dragged element.
      */
-    .directive('dndList', ['$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                   function($timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+    .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                   function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
         return function(scope, element, attr) {
             // While an element is dragged over the list, this placeholder element is inserted
             // at the location where the element would be inserted after dropping
@@ -151,15 +172,28 @@ angular.module('dndLists', [])
             var placeholderNode = placeholder[0];
             var listNode = element[0];
 
+            var fixEvent = function(event) {
+                if (event.dataTransfer === undefined && event.originalEvent) {
+                    event = event.originalEvent;
+                }
+
+                return event;
+            };
+
             /**
              * The dragover event is triggered "every few hundred milliseconds" while an element
              * is being dragged over our list, or over an child element.
              */
             element.on('dragover', function(event) {
+                event = fixEvent(event);
+
                 // Disallow drop if it comes from an external source or is not text.
                 // Usually we would use a custom drag type for this, but IE doesn't support that.
                 if (!dndDragTypeWorkaround.isDragging) return true;
                 if (!isDropAllowed(event.dataTransfer.types)) return true;
+
+                // Disallow drop if a drop zone was set in draggable element and drop zone element is not a valid element
+                if (!element.is('.dndDropZone')) return true;
 
                 // First of all, make sure that the placeholder is shown
                 // This is especially important if the list is empty
@@ -220,6 +254,8 @@ angular.module('dndLists', [])
              * one child element per array element.
              */
             element.on('drop', function(event) {
+                event = fixEvent(event);
+
                 // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
                 // the "Text" drag type will be converted to text/plain, but IE does not do that.
                 var transferredObject = JSON.parse(event.dataTransfer.getData("Text")
@@ -234,6 +270,8 @@ angular.module('dndLists', [])
                 scope.$apply(function() {
                     targetArray.splice(placeholderIndex, 0, transferredObject);
                 });
+
+                $parse(attr.dndDropped)(scope);
 
                 // In Chrome on Windows the dropEffect will always be none...
                 // We have to determine the actual effect manually from the allowed effects
