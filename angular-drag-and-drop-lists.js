@@ -82,6 +82,14 @@ angular.module('dndLists', [])
                 var dropEffect = event.dataTransfer.dropEffect !== "none"
                                ? event.dataTransfer.dropEffect : dndDropEffectWorkaround.dropEffect;
 
+                // Noto que en ciertas condiciones se dispara el dragend sin el drop, y el
+                // event.dataTransfer.dropEffect !== none, lo que ocaciona que se ejecute
+                // el dndMove o dndCopied, sin haber copiado el item en el destino nuevo
+                // Generalmente produce que se pierdan elementos en la lista
+                // Usamos siempre la almacenada en la variable dndDropEffectWorkaround.dropEffect
+                // Que solo se establece en el onDrop.
+                dropEffect = dndDropEffectWorkaround.dropEffect;
+
                 // Invoke callbacks
                 scope.$apply(function() {
                     switch (dropEffect) {
@@ -241,6 +249,14 @@ angular.module('dndLists', [])
                     dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed === "copyMove"
                                                        ? (event.ctrlKey ? "copy" : "move")
                                                        :  event.dataTransfer.effectAllowed;
+                } else {
+                    // Noto que en ciertas condiciones se dispara el dragend sin el drop, y el
+                    // event.dataTransfer.dropEffect !== none, lo que ocaciona que se ejecute
+                    // el dndMove o dndCopied, sin haber copiado el item en el destino nuevo
+                    // Generalmente produce que se pierdan elementos en la lista
+                    // Usamos siempre la almacenada en la variable dndDropEffectWorkaround.dropEffect
+                    // Que solo se establece aqui.
+                    dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
                 }
 
                 // Clean up
