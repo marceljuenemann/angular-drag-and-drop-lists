@@ -11,7 +11,13 @@
 
 ## Tested browsers
 
-TODO
+- Chrome 34 (Ubuntu)
+- Chrome 37 (Mac)
+- Chrome 37 (Win7)
+- Firefox 28 (Win7)
+- Firefox 31 (Ubuntu)
+- Safari 7.0.6 (Mac)
+- Internet Explorer 11 (IE9 & 10 in compatibility mode)
 
 # 1.0.0 (2014-04-11)
 
@@ -23,8 +29,8 @@ Initial release
   - bower.json
   - package.json
   - JS files
-- Minify
-- Test (npm start)
+- Minify (and test)
+- Test different OS & browsers (npm start)
 - Update README and CHANGELOG
 - Merge to master
 - Tag release
