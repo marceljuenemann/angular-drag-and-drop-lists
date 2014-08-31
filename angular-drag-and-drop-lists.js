@@ -62,7 +62,6 @@ angular.module('dndLists', [])
             // If the dnd-disable-if attribute is set, we have to watch that
             if (attr.dndDisableIf) {
                 scope.$watch(attr.dndDisableIf, function(disabled) {
-                    console.log(disabled);
                     element.attr("draggable", !disabled);
                 });
             }
@@ -147,7 +146,7 @@ angular.module('dndLists', [])
              * Workaround to make element draggable in IE9
              */
             element.on('selectstart', function() {
-                this.dragDrop();
+                if (this.dragDrop) this.dragDrop();
                 return false;
             });
         };
