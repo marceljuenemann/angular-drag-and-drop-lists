@@ -32,6 +32,10 @@ angular.module('dndLists', [])
      *                      is not doing that for you automatically.
      * - dnd-copied         Same as dnd-moved, just that it is called when the element was copied
      *                      instead of moved.
+     * - dnd-type           Use this attribute if you have different kinds of items in your application
+     *                      and you want to limit which items can be dropped into which lists. Combine with
+     *                      dnd-allowed-types on the dnd-list(s). This attribute should evaluate to a string,
+     *                      although this restriction is not enforced (at the moment).
      *
      * CSS classes:
      * - dndDragging        This class will be added to the element while the element is being dragged.
@@ -66,6 +70,10 @@ angular.module('dndLists', [])
                 // Workarounds for stupid browsers, see description below
                 dndDropEffectWorkaround.dropEffect = "none";
                 dndDragTypeWorkaround.isDragging = true;
+
+                // Save type of item in global state. Usually, this would go into the dataTransfer
+                // typename, but we have to use "Text" there to support IE
+                dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
                 event.stopPropagation();
             });
@@ -136,6 +144,8 @@ angular.module('dndLists', [])
      * Attributes:
      * - dnd-list           Required attribute. The value has to be the array in which the data of the
      *                      dropped element should be inserted.
+     * - dnd-allowed-types  Optional array of allowed item types. When used, only items that had a matching
+     *                      dnd-type attribute will be dropable.
      *
      * CSS classes:
      * - dndPlaceholder     When an element is dragged over the list, a new placeholder child element will be
@@ -160,6 +170,14 @@ angular.module('dndLists', [])
                 // Usually we would use a custom drag type for this, but IE doesn't support that.
                 if (!dndDragTypeWorkaround.isDragging) return true;
                 if (!isDropAllowed(event.dataTransfer.types)) return true;
+
+                // Now check the dnd-allowed-types against the type of the incoming element
+                if (attr.dndAllowedTypes) {
+                    var allowed = scope.$eval(attr.dndAllowedTypes);
+                    if (angular.isArray(allowed) && allowed.indexOf(dndDragTypeWorkaround.dragType) === -1) {
+                        return true;
+                    }
+                }
 
                 // First of all, make sure that the placeholder is shown
                 // This is especially important if the list is empty

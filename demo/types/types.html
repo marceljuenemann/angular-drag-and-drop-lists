@@ -1,0 +1,19 @@
+<!-- The dnd-list directive allows to drop elements into it.
+     The dropped data will be added to the referenced list -->
+<ul dnd-list="list.people" dnd-allowed-types="list.allowedTypes">
+    <!-- The dnd-draggable directive makes an element draggable and will
+         transfer the object that was assigned to it. If an element was
+         dragged away, you have to remove it from the original list
+         yourself using the dnd-moved attribute -->
+    <li ng-repeat="person in list.people"
+        dnd-draggable="person"
+        dnd-type="person.type"
+        dnd-moved="list.people.splice($index, 1)"
+        dnd-effect-allowed="move"
+        dnd-selected="models.selected = person"
+        ng-class="{'selected': models.selected === person}"
+        class="background-{{person.type}}"
+        >
+        {{person.name}}
+    </li>
+</ul>

@@ -9,6 +9,10 @@ angular.module("demo", ["ngRoute", "dndLists"])
                 templateUrl: 'nested/nested-frame.html',
                 controller: 'NestedListsDemoController'
             })
+            .when('/types', {
+                templateUrl: 'types/types-frame.html',
+                controller: 'TypesDemoController'
+            })
             .otherwise({redirectTo: '/nested'});
     })
 
@@ -21,6 +25,7 @@ angular.module("demo", ["ngRoute", "dndLists"])
                 scope.options = [
                     {label: "Nested Containers", href: "#/nested"},
                     {label: "Simple Demo", href: "#/simple"},
+                    {label: "Item Types", href: "#/types"},
                     {label: "Github", href: "https://github.com/marceljuenemann/angular-drag-and-drop-lists"}
                 ];
 
