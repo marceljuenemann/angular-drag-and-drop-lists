@@ -72,6 +72,8 @@ angular.module('dndLists', [])
              * which is the primary way we communicate with the target element
              */
             element.on('dragstart', function(event) {
+                event = event.originalEvent || event;
+
                 // Serialize the data associated with this element. IE only supports the Text drag type
                 event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
 
@@ -99,6 +101,8 @@ angular.module('dndLists', [])
              * we will invoke the callbacks specified with the dnd-moved or dnd-copied attribute.
              */
             element.on('dragend', function(event) {
+                event = event.originalEvent || event;
+
                 // If the dropEffect is none it means that the drag action was aborted or
                 // that the browser does not support this field. In either case we use
                 // the fallback which was initialized to none
@@ -130,6 +134,8 @@ angular.module('dndLists', [])
              * specified with the dnd-selected attribute.
              */
             element.on('click', function(event) {
+                event = event.originalEvent || event;
+
                 scope.$apply(function() {
                     $parse(attr.dndSelected)(scope);
                 });
@@ -183,6 +189,8 @@ angular.module('dndLists', [])
              * is being dragged over our list, or over an child element.
              */
             element.on('dragover', function(event) {
+                event = event.originalEvent || event;
+
                 // Disallow drop if it comes from an external source or is not text.
                 // Usually we would use a custom drag type for this, but IE doesn't support that.
                 if (!dndDragTypeWorkaround.isDragging) return true;
@@ -258,6 +266,8 @@ angular.module('dndLists', [])
              * one child element per array element.
              */
             element.on('drop', function(event) {
+                event = event.originalEvent || event;
+
                 // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
                 // the "Text" drag type will be converted to text/plain, but IE does not do that.
                 var transferredObject = JSON.parse(event.dataTransfer.getData("Text")
@@ -298,6 +308,8 @@ angular.module('dndLists', [])
              * is still dragging over the list. If you know a better way of doing this, please tell me!
              */
             element.on('dragleave', function(event) {
+                event = event.originalEvent || event;
+
                 element.removeClass("dndDragover");
                 $timeout(function() {
                     if (!element.hasClass("dndDragover")) {
