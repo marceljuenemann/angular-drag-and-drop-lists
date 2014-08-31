@@ -1,5 +1,5 @@
 /**
- * angular-drag-and-drop-lists v1.0.0
+ * angular-drag-and-drop-lists v1.0.1
  *
  * Copyright (c) 2014 Marcel Juenemann mail@marcel-junemann.de
  * https://github.com/marceljuenemann/angular-drag-and-drop-lists
@@ -36,7 +36,7 @@ angular.module('dndLists', [])
      *                      and you want to limit which items can be dropped into which lists. Combine with
      *                      dnd-allowed-types on the dnd-list(s). This attribute should evaluate to a string,
      *                      although this restriction is not enforced (at the moment).
-     * - dnd-disable-if     You can use this attribute to dinamically disable the draggability of the element.
+     * - dnd-disable-if     You can use this attribute to dynamically disable the draggability of the element.
      *                      This is useful if you have certain list items that you don't want to be draggable,
      *                      or if you want to disable drag & drop completely without having two different
      *                      code branches (e.g. only allow for admins). **Note**: If your element is not
