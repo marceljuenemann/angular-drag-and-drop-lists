@@ -60,14 +60,14 @@ ul[dnd-list], ul[dnd-list] > li {
     display: block;
     padding: 10px 15px;
     margin-bottom: -1px;
-}
-
-/**
- * Show selected elements in green
- */
-.typesDemo ul[dnd-list] li.selected {
-    background-color: #dff0d8;
-    color: #3c763d;
+    
+    /* Disable text selection if item is not draggable */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 /**

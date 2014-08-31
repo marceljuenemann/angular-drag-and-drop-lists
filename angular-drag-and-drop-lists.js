@@ -36,6 +36,13 @@ angular.module('dndLists', [])
      *                      and you want to limit which items can be dropped into which lists. Combine with
      *                      dnd-allowed-types on the dnd-list(s). This attribute should evaluate to a string,
      *                      although this restriction is not enforced (at the moment).
+     * - dnd-disable-if     You can use this attribute to dinamically disable the draggability of the element.
+     *                      This is useful if you have certain list items that you don't want to be draggable,
+     *                      or if you want to disable drag & drop completely without having two different
+     *                      code branches (e.g. only allow for admins). **Note**: If your element is not
+     *                      draggable, the user is probably able to select text or images inside of it. Since
+     *                      a selection is always draggable, this breaks your UI. You most likely want to
+     *                      disable user selection via CSS (see user-select).
      *
      * CSS classes:
      * - dndDragging        This class will be added to the element while the element is being dragged.
@@ -51,6 +58,14 @@ angular.module('dndLists', [])
         return function(scope, element, attr) {
             // Set the HTML5 draggable attribute on the element
             element.attr("draggable", "true");
+
+            // If the dnd-disable-if attribute is set, we have to watch that
+            if (attr.dndDisableIf) {
+                scope.$watch(attr.dndDisableIf, function(disabled) {
+                    console.log(disabled);
+                    element.attr("draggable", !disabled);
+                });
+            }
 
             /**
              * When the drag operation is started we have to prepare the dataTransfer object,
@@ -146,6 +161,8 @@ angular.module('dndLists', [])
      *                      dropped element should be inserted.
      * - dnd-allowed-types  Optional array of allowed item types. When used, only items that had a matching
      *                      dnd-type attribute will be dropable.
+     * - dnd-disable-if     Optional boolean expresssion. When it evaluates to true, no dropping into
+     *                      the list is possible. Note that this also disables rearranging items inside the list.
      *
      * CSS classes:
      * - dndPlaceholder     When an element is dragged over the list, a new placeholder child element will be
@@ -178,6 +195,9 @@ angular.module('dndLists', [])
                         return true;
                     }
                 }
+
+                // Check whether droping is disabled completely
+                if (attr.dndDisableIf && scope.$eval(attr.dndDisableIf)) return true;
 
                 // First of all, make sure that the placeholder is shown
                 // This is especially important if the list is empty
