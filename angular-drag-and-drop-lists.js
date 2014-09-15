@@ -190,9 +190,9 @@ angular.module('dndLists', [])
             element.on('dragover', function(event) {
                 event = event.originalEvent || event;
 
-                // Disallow drop if it comes from an external source or is not text.
+                // Disallow drop if it comes from an external source and dnd-external-allowed not set or is not text.
                 // Usually we would use a custom drag type for this, but IE doesn't support that.
-                if (!dndDragTypeWorkaround.isDragging) return true;
+                if (!dndDragTypeWorkaround.isDragging && !attr.dndExternalAllowed) return true;
                 if (!isDropAllowed(event.dataTransfer.types)) return true;
 
                 // Now check the dnd-allowed-types against the type of the incoming element
