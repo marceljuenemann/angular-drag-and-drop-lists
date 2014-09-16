@@ -91,6 +91,7 @@ angular.module('dndLists', [])
                 // typename, but we have to use "Text" there to support IE
                 dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
+                $parse(attr.dndDragstart)(scope);
                 event.stopPropagation();
             });
 
@@ -174,8 +175,8 @@ angular.module('dndLists', [])
      *                      added. This element is of type li and has the class dndPlaceholder set.
      * - dndDragover        This class will be added to the list while an element is being dragged over the list.
      */
-    .directive('dndList', ['$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                   function($timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+    .directive('dndList', ['$timeout', '$parse', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', 
+                   function($timeout, $parse, dndDropEffectWorkaround,   dndDragTypeWorkaround) {
         return function(scope, element, attr) {
             // While an element is dragged over the list, this placeholder element is inserted
             // at the location where the element would be inserted after dropping
@@ -253,6 +254,7 @@ angular.module('dndLists', [])
                     }
                 }
 
+                $parse(attr.dndDragover)(scope);
                 element.addClass("dndDragover");
                 event.preventDefault();
                 event.stopPropagation();
@@ -292,6 +294,7 @@ angular.module('dndLists', [])
 
                 // Clean up
                 placeholder.remove();
+                $parse(attr.dndDropped)(scope);
                 element.removeClass("dndDragover");
                 event.preventDefault();
                 event.stopPropagation();
