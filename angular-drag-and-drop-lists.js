@@ -91,6 +91,7 @@ angular.module('dndLists', [])
                 // typename, but we have to use "Text" there to support IE
                 dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
+                $parse(attr.dndDragstart)(scope);
                 event.stopPropagation();
             });
 
@@ -174,8 +175,8 @@ angular.module('dndLists', [])
      *                      added. This element is of type li and has the class dndPlaceholder set.
      * - dndDragover        This class will be added to the list while an element is being dragged over the list.
      */
-    .directive('dndList', ['$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                   function($timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+    .directive('dndList', ['$timeout', '$parse', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', 
+                   function($timeout, $parse, dndDropEffectWorkaround,   dndDragTypeWorkaround) {
         return function(scope, element, attr) {
             // While an element is dragged over the list, this placeholder element is inserted
             // at the location where the element would be inserted after dropping
@@ -190,9 +191,9 @@ angular.module('dndLists', [])
             element.on('dragover', function(event) {
                 event = event.originalEvent || event;
 
-                // Disallow drop if it comes from an external source or is not text.
+                // Disallow drop if it comes from an external source and dnd-external-allowed not set or is not text.
                 // Usually we would use a custom drag type for this, but IE doesn't support that.
-                if (!dndDragTypeWorkaround.isDragging) return true;
+                if (!dndDragTypeWorkaround.isDragging && !attr.dndExternalAllowed) return true;
                 if (!isDropAllowed(event.dataTransfer.types)) return true;
 
                 // Now check the dnd-allowed-types against the type of the incoming element
@@ -253,6 +254,7 @@ angular.module('dndLists', [])
                     }
                 }
 
+                $parse(attr.dndDragover)(scope);
                 element.addClass("dndDragover");
                 event.preventDefault();
                 event.stopPropagation();
@@ -279,7 +281,13 @@ angular.module('dndLists', [])
                 // position of the array we will insert the object
                 var placeholderIndex = Array.prototype.indexOf.call(listNode.children, placeholderNode);
                 scope.$apply(function() {
-                    targetArray.splice(placeholderIndex, 0, transferredObject);
+                    if(!attr.dndAllowDrop || $parse(attr.dndAllowDrop)(scope, {
+                        $event: event,
+                        data: transferredObject,
+                        internalDrag: dndDragTypeWorkaround.isDragging === true
+                    })) {
+                        targetArray.splice(placeholderIndex, 0, transferredObject);
+                    }
                 });
 
                 // In Chrome on Windows the dropEffect will always be none...
@@ -292,6 +300,7 @@ angular.module('dndLists', [])
 
                 // Clean up
                 placeholder.remove();
+                $parse(attr.dndDropped)(scope);
                 element.removeClass("dndDragover");
                 event.preventDefault();
                 event.stopPropagation();
