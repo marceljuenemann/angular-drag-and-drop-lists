@@ -281,7 +281,13 @@ angular.module('dndLists', [])
                 // position of the array we will insert the object
                 var placeholderIndex = Array.prototype.indexOf.call(listNode.children, placeholderNode);
                 scope.$apply(function() {
-                    targetArray.splice(placeholderIndex, 0, transferredObject);
+                    if(!attr.dndAllowDrop || $parse(attr.dndAllowDrop)(scope, {
+                        $event: event,
+                        data: transferredObject,
+                        internalDrag: dndDragTypeWorkaround.isDragging === true
+                    })) {
+                        targetArray.splice(placeholderIndex, 0, transferredObject);
+                    }
                 });
 
                 // In Chrome on Windows the dropEffect will always be none...
