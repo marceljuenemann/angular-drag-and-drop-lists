@@ -108,12 +108,11 @@ angular.module('dndLists', [])
                 var dropEffect = event.dataTransfer.dropEffect !== "none"
                                ? event.dataTransfer.dropEffect : dndDropEffectWorkaround.dropEffect;
 
-                // Noto que en ciertas condiciones se dispara el dragend sin el drop, y el
-                // event.dataTransfer.dropEffect !== none, lo que ocaciona que se ejecute
-                // el dndMove o dndCopied, sin haber copiado el item en el destino nuevo
-                // Generalmente produce que se pierdan elementos en la lista
-                // Usamos siempre la almacenada en la variable dndDropEffectWorkaround.dropEffect
-                // Que solo se establece en el onDrop.
+                // Under certain conditions the 'dragend' event is triggered without having fired the 'drop' event
+                // and 'event.dataTransfer.dropEffect' is set to a value other than 'none',
+                // which causes the dndMove run without having previously copied element.
+                // This causes the elements of the list are missing.
+                // To fix dndDropEffectWorkaround.dropEffect is always used to store the dropEffect.
                 dropEffect = dndDropEffectWorkaround.dropEffect;
 
                 // Invoke callbacks
@@ -297,12 +296,11 @@ angular.module('dndLists', [])
                                                        ? (event.ctrlKey ? "copy" : "move")
                                                        :  event.dataTransfer.effectAllowed;
                 } else {
-                    // Noto que en ciertas condiciones se dispara el dragend sin el drop, y el
-                    // event.dataTransfer.dropEffect !== none, lo que ocaciona que se ejecute
-                    // el dndMove o dndCopied, sin haber copiado el item en el destino nuevo
-                    // Generalmente produce que se pierdan elementos en la lista
-                    // Usamos siempre la almacenada en la variable dndDropEffectWorkaround.dropEffect
-                    // Que solo se establece aqui.
+                    // Under certain conditions the 'dragend' event is triggered without having fired the 'drop' event
+                    // and 'event.dataTransfer.dropEffect' is set to a value other than 'none',
+                    // which causes the dndMove run without having previously copied element.
+                    // This causes the elements of the list are missing.
+                    // To fix dndDropEffectWorkaround.dropEffect is always used to store the dropEffect.
                     dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
                 }
 
