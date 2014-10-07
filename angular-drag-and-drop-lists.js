@@ -108,6 +108,13 @@ angular.module('dndLists', [])
                 var dropEffect = event.dataTransfer.dropEffect !== "none"
                                ? event.dataTransfer.dropEffect : dndDropEffectWorkaround.dropEffect;
 
+                // Under certain conditions the 'dragend' event is triggered without having fired the 'drop' event
+                // and 'event.dataTransfer.dropEffect' is set to a value other than 'none',
+                // which causes the dndMove run without having previously copied element.
+                // This causes the elements of the list are missing.
+                // To fix dndDropEffectWorkaround.dropEffect is always used to store the dropEffect.
+                dropEffect = dndDropEffectWorkaround.dropEffect;
+
                 // Invoke callbacks
                 scope.$apply(function() {
                     switch (dropEffect) {
@@ -212,7 +219,13 @@ angular.module('dndLists', [])
                     element.append(placeholder);
                 }
 
-                if (event.target.parentNode === listNode && event.target !== placeholderNode) {
+                // We are looking up the '<li>' that the event occurred.
+                var targetLiNode = event.target;
+                while (targetLiNode.parentNode !== listNode && targetLiNode.parentNode !== null) {
+                    targetLiNode = targetLiNode.parentNode;
+                }
+
+                if (targetLiNode.parentNode === listNode && targetLiNode !== placeholderNode) {
                     // The element is being dragged over one of our child nodes. Now we have
                     // to decide at which position to show the placeholder: If the mouse pointer
                     // is in the upper half of the child element, we place it before the child
@@ -220,8 +233,8 @@ angular.module('dndLists', [])
                     // Firefox we have to use layerY, which only works if the child element has
                     // position relative. In IE this branch is never reached because the dragover
                     // event is only fired for the listNode, not for it's children
-                    var beforeOrAfter = (event.offsetY || event.layerY) < event.target.offsetHeight / 2;
-                    listNode.insertBefore(placeholderNode, beforeOrAfter ? event.target : event.target.nextSibling);
+                    var beforeOrAfter = (event.offsetY || event.layerY) < targetLiNode.offsetHeight / 2;
+                    listNode.insertBefore(placeholderNode, beforeOrAfter ? targetLiNode : targetLiNode.nextSibling);
                 } else if (event.target === listNode) {
                     // This branch is reached when we are dragging directly over the list element.
                     // Usually we wouldn't need to do anything here, but the IE does not fire it's
@@ -288,6 +301,13 @@ angular.module('dndLists', [])
                     dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed === "copyMove"
                                                        ? (event.ctrlKey ? "copy" : "move")
                                                        :  event.dataTransfer.effectAllowed;
+                } else {
+                    // Under certain conditions the 'dragend' event is triggered without having fired the 'drop' event
+                    // and 'event.dataTransfer.dropEffect' is set to a value other than 'none',
+                    // which causes the dndMove run without having previously copied element.
+                    // This causes the elements of the list are missing.
+                    // To fix dndDropEffectWorkaround.dropEffect is always used to store the dropEffect.
+                    dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
                 }
 
                 // Clean up
