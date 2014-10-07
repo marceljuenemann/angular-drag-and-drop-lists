@@ -5,6 +5,7 @@ Angular directives that allow you to build sortable lists with the native HTML5 
 ## Demo
 * [Nested Lists](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/nested) 
 * [Simple Lists](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/simple) 
+* [Typed Lists](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types) 
 
 ## Why another drag & drop library?
 There are tons of other drag & drop libraries out there, but none of them met my three requirements:
@@ -15,18 +16,17 @@ There are tons of other drag & drop libraries out there, but none of them met my
 
 If this doesn't fit your requirements, check out one of the other awesome drag & drop libraries:
 
-* [angular-ui-tree](https://github.com/JimLiu/angular-ui-tree): Very similar to this library, but does not use the HTML5 API. Therefore you need to write some more markup and to see what you are dragging it will create another DOM node that you have to style.
+* [angular-ui-tree](https://github.com/JimLiu/angular-ui-tree): Very similar to this library, but does not use the HTML5 API. Therefore you need to write some more markup to see what you are dragging and it will create another DOM node that you have to style. However, if you plan to support touch devices this is probably your best choice.
 * [angular-dragdrop](https://github.com/ganarajpr/angular-dragdrop): One of many libraries with the same name. This one uses the HTML5 API, but if you want to build (nested) sortable lists, you're on your own, because it does not calculate the correct element position for you. 
 * [more...](https://www.google.de/search?q=angular+drag+and+drop)
 
 
 ## Supported browsers
 
-Tested in recent versions of
-* Chrome
-* Firefox
-* Safari
-* IE >= 9
+Internet Explorer 8 or lower is *not supported*, but all modern browsers are (see changelog for tested versions).
+
+Note that *touch devices* are *not supported*, because the HTML5 drag & drop standard doesn't cover those.
+
 
 ## Usage
 
@@ -48,6 +48,8 @@ Use the dnd-draggable directive to make your element draggable
     * HTML5 also specifies the `link` option, but this library does not actively support it yet, so use it at your own risk.
 * `dnd-moved` Callback that is invoked when the element was moved. Usually you will remove your element from the original list in this callback, since the directive is not doing that for you automatically.
 * `dnd-copied` Same as dnd-moved, just that it is called when the element was copied instead of moved.
+* `dnd-type` Use this attribute if you have different kinds of items in your application and you want to limit which items can be dropped into which lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute should evaluate to a string, although this restriction is not enforced (at the moment).
+* `dnd-disable-if` You can use this attribute to dynamically disable the draggability of the element. This is useful if you have certain list items that you don't want to be draggable, or if you want to disable drag & drop completely without having two different code branches (e.g. only allow for admins). *Note*: If your element is not draggable, the user is probably able to select text or images inside of it. Since a selection is always draggable, this breaks your UI. You most likely want to disable user selection via CSS (see [user-select](http://stackoverflow.com/a/4407335)).
 
 **CSS classes**
 * `dndDragging` This class will be added to the element while the element is being dragged. It will affect both the element you see while dragging and the source element that stays at it's position. Do not try to hide the source element with this class, because that will abort the drag operation.
@@ -58,6 +60,8 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 
 **Attributes**
 * `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted.
+* `dnd-allowed-types` Optional array of allowed item types. When used, only items that had a matching dnd-type attribute will be dropable.
+* `dnd-disable-if` Optional boolean expresssion. When it evaluates to true, no dropping into the list is possible. Note that this also disables rearranging items inside the list.
 
 **CSS classes**
 * `dndPlaceholder` When an element is dragged over the list, a new placeholder child element will be added. This element is of type li and has the class dndPlaceholder set.
