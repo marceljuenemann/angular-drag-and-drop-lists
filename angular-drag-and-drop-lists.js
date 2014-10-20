@@ -168,14 +168,15 @@ angular.module('dndLists', [])
      *                      dnd-type attribute will be dropable.
      * - dnd-disable-if     Optional boolean expresssion. When it evaluates to true, no dropping into
      *                      the list is possible. Note that this also disables rearranging items inside the list.
-     *
+     * - dnd-dropped        The dropped function called.
+     *  
      * CSS classes:
      * - dndPlaceholder     When an element is dragged over the list, a new placeholder child element will be
      *                      added. This element is of type li and has the class dndPlaceholder set.
      * - dndDragover        This class will be added to the list while an element is being dragged over the list.
      */
-    .directive('dndList', ['$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                   function($timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+    .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                   function($parse, $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
         return function(scope, element, attr) {
             // While an element is dragged over the list, this placeholder element is inserted
             // at the location where the element would be inserted after dropping
@@ -278,6 +279,10 @@ angular.module('dndLists', [])
                 // We use the position of the placeholder node to determine at which
                 // position of the array we will insert the object
                 var placeholderIndex = Array.prototype.indexOf.call(listNode.children, placeholderNode);
+                var dropped = $parse(attr.dndDropped)(scope);
+                if (!angular.isUndefined(dropped)){
+                    transferredObject = dropped(transferredObject);
+                }
                 scope.$apply(function() {
                     targetArray.splice(placeholderIndex, 0, transferredObject);
                 });
