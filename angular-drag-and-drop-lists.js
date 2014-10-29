@@ -180,7 +180,7 @@ angular.module('dndLists', [])
         return function(scope, element, attr) {
             // While an element is dragged over the list, this placeholder element is inserted
             // at the location where the element would be inserted after dropping
-            var placeholder = angular.element("<li class='dndPlaceholder'></li>");
+            var placeholder = angular.element("<li class='dndPlaceholder'><div /></li>");
             var placeholderNode = placeholder[0];
             var listNode = element[0];
 
@@ -254,7 +254,7 @@ angular.module('dndLists', [])
                     }
                 }
 
-                $parse(attr.dndDragover)(scope);
+                $parse(attr.dndDragover)(scope, { event: event });
                 element.addClass("dndDragover");
                 event.preventDefault();
                 event.stopPropagation();
@@ -294,7 +294,7 @@ angular.module('dndLists', [])
 
                 // Clean up
                 placeholder.remove();
-                $parse(attr.dndDropped)(scope);
+                $parse(attr.dndDropped)(scope, { event: event });
                 element.removeClass("dndDragover");
                 event.preventDefault();
                 event.stopPropagation();
