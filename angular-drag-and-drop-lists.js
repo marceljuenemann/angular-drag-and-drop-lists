@@ -102,13 +102,11 @@ angular.module('dndLists', [])
             element.on('dragend', function(event) {
                 event = event.originalEvent || event;
 
-                // If the dropEffect is none it means that the drag action was aborted or
-                // that the browser does not support this field. In either case we use
-                // the fallback which was initialized to none
-                var dropEffect = event.dataTransfer.dropEffect !== "none"
-                               ? event.dataTransfer.dropEffect : dndDropEffectWorkaround.dropEffect;
-
-                // Invoke callbacks
+                // Invoke callbacks. Usually we would use event.dataTransfer.dropEffect to determine
+                // the used effect, but Chrome has not implemented that field correctly. On Windows
+                // it always sets it to 'none', while Chrome on Linux sometimes sets it to something
+                // else when it's supposed to send 'none' (drag operation aborted).
+                var dropEffect = dndDropEffectWorkaround.dropEffect;
                 scope.$apply(function() {
                     switch (dropEffect) {
                         case "move":
@@ -288,6 +286,8 @@ angular.module('dndLists', [])
                     dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed === "copyMove"
                                                        ? (event.ctrlKey ? "copy" : "move")
                                                        :  event.dataTransfer.effectAllowed;
+                } else {
+                    dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
                 }
 
                 // Clean up
