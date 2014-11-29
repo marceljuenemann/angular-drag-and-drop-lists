@@ -1,19 +1,11 @@
 /***************************** Required styles *****************************/
 
 /**
- * With nested lists it's very important that only the droplist and the
- * draggable elements react to mouse events. This can be achieved as follows:
- */
-ul[dnd-list] * { 
-	pointer-events: none; 
-}
-
-/**
  * For the correct positioning of the placeholder element, the dnd-list and
  * it's children must have position: relative
  */
-ul[dnd-list], ul[dnd-list] > li { 
-    pointer-events: auto;
+.nestedDemo ul[dnd-list],
+.nestedDemo ul[dnd-list] > li {
 	position: relative;
 }
 

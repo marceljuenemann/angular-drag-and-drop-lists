@@ -156,8 +156,7 @@ angular.module('dndLists', [])
      * the dropped element correctly. If you want your list to be sortable, also add the dnd-draggable
      * directive to your li element(s). Both the dnd-list and it's direct children must have position: relative
      * CSS style, otherwise the positioning algorithm will not be able to determine the correct placeholder
-     * position in all browsers. If you use nested dnd-lists, make sure that all elements excecpt for the
-     * dnd-lists and it's direct children have the pointer-events: none CSS style.
+     * position in all browsers.
      *
      * Attributes:
      * - dnd-list           Required attribute. The value has to be the array in which the data of the
@@ -210,17 +209,25 @@ angular.module('dndLists', [])
                     element.append(placeholder);
                 }
 
-                if (event.target.parentNode === listNode && event.target !== placeholderNode) {
-                    // The element is being dragged over one of our child nodes. Now we have
-                    // to decide at which position to show the placeholder: If the mouse pointer
-                    // is in the upper half of the child element, we place it before the child
-                    // element, otherwise below it. In Chrome we can just use offsetY, but in
-                    // Firefox we have to use layerY, which only works if the child element has
-                    // position relative. In IE this branch is never reached because the dragover
-                    // event is only fired for the listNode, not for it's children
-                    var beforeOrAfter = (event.offsetY || event.layerY) < event.target.offsetHeight / 2;
-                    listNode.insertBefore(placeholderNode, beforeOrAfter ? event.target : event.target.nextSibling);
-                } else if (event.target === listNode) {
+                if (event.target !== listNode) {
+                    // Try to find the node direct directly below the list node.
+                    var listItemNode = event.target;
+                    while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
+                        listItemNode = listItemNode.parentNode;
+                    }
+
+                    if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
+                        // The element is being dragged over one of our child nodes. Now we have
+                        // to decide at which position to show the placeholder: If the mouse pointer
+                        // is in the upper half of the child element, we place it before the child
+                        // element, otherwise below it. In Chrome we can just use offsetY, but in
+                        // Firefox we have to use layerY, which only works if the child element has
+                        // position relative. In IE this branch is never reached because the dragover
+                        // event is only fired for the listNode, not for it's children
+                        var beforeOrAfter = (event.offsetY || event.layerY) < listItemNode.offsetHeight / 2;
+                        listNode.insertBefore(placeholderNode, beforeOrAfter ? listItemNode : listItemNode.nextSibling);
+                    }
+                } else {
                     // This branch is reached when we are dragging directly over the list element.
                     // Usually we wouldn't need to do anything here, but the IE does not fire it's
                     // events for the child element, only for the list directly. Therefore we repeat

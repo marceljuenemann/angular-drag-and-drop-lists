@@ -56,7 +56,7 @@ Use the dnd-draggable directive to make your element draggable
 * `dndDraggingSource` This class will be added to the element after the drag operation was started, meaning it only affects the original element that is still at it's source position, and not the "element" that the user is dragging with his mouse pointer
 
 ### dnd-list directive
-Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single li element as child with the ng-repeat directive. If you don't do that, we will not be able to position the dropped element correctly. If you want your list to be sortable, also add the dnd-draggable directive to your li element(s). Both the dnd-list and it's direct children must have position: relative CSS style, otherwise the positioning algorithm will not be able to determine the correct placeholder position in all browsers. If you use nested dnd-lists, make sure that all elements excecpt for the dnd-lists and it's direct children have the pointer-events: none CSS style.
+Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single li element as child with the ng-repeat directive. If you don't do that, we will not be able to position the dropped element correctly. If you want your list to be sortable, also add the dnd-draggable directive to your li element(s). Both the dnd-list and it's direct children must have position: relative CSS style, otherwise the positioning algorithm will not be able to determine the correct placeholder position in all browsers.
 
 **Attributes**
 * `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted.
@@ -68,19 +68,15 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 * `dndDragover` This class will be added to the list while an element is being dragged over the list.
 
 ### Required CSS styles 
-* `pointer-events: none` With nested lists it's very important that **only the dnd-list and it's children** react to mouse events.
-* `position: relative` Both the dnd-list and it's children require this, so that the directive can determine the mouse position relative to the list and thus calculate the correct drop position.
+Both the dnd-list and it's children require relative positioning, so that the directive can determine the mouse position relative to the list and thus calculate the correct drop position.
 
 <pre>
-ul[dnd-list] * { 
-    pointer-events: none; 
-}
-
 ul[dnd-list], ul[dnd-list] > li { 
-    pointer-events: auto;
     position: relative;
 }
 </pre>
+
+*Since 1.2.0 `pointer-events: none` is no longer required*
 
 ### Example
 
