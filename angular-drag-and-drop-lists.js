@@ -169,30 +169,37 @@ angular.module('dndLists', [])
    * determine the correct placeholder position in all browsers.
    *
    * Attributes:
-   * - dnd-list            Required attribute. The value has to be the array in which the data of
-   *                       the dropped element should be inserted.
-   * - dnd-allowed-types   Optional array of allowed item types. When used, only items that had a
-   *                       matching dnd-type attribute will be dropable.
-   * - dnd-disable-if      Optional boolean expresssion. When it evaluates to true, no dropping into
-   *                       the list is possible. Note that this also disables rearranging items
-   *                       inside the list.
-   * - dnd-horizontal-list Optional boolean expresssion. When it evaluates to true, the positioning
-   *                       algorithm will use the left and right halfs of the list items instead of
-   *                       the upper and lower halfs.
-   * - dnd-dragover        Optional expression that is invoked when an element is dragged over the
-   *                       list. If the expression is set, but does not return true, the element is
-   *                       not allowed to be dropped. The following variables will be available:
-   *                       - event: The original dragover event sent by the browser.
-   *                       - index: The position in the list at which the element would be dropped.
-   *                       - type: The dnd-type set on the dnd-draggable, or undefined if unset.
-   * - dnd-drop            Optional expression that is invoked when an element is dropped over the
-   *                       list. If the expression is set, it must return the object that will be
-   *                       inserted into the list. If it returns false, the drop will be aborted and
-   *                       the drop event is propagated. The following variables will be available:
-   *                       - event: The original dragover event sent by the browser.
-   *                       - index: The position in the list at which the element would be dropped.
-   *                       - item: The transferred object.
-   *                       - type: The dnd-type set on the dnd-draggable, or undefined if unset.
+   * - dnd-list             Required attribute. The value has to be the array in which the data of
+   *                        the dropped element should be inserted.
+   * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
+   *                        matching dnd-type attribute will be dropable.
+   * - dnd-disable-if       Optional boolean expresssion. When it evaluates to true, no dropping
+   *                        into the list is possible. Note that this also disables rearranging
+   *                        items inside the list.
+   * - dnd-horizontal-list  Optional boolean expresssion. When it evaluates to true, the positioning
+   *                        algorithm will use the left and right halfs of the list items instead of
+   *                        the upper and lower halfs.
+   * - dnd-dragover         Optional expression that is invoked when an element is dragged over the
+   *                        list. If the expression is set, but does not return true, the element is
+   *                        not allowed to be dropped. The following variables will be available:
+   *                        - event: The original dragover event sent by the browser.
+   *                        - index: The position in the list at which the element would be dropped.
+   *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
+   * - dnd-drop             Optional expression that is invoked when an element is dropped over the
+   *                        list. If the expression is set, it must return the object that will be
+   *                        inserted into the list. If it returns false, the drop will be aborted
+   *                        and the event is propagated. The following variables will be available:
+   *                        - event: The original dragover event sent by the browser.
+   *                        - index: The position in the list at which the element would be dropped.
+   *                        - item: The transferred object.
+   *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
+   * - dnd-external-sources Optional boolean expression. When it evaluates to true, the list accepts
+   *                        drops from sources outside of the current browser tab. This allows to
+   *                        drag and drop accross different browser tabs. Note that this will allow
+   *                        to drop arbitrary text into the list, thus it is highly recommended to
+   *                        implement the dnd-drop callback to check the incoming element for
+   *                        sanity. Furthermore, the dnd-type of external sources can not be
+   *                        determined, therefore do not rely on restrictions of dnd-allowed-type.
    *
    * CSS classes:
    * - dndPlaceholder      When an element is dragged over the list, a new placeholder child element
@@ -209,7 +216,8 @@ angular.module('dndLists', [])
       var placeholderNode = placeholder[0];
       var listNode = element[0];
 
-      var horizontal = attr.dndHorizontalList ? scope.$eval(attr.dndHorizontalList) : false;
+      var horizontal = attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList);
+      var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
 
       /**
        * The dragover event is triggered "every few hundred milliseconds" while an element
@@ -269,9 +277,7 @@ angular.module('dndLists', [])
         // At this point we invoke the callback, which still can disallow the drop.
         // We can't do this earlier because we want to pass the index of the placeholder.
         if (attr.dndDragover && !invokeCallback(attr.dndDragover, event)) {
-          placeholder.remove();
-          element.removeClass("dndDragover");
-          return true;
+          return stopDragover();
         }
 
         element.addClass("dndDragover");
@@ -292,16 +298,19 @@ angular.module('dndLists', [])
 
         // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
         // the "Text" drag type will be converted to text/plain, but IE does not do that.
-        var transferredObject = JSON.parse(event.dataTransfer.getData("Text")
-                        || event.dataTransfer.getData("text/plain"));
+        var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
+        var transferredObject;
+        try {
+          transferredObject = JSON.parse(data);
+        } catch(e) {
+          return stopDragover();
+        }
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         if (attr.dndDrop) {
           transferredObject = invokeCallback(attr.dndDrop, event, transferredObject);
           if (!transferredObject) {
-            placeholder.remove();
-            element.removeClass("dndDragover");
-            return true;
+            return stopDragover();
           }
         }
 
@@ -322,11 +331,9 @@ angular.module('dndLists', [])
         }
 
         // Clean up
-        placeholder.remove();
-        element.removeClass("dndDragover");
         event.preventDefault();
         event.stopPropagation();
-        return false;
+        return !stopDragover();
       });
 
       /**
@@ -378,14 +385,14 @@ angular.module('dndLists', [])
        */
       function isDropAllowed(event) {
         // Disallow drop if it comes from an external source.
-        if (!dndDragTypeWorkaround.isDragging) return false;
+        if (!dndDragTypeWorkaround.isDragging && !externalSources) return false;
 
         // Check mimetype. Usually we would use a custom drag type instead of Text, but IE doesn't
         // support that.
         if (!hasTextMimetype(event.dataTransfer.types)) return false;
 
         // Now check the dnd-allowed-types against the type of the incoming element
-        if (attr.dndAllowedTypes) {
+        if (attr.dndAllowedTypes && dndDragTypeWorkaround.isDragging) {
           var allowed = scope.$eval(attr.dndAllowedTypes);
           if (angular.isArray(allowed) && allowed.indexOf(dndDragTypeWorkaround.dragType) === -1) {
             return false;
@@ -399,6 +406,15 @@ angular.module('dndLists', [])
       }
 
       /**
+       * Small helper function that cleans up if we aborted a drop.
+       */
+      function stopDragover() {
+        placeholder.remove();
+        element.removeClass("dndDragover");
+        return true;
+      }
+
+      /**
        * Invokes a callback with some interesting parameters and returns the callbacks return value.
        */
       function invokeCallback(expression, event, item) {
@@ -406,7 +422,8 @@ angular.module('dndLists', [])
           event: event,
           index: getPlaceholderIndex(),
           item: item || undefined,
-          type: dndDragTypeWorkaround.dragType
+          external: !dndDragTypeWorkaround.isDragging,
+          type: dndDragTypeWorkaround.isDragging ? dndDragTypeWorkaround.dragType : undefined
         });
       }
 
