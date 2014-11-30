@@ -15,7 +15,8 @@ angular.module('dndLists', [])
    * - dnd-draggable      Required attribute. The value has to be an object that represents the data
    *                      of the element. In case of a drag and drop operation the object will be
    *                      serialized and unserialized on the receiving end.
-   * - dnd-selected       Callback that is invoked when the element was clicked but not dragged
+   * - dnd-selected       Callback that is invoked when the element was clicked but not dragged.
+   *                      The original click event will be provided in the local event variable.
    * - dnd-effect-allowed Use this attribute to limit the operations that can be performed. Options:
    *                      - "move": The drag operation will move the element. This is the default.
    *                      - "copy": The drag operation will copy the element. Shows a copy cursor.
@@ -29,9 +30,13 @@ angular.module('dndLists', [])
    *                        actively support it yet, so use it at your own risk.
    * - dnd-moved          Callback that is invoked when the element was moved. Usually you will
    *                      remove your element from the original list in this callback, since the
-   *                      directive is not doing that for you automatically.
+   *                      directive is not doing that for you automatically. The original dragend
+   *                      event will be provided in the local event variable.
    * - dnd-copied         Same as dnd-moved, just that it is called when the element was copied
-   *                      instead of moved.
+   *                      instead of moved. The original dragend event will be provided in the local
+   *                      event variable.
+   * - dnd-dragstart      Callback that is invoked when the element was dragged. The original
+   *                      dragstart event will be provided in the local event variable.
    * - dnd-type           Use this attribute if you have different kinds of items in your
    *                      application and you want to limit which items can be dropped into which
    *                      lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute
@@ -93,6 +98,9 @@ angular.module('dndLists', [])
         // typename, but we have to use "Text" there to support IE
         dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
+        // Invoke callback
+        $parse(attr.dndDragstart)(scope, {event: event});
+
         event.stopPropagation();
       });
 
@@ -112,11 +120,11 @@ angular.module('dndLists', [])
         scope.$apply(function() {
           switch (dropEffect) {
             case "move":
-              $parse(attr.dndMoved)(scope);
+              $parse(attr.dndMoved)(scope, {event: event});
               break;
 
             case "copy":
-              $parse(attr.dndCopied)(scope);
+              $parse(attr.dndCopied)(scope, {event: event});
               break;
           }
         });
@@ -136,7 +144,7 @@ angular.module('dndLists', [])
         event = event.originalEvent || event;
 
         scope.$apply(function() {
-          $parse(attr.dndSelected)(scope);
+          $parse(attr.dndSelected)(scope, {event: event});
         });
 
         event.stopPropagation();

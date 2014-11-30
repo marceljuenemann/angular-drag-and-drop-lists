@@ -3,6 +3,11 @@
  */
 angular.module("demo").controller("AdvancedDemoController", function($scope) {
 
+    $scope.logEvent = function(message, event) {
+        console.log(message, '(triggered by the following', event.type, 'event)');
+        console.log(event);
+    }
+
     $scope.model = [];
 
     // Initialize model

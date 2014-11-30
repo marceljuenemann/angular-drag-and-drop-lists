@@ -4,7 +4,10 @@
     <li ng-repeat="items in containers"
         dnd-draggable="items"
         dnd-type="'containerType'"
-        dnd-moved="containers.splice($index, 1)">
+        dnd-effect-allowed="copyMove"
+        dnd-dragstart="logEvent('Started to drag a container', event)"
+        dnd-moved="containers.splice($index, 1); logEvent('Container moved', event)"
+        dnd-copied="logEvent('Container copied', event)">
         <div class="container-element box box-blue">
             <h3>Container</h3>
             <ul dnd-list="items"
@@ -14,7 +17,10 @@
                 <li ng-repeat="item in items"
                     dnd-draggable="item"
                     dnd-type="'itemType'"
-                    dnd-moved="items.splice($index, 1)">
+                    dnd-effect-allowed="copyMove"
+                    dnd-dragstart="logEvent('Started to drag an item', event)"
+                    dnd-moved="items.splice($index, 1); logEvent('Item moved', event)"
+                    dnd-copied="logEvent('Item copied', event)">
                     {{item.label}}
                 </li>
             </ul>
