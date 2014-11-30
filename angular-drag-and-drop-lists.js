@@ -196,12 +196,16 @@ angular.module('dndLists', [])
                 if (attr.dndAllowedTypes) {
                     var allowed = scope.$eval(attr.dndAllowedTypes);
                     if (angular.isArray(allowed) && allowed.indexOf(dndDragTypeWorkaround.dragType) === -1) {
+                        event.stopPropagation();
                         return true;
                     }
                 }
 
                 // Check whether droping is disabled completely
-                if (attr.dndDisableIf && scope.$eval(attr.dndDisableIf)) return true;
+                if (attr.dndDisableIf && scope.$eval(attr.dndDisableIf)) {
+                    event.stopPropagation();
+                    return true;
+                }
 
                 // First of all, make sure that the placeholder is shown
                 // This is especially important if the list is empty
