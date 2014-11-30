@@ -1,6 +1,3 @@
-/**
- * The controller doesn't do much more than setting the initial data model
- */
 angular.module("demo").controller("AdvancedDemoController", function($scope) {
 
     $scope.dragoverCallback = function(event, index, external, type) {
