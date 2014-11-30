@@ -189,7 +189,7 @@ angular.module('dndLists', [])
    *                        list. If the expression is set, it must return the object that will be
    *                        inserted into the list. If it returns false, the drop will be aborted
    *                        and the event is propagated. The following variables will be available:
-   *                        - event: The original dragover event sent by the browser.
+   *                        - event: The original drop event sent by the browser.
    *                        - index: The position in the list at which the element would be dropped.
    *                        - item: The transferred object.
    *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
