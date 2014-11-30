@@ -202,10 +202,10 @@ angular.module('dndLists', [])
    *                        determined, therefore do not rely on restrictions of dnd-allowed-type.
    *
    * CSS classes:
-   * - dndPlaceholder      When an element is dragged over the list, a new placeholder child element
-   *                       will be added. This element is of type li and has the class
-   *                       dndPlaceholder set.
-   * - dndDragover         Will be added to the list while an element is dragged over the list.
+   * - dndPlaceholder       When an element is dragged over the list, a new placeholder child
+   *                        element will be added. This element is of type li and has the class
+   *                        dndPlaceholder set.
+   * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
   .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
                  function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
@@ -256,12 +256,12 @@ angular.module('dndLists', [])
           // events for the child element, only for the list directly. Therefore we repeat
           // the positioning algorithm for IE here.
           if (isMouseInFirstHalf(event, placeholderNode, true)) {
-            // Check if we should move the placeholder element one spot towards the top
+            // Check if we should move the placeholder element one spot towards the top.
             // Note that display none elements will have offsetTop and offsetHeight set to
-            // zero, therefore we need a special check for them
+            // zero, therefore we need a special check for them.
             while (placeholderNode.previousElementSibling
-                 && (placeholderNode.previousElementSibling.offsetHeight === 0
-                   || isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true))) {
+                 && (isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true)
+                 || placeholderNode.previousElementSibling.offsetHeight === 0)) {
               listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
             }
           } else {
@@ -324,16 +324,17 @@ angular.module('dndLists', [])
         // We have to determine the actual effect manually from the allowed effects
         if (event.dataTransfer.dropEffect === "none") {
           dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed === "copyMove"
-                             ? (event.ctrlKey ? "copy" : "move")
-                             :  event.dataTransfer.effectAllowed;
+                                             ? (event.ctrlKey ? "copy" : "move")
+                                             :  event.dataTransfer.effectAllowed;
         } else {
           dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
         }
 
         // Clean up
+        stopDragover();
         event.preventDefault();
         event.stopPropagation();
-        return !stopDragover();
+        return false;
       });
 
       /**
@@ -365,7 +366,7 @@ angular.module('dndLists', [])
        */
       function isMouseInFirstHalf(event, targetNode, relativeToParent) {
         var mousePointer = horizontal ? (event.offsetX || event.layerX)
-                        : (event.offsetY || event.layerY);
+                                      : (event.offsetY || event.layerY);
         var targetSize = horizontal ? targetNode.offsetWidth : targetNode.offsetHeight;
         var targetPosition = horizontal ? targetNode.offsetLeft : targetNode.offsetTop;
         targetPosition = relativeToParent ? targetPosition : 0;
@@ -384,14 +385,15 @@ angular.module('dndLists', [])
        * Checks various conditions that must be fulfilled for a drop to be allowed
        */
       function isDropAllowed(event) {
-        // Disallow drop if it comes from an external source.
+        // Disallow drop from external source unless it's allowed explicitly.
         if (!dndDragTypeWorkaround.isDragging && !externalSources) return false;
 
         // Check mimetype. Usually we would use a custom drag type instead of Text, but IE doesn't
         // support that.
         if (!hasTextMimetype(event.dataTransfer.types)) return false;
 
-        // Now check the dnd-allowed-types against the type of the incoming element
+        // Now check the dnd-allowed-types against the type of the incoming element. For drops from
+        // external sources we don't know the type, so it will need to be checked via dnd-drop.
         if (attr.dndAllowedTypes && dndDragTypeWorkaround.isDragging) {
           var allowed = scope.$eval(attr.dndAllowedTypes);
           if (angular.isArray(allowed) && allowed.indexOf(dndDragTypeWorkaround.dragType) === -1) {
@@ -447,8 +449,7 @@ angular.module('dndLists', [])
    * "Text" and "URL". That means we can not know whether the data comes from one of our elements or
    * is just some other data like a text selection. As a workaround we save the isDragging flag in
    * here. When a dropover event occurs, we only allow the drop if we are already dragging, because
-   * that means the element is ours. Note that this workaround also prevents the cool feature of
-   * dragging list elements accross browser tabs.
+   * that means the element is ours.
    */
   .factory('dndDragTypeWorkaround', function(){ return {} })
 
