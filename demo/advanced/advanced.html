@@ -1,6 +1,8 @@
 <h3>Dropzone {{$index + 1}}</h3>
 <ul dnd-list="containers"
-    dnd-allowed-types="['containerType']">
+    dnd-allowed-types="['containerType']"
+    dnd-dragover="dragoverCallback(event, index, type)"
+    dnd-drop="dropCallback(event, index, item, type)">
     <li ng-repeat="items in containers"
         dnd-draggable="items"
         dnd-type="'containerType'"
@@ -13,6 +15,8 @@
             <ul dnd-list="items"
                 dnd-allowed-types="['itemType']"
                 dnd-horizontal-list="true"
+                dnd-dragover="dragoverCallback(event, index, type)"
+                dnd-drop="dropCallback(event, index, item, type)"
                 class="itemlist">
                 <li ng-repeat="item in items"
                     dnd-draggable="item"
