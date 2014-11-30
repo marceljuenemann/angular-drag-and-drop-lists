@@ -179,6 +179,20 @@ angular.module('dndLists', [])
    * - dnd-horizontal-list Optional boolean expresssion. When it evaluates to true, the positioning
    *                       algorithm will use the left and right halfs of the list items instead of
    *                       the upper and lower halfs.
+   * - dnd-dragover        Optional expression that is invoked when an element is dragged over the
+   *                       list. If the expression is set, but does not return true, the element is
+   *                       not allowed to be dropped. The following variables will be available:
+   *                       - event: The original dragover event sent by the browser.
+   *                       - index: The position in the list at which the element would be dropped.
+   *                       - type: The dnd-type set on the dnd-draggable, or undefined if unset.
+   * - dnd-drop            Optional expression that is invoked when an element is dropped over the
+   *                       list. If the expression is set, it must return the object that will be
+   *                       inserted into the list. If it returns false, the drop will be aborted and
+   *                       the drop event is propagated. The following variables will be available:
+   *                       - event: The original dragover event sent by the browser.
+   *                       - index: The position in the list at which the element would be dropped.
+   *                       - item: The transferred object.
+   *                       - type: The dnd-type set on the dnd-draggable, or undefined if unset.
    *
    * CSS classes:
    * - dndPlaceholder      When an element is dragged over the list, a new placeholder child element
@@ -186,8 +200,8 @@ angular.module('dndLists', [])
    *                       dndPlaceholder set.
    * - dndDragover         Will be added to the list while an element is dragged over the list.
    */
-  .directive('dndList', ['$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                 function($timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
@@ -252,6 +266,14 @@ angular.module('dndLists', [])
           }
         }
 
+        // At this point we invoke the callback, which still can disallow the drop.
+        // We can't do this earlier because we want to pass the index of the placeholder.
+        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event)) {
+          placeholder.remove();
+          element.removeClass("dndDragover");
+          return true;
+        }
+
         element.addClass("dndDragover");
         event.preventDefault();
         event.stopPropagation();
@@ -273,14 +295,20 @@ angular.module('dndLists', [])
         var transferredObject = JSON.parse(event.dataTransfer.getData("Text")
                         || event.dataTransfer.getData("text/plain"));
 
-        // Retrieve the JSON array in which we are going to insert the transferred object
-        var targetArray = scope.$eval(attr.dndList);
+        // Invoke the callback, which can transform the transferredObject and even abort the drop.
+        if (attr.dndDrop) {
+          transferredObject = invokeCallback(attr.dndDrop, event, transferredObject);
+          if (!transferredObject) {
+            placeholder.remove();
+            element.removeClass("dndDragover");
+            return true;
+          }
+        }
 
-        // We use the position of the placeholder node to determine at which
-        // position of the array we will insert the object
-        var placeholderIndex = Array.prototype.indexOf.call(listNode.children, placeholderNode);
+        // Retrieve the JSON array and insert the transferred object into it.
+        var targetArray = scope.$eval(attr.dndList);
         scope.$apply(function() {
-          targetArray.splice(placeholderIndex, 0, transferredObject);
+          targetArray.splice(getPlaceholderIndex(), 0, transferredObject);
         });
 
         // In Chrome on Windows the dropEffect will always be none...
@@ -338,6 +366,14 @@ angular.module('dndLists', [])
       }
 
       /**
+       * We use the position of the placeholder node to determine at which position of the array the
+       * object needs to be inserted
+       */
+      function getPlaceholderIndex() {
+        return Array.prototype.indexOf.call(listNode.children, placeholderNode);
+      }
+
+      /**
        * Checks various conditions that must be fulfilled for a drop to be allowed
        */
       function isDropAllowed(event) {
@@ -360,6 +396,18 @@ angular.module('dndLists', [])
         if (attr.dndDisableIf && scope.$eval(attr.dndDisableIf)) return false;
 
         return true;
+      }
+
+      /**
+       * Invokes a callback with some interesting parameters and returns the callbacks return value.
+       */
+      function invokeCallback(expression, event, item) {
+        return $parse(expression)(scope, {
+          event: event,
+          index: getPlaceholderIndex(),
+          item: item || undefined,
+          type: dndDragTypeWorkaround.dragType
+        });
       }
 
       /**
