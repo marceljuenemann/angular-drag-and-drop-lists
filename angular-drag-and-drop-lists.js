@@ -296,6 +296,10 @@ angular.module('dndLists', [])
 
         if (!isDropAllowed(event)) return true;
 
+        // The default behavior in Firefox is to interpret the dropped element as URL and
+        // forward to it. We want to prevent that even if our drop is aborted.
+        event.preventDefault();
+
         // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
         // the "Text" drag type will be converted to text/plain, but IE does not do that.
         var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
@@ -332,7 +336,6 @@ angular.module('dndLists', [])
 
         // Clean up
         stopDragover();
-        event.preventDefault();
         event.stopPropagation();
         return false;
       });
