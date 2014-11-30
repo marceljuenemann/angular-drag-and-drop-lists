@@ -230,7 +230,7 @@ angular.module('dndLists', [])
             // Note that display none elements will have offsetTop and offsetHeight set to
             // zero, therefore we need a special check for them
             while (placeholderNode.previousElementSibling
-                 && (isElementHidden(placeholderNode.previousElementSibling)
+                 && (placeholderNode.previousElementSibling.offsetHeight === 0
                    || isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true))) {
               listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
             }
@@ -327,10 +327,6 @@ angular.module('dndLists', [])
         var targetPosition = horizontal ? targetNode.offsetLeft : targetNode.offsetTop;
         targetPosition = relativeToParent ? targetPosition : 0;
         return mousePointer < targetPosition + targetSize / 2;
-      }
-
-      function isElementHidden(node) {
-        return (horizontal ? node.offsetWidth : node.offsetHeight) === 0;
       }
 
       /**
