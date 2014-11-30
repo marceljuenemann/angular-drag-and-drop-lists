@@ -29,10 +29,7 @@
  * browsers we can use event.offsetY for this.
  */
 .advancedDemo .dropzone li {
-    background-color: #fff;
-    border: 1px solid #ddd;
     display: block;
-    padding: 0px;
 }
 
 /**
@@ -58,7 +55,7 @@
  * while the user is dragging over it.
  */
 .advancedDemo .dropzone .dndPlaceholder {
-    background-color: #ddd;
+    background-color: #ddd !important;
     min-height: 42px;
     display: block;
     position: relative;
@@ -66,8 +63,21 @@
 
 /***************************** Element type specific styles *****************************/
 
-.advancedDemo .dropzone .item {
-    padding: 10px 15px;
+.advancedDemo .dropzone .itemlist {
+}
+
+.advancedDemo .dropzone .itemlist > li {
+    background-color: #337ab7;
+    border: none;
+    border-radius: .25em;
+    color: #fff;
+    float: left;
+    font-weight: 700;
+    height: 50px;
+    margin: 5px;
+    padding: 3px;
+    text-align: center;
+    width: 50px;
 }
 
 .advancedDemo .dropzone .container-element {

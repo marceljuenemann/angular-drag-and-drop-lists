@@ -3,19 +3,19 @@
  */
 angular.module("demo").controller("AdvancedDemoController", function($scope) {
 
-    $scope.model = [
-        [
-            ['Item 1', 'Item 2', 'Item 3'],
-            ['Item 4', 'Item 5', 'Item 6']
-        ],
-        [
-            ['Item 7', 'Item 8', 'Item 9'],
-            ['Item 10', 'Item 11', 'Item 12']
-        ],
-        [
-            ['Item 13', 'Item 14', 'Item 15'],
-            ['Item 16', 'Item 17', 'Item 18']
-        ]];
+    $scope.model = [];
+
+    // Initialize model
+    var id = 10;
+    for (var i = 0; i < 3; ++i) {
+        $scope.model.push([]);
+        for (var j = 0; j < 2; ++j) {
+            $scope.model[i].push([]);
+            for (var k = 0; k < 7; ++k) {
+                $scope.model[i][j].push({label: 'Item ' + id++});
+            }
+        }
+    }
 
     $scope.$watch('model', function(model) {
         $scope.modelAsJson = angular.toJson(model, true);
