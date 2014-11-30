@@ -327,9 +327,12 @@ angular.module('dndLists', [])
         // In Chrome on Windows the dropEffect will always be none...
         // We have to determine the actual effect manually from the allowed effects
         if (event.dataTransfer.dropEffect === "none") {
-          dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed === "copyMove"
-                                             ? (event.ctrlKey ? "copy" : "move")
-                                             :  event.dataTransfer.effectAllowed;
+          if (event.dataTransfer.effectAllowed === "copy" ||
+              event.dataTransfer.effectAllowed === "move") {
+            dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed;
+          } else {
+            dndDropEffectWorkaround.dropEffect = event.ctrlKey ? "copy" : "move";
+          }
         } else {
           dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
         }
