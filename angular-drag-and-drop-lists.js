@@ -196,25 +196,7 @@ angular.module('dndLists', [])
       element.on('dragover', function(event) {
         event = event.originalEvent || event;
 
-        // Disallow drop if it comes from an external source or is not text.
-        // Usually we would use a custom drag type for this, but IE doesn't support that.
-        if (!dndDragTypeWorkaround.isDragging) return true;
-        if (!isDropAllowed(event.dataTransfer.types)) return true;
-
-        // Now check the dnd-allowed-types against the type of the incoming element
-        if (attr.dndAllowedTypes) {
-          var allowed = scope.$eval(attr.dndAllowedTypes);
-          if (angular.isArray(allowed) && allowed.indexOf(dndDragTypeWorkaround.dragType) === -1) {
-            event.stopPropagation();
-            return true;
-          }
-        }
-
-        // Check whether droping is disabled completely
-        if (attr.dndDisableIf && scope.$eval(attr.dndDisableIf)) {
-          event.stopPropagation();
-          return true;
-        }
+        if (!isDropAllowed(event)) return true;
 
         // First of all, make sure that the placeholder is shown
         // This is especially important if the list is empty
@@ -275,6 +257,8 @@ angular.module('dndLists', [])
        */
       element.on('drop', function(event) {
         event = event.originalEvent || event;
+
+        if (!isDropAllowed(event)) return true;
 
         // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
         // the "Text" drag type will be converted to text/plain, but IE does not do that.
@@ -350,10 +334,35 @@ angular.module('dndLists', [])
       }
 
       /**
+       * Checks various conditions that must be fulfilled for a drop to be allowed
+       */
+      function isDropAllowed(event) {
+        // Disallow drop if it comes from an external source.
+        if (!dndDragTypeWorkaround.isDragging) return false;
+
+        // Check mimetype. Usually we would use a custom drag type instead of Text, but IE doesn't
+        // support that.
+        if (!hasTextMimetype(event.dataTransfer.types)) return false;
+
+        // Now check the dnd-allowed-types against the type of the incoming element
+        if (attr.dndAllowedTypes) {
+          var allowed = scope.$eval(attr.dndAllowedTypes);
+          if (angular.isArray(allowed) && allowed.indexOf(dndDragTypeWorkaround.dragType) === -1) {
+            return false;
+          }
+        }
+
+        // Check whether droping is disabled completely
+        if (attr.dndDisableIf && scope.$eval(attr.dndDisableIf)) return false;
+
+        return true;
+      }
+
+      /**
        * Check if the dataTransfer object contains a drag type that we can handle. In old versions
        * of IE the types collection will not even be there, so we just assume a drop is possible.
        */
-      function isDropAllowed(types) {
+      function hasTextMimetype(types) {
         if (!types) return true;
         for (var i = 0; i < types.length; i++) {
           if (types[i] === "Text" || types[i] === "text/plain") return true;
