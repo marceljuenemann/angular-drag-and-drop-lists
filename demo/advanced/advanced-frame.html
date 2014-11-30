@@ -1,0 +1,16 @@
+<h1>Demo: Advanced Features</h1>
+
+<div class="alert alert-success">
+    TODO
+</div>
+
+<div class="advancedDemo row">
+    <div ng-repeat="containers in model" class="col-md-4">
+        <div class="dropzone box box-yellow" ng-include="'advanced/advanced.html'"></div>
+    </div>
+</div>
+
+<div view-source="advanced"></div>
+
+<h2>Generated Model</h2>
+<pre>{{modelAsJson}}</pre>
