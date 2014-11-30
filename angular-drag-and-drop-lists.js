@@ -159,17 +159,19 @@ angular.module('dndLists', [])
      * position in all browsers.
      *
      * Attributes:
-     * - dnd-list           Required attribute. The value has to be the array in which the data of the
-     *                      dropped element should be inserted.
-     * - dnd-allowed-types  Optional array of allowed item types. When used, only items that had a matching
-     *                      dnd-type attribute will be dropable.
-     * - dnd-disable-if     Optional boolean expresssion. When it evaluates to true, no dropping into
-     *                      the list is possible. Note that this also disables rearranging items inside the list.
+     * - dnd-list            Required attribute. The value has to be the array in which the data of the
+     *                       dropped element should be inserted.
+     * - dnd-allowed-types   Optional array of allowed item types. When used, only items that had a matching
+     *                       dnd-type attribute will be dropable.
+     * - dnd-disable-if      Optional boolean expresssion. When it evaluates to true, no dropping into
+     *                       the list is possible. Note that this also disables rearranging items inside the list.
+     * - dnd-horizontal-list Optional boolean expresssion. When it evaluates to true, the positioning algorithm
+     *                       will use the left and right halfs of the list items instead of the upper and lower halfs.
      *
      * CSS classes:
-     * - dndPlaceholder     When an element is dragged over the list, a new placeholder child element will be
-     *                      added. This element is of type li and has the class dndPlaceholder set.
-     * - dndDragover        This class will be added to the list while an element is being dragged over the list.
+     * - dndPlaceholder      When an element is dragged over the list, a new placeholder child element will be
+     *                       added. This element is of type li and has the class dndPlaceholder set.
+     * - dndDragover         This class will be added to the list while an element is being dragged over the list.
      */
     .directive('dndList', ['$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
                    function($timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
@@ -179,6 +181,8 @@ angular.module('dndLists', [])
             var placeholder = angular.element("<li class='dndPlaceholder'></li>");
             var placeholderNode = placeholder[0];
             var listNode = element[0];
+
+            var horizontal = attr.dndHorizontalList ? scope.$eval(attr.dndHorizontalList) : false;
 
             /**
              * The dragover event is triggered "every few hundred milliseconds" while an element
@@ -221,42 +225,32 @@ angular.module('dndLists', [])
                     }
 
                     if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
-                        // The element is being dragged over one of our child nodes. Now we have
-                        // to decide at which position to show the placeholder: If the mouse pointer
-                        // is in the upper half of the child element, we place it before the child
-                        // element, otherwise below it. In Chrome we can just use offsetY, but in
-                        // Firefox we have to use layerY, which only works if the child element has
-                        // position relative. In IE this branch is never reached because the dragover
-                        // event is only fired for the listNode, not for it's children
-                        var beforeOrAfter = (event.offsetY || event.layerY) < listItemNode.offsetHeight / 2;
-                        listNode.insertBefore(placeholderNode, beforeOrAfter ? listItemNode : listItemNode.nextSibling);
+                        // If the mouse pointer is in the upper half of the child element,
+                        // we place it before the child element, otherwise below it.
+                        if (isMouseInFirstHalf(event, listItemNode)) {
+                            listNode.insertBefore(placeholderNode, listItemNode);
+                        } else {
+                            listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+                        }
                     }
                 } else {
                     // This branch is reached when we are dragging directly over the list element.
                     // Usually we wouldn't need to do anything here, but the IE does not fire it's
                     // events for the child element, only for the list directly. Therefore we repeat
                     // the positioning algorithm for IE here.
-                    // The logic is the same as above: If the mouse pointer is in the upper half of
-                    // an element, we position the placeholder above that element. The only difference
-                    // is that this time the mouse position is relative to the listNode, and not to
-                    // the child element.
-                    // The code could be simplified by simply looping through all elements, but this
-                    // implementation is more efficent because it usually only checks one neighbor element
-                    if (event.offsetY < placeholderNode.offsetTop) {
+                    if (isMouseInFirstHalf(event, placeholderNode, true)) {
                         // Check if we should move the placeholder element one spot towards the top
                         // Note that display none elements will have offsetTop and offsetHeight set to
                         // zero, therefore we need a special check for them
                         while (placeholderNode.previousElementSibling
-                               && (placeholderNode.previousElementSibling.offsetHeight === 0
-                                   || event.offsetY < placeholderNode.previousElementSibling.offsetTop
-                                                    + placeholderNode.previousElementSibling.offsetHeight / 2)) {
+                               && (isElementHidden(placeholderNode.previousElementSibling)
+                                   || isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true))) {
                             listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
                         }
                     } else {
                         // Check if we should move the placeholder element one spot towards the bottom
                         while (placeholderNode.nextElementSibling &&
-                               event.offsetY > placeholderNode.nextElementSibling.offsetTop
-                                             + placeholderNode.nextElementSibling.offsetHeight / 2) {
+                               !isMouseInFirstHalf(event, placeholderNode.nextElementSibling, true)) {
                             listNode.insertBefore(placeholderNode, placeholderNode.nextElementSibling.nextElementSibling);
                         }
                     }
@@ -327,6 +321,27 @@ angular.module('dndLists', [])
                     }
                 }, 100);
             });
+
+            /**
+             * Checks whether the mouse pointer is in the first half of the given target element.
+             *
+             * In Chrome we can just use offsetY, but in Firefox we have to use layerY, which only
+             * works if the child element has position relative. In IE the events are only triggered
+             * on the listNode instead of the listNodeItem, therefore the mouse positions are
+             * relative to the parent element of targetNode.
+             */
+            function isMouseInFirstHalf(event, targetNode, relativeToParent) {
+                var mousePointer = horizontal ? (event.offsetX || event.layerX)
+                                              : (event.offsetY || event.layerY);
+                var targetSize = horizontal ? targetNode.offsetWidth : targetNode.offsetHeight;
+                var targetPosition = horizontal ? targetNode.offsetLeft : targetNode.offsetTop;
+                targetPosition = relativeToParent ? targetPosition : 0;
+                return mousePointer < targetPosition + targetSize / 2;
+            }
+
+            function isElementHidden(node) {
+                return (horizontal ? node.offsetWidth : node.offsetHeight) === 0;
+            }
 
             /**
              * Check if the dataTransfer object contains a drag type that we can handle. In old versions of
