@@ -65,11 +65,22 @@ angular.module('dndLists', [])
     return function(scope, element, attr) {
       // Set the HTML5 draggable attribute on the element
       element.attr("draggable", "true");
-
       // If the dnd-disable-if attribute is set, we have to watch that
       if (attr.dndDisableIf) {
         scope.$watch(attr.dndDisableIf, function(disabled) {
-          element.attr("draggable", !disabled);
+
+          var userAgent = userAgent || navigator.userAgent;
+          if(userAgent.indexOf("MSIE ") > -1 || userAgent.indexOf("Trident/") > -1){
+            if(disabled){
+              element[0].removeAttribute("draggable");
+            }
+            if(!disabled){
+              element.attr("draggable", true);
+            }
+          }else{
+            element.attr("draggable", !disabled);
+          }
+
         });
       }
 
@@ -150,13 +161,6 @@ angular.module('dndLists', [])
         event.stopPropagation();
       });
 
-      /**
-       * Workaround to make element draggable in IE9
-       */
-      element.on('selectstart', function() {
-        if (this.dragDrop) this.dragDrop();
-        return false;
-      });
     };
   }])
 
