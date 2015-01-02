@@ -22,6 +22,8 @@
     "**/.*",
     "node_modules",
     "bower_components",
+    "demo",
+    "*.json",
     "test",
     "tests"
   ]
