@@ -67,8 +67,7 @@ angular.module('dndLists', [])
   .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
                       function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
     return function(scope, element, attr) {
-      // Set the HTML5 draggable attribute on the element
-      element.attr("draggable", "true");
+      var mouseTarget;
 
       // If the dnd-disable-if attribute is set, we have to watch that
       if (attr.dndDisableIf) {
