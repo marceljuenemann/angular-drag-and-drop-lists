@@ -49,6 +49,10 @@ angular.module('dndLists', [])
    *                      select text or images inside of it. Since a selection is always draggable,
    *                      this breaks your UI. You most likely want to disable user selection via
    *                      CSS (see user-select).
+   * - dnd-handle-class   Use this attribute if you want to use a different element as your drag
+   *                      handler (instead of the whole element). Add the class to your drag handle
+   *                      element and include this attribute with your class name here.  Note that
+   *                      the "drag handler" element must be a child of the draggable element.
    *
    * CSS classes:
    * - dndDragging        This class will be added to the element while the element is being
@@ -74,10 +78,22 @@ angular.module('dndLists', [])
       }
 
       /**
+       * Keep track of the mouseTarget so we can use a custom handle.
+       */
+      element.on('mousedown', function (event) {
+        mouseTarget = event.target;
+      });
+
+      /**
        * When the drag operation is started we have to prepare the dataTransfer object,
        * which is the primary way we communicate with the target element
        */
       element.on('dragstart', function(event) {
+        if (attr.dndHandleClass && !mouseTarget.classList.contains(attr.dndHandleClass)) {
+          event.preventDefault();
+          return;
+        }
+
         event = event.originalEvent || event;
 
         // Serialize the data associated with this element. IE only supports the Text drag type
