@@ -81,6 +81,13 @@ angular.module('dndLists', [])
        */
       element.on('mousedown', function (event) {
         mouseTarget = event.target;
+
+        if (!attr.dndHandleClass || mouseTarget.classList.contains(attr.dndHandleClass)) {
+          // Set the HTML5 draggable attribute on the element
+          element.attr("draggable", "true");
+        } else {
+          element.attr("draggable", "false");
+        }
       });
 
       /**
