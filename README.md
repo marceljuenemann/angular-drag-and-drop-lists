@@ -98,6 +98,11 @@ ul[dnd-list], ul[dnd-list] > li {
 
 Take a look at the code in the [Simple Lists](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/simple) example
 
+## Dev
+
+### Build/minify
+
+<pre>uglifyjs angular-drag-and-drop-lists.js -m -o angular-drag-and-drop-lists.min.js</pre> 
 
 ## License
 

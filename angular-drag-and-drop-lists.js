@@ -168,8 +168,6 @@ angular.module('dndLists', [])
         scope.$apply(function() {
           $parse(attr.dndSelected)(scope, {event: event});
         });
-
-        event.stopPropagation();
       });
 
       /**
