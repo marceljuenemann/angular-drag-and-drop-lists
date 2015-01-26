@@ -169,14 +169,6 @@ angular.module('dndLists', [])
           $parse(attr.dndSelected)(scope, {event: event});
         });
       });
-
-      /**
-       * Workaround to make element draggable in IE9
-       */
-      element.on('selectstart', function() {
-        if (this.dragDrop) this.dragDrop();
-        return false;
-      });
     };
   }])
 

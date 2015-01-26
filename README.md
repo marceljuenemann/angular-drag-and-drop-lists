@@ -24,7 +24,7 @@ If this doesn't fit your requirements, check out one of the other awesome drag &
 
 ## Supported browsers
 
-Internet Explorer 8 or lower is *not supported*, but all modern browsers are (see changelog for tested versions).
+Internet Explorer 9 or lower is *not supported*, but all modern browsers are (see changelog for tested versions).
 
 Note that **touch devices are not supported**, because the HTML5 drag & drop standard doesn't cover those.
 
