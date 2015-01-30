@@ -35,6 +35,9 @@ angular.module('dndLists', [])
    * - dnd-copied         Same as dnd-moved, just that it is called when the element was copied
    *                      instead of moved. The original dragend event will be provided in the local
    *                      event variable.
+   * - dnd-canceled       Callback that is invoked if the element was dragged but not dropped
+   *                      (canceled) instead of moved or copied. The original dragend event will
+   *                      be provided in the local event variable.
    * - dnd-dragstart      Callback that is invoked when the element was dragged. The original
    *                      dragstart event will be provided in the local event variable.
    * - dnd-type           Use this attribute if you have different kinds of items in your
@@ -125,6 +128,10 @@ angular.module('dndLists', [])
 
             case "copy":
               $parse(attr.dndCopied)(scope, {event: event});
+              break;
+
+            case "none":
+              $parse(attr.dndCanceled)(scope, {event: event});
               break;
           }
         });
