@@ -60,9 +60,19 @@ angular.module('dndLists', [])
    *                      it's source position, and not the "element" that the user is dragging with
    *                      his mouse pointer.
    */
-  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', '$cacheFactory',
+                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround,   $cacheFactory) {
+
+    // cache to manage data getting dragged and dropped
+    var cache = $cacheFactory.get('dndLists') || $cacheFactory('dndLists'),
+
+      // our data needs a unique ID; this is used to get one
+      nextBufferId = 0;
+
     return function(scope, element, attr) {
+      // data buffer id
+      var id;
+
       // Set the HTML5 draggable attribute on the element
       element.attr("draggable", "true");
 
@@ -78,10 +88,11 @@ angular.module('dndLists', [])
        * which is the primary way we communicate with the target element
        */
       element.on('dragstart', function(event) {
+        id = (nextBufferId++).toString();
         event = event.originalEvent || event;
 
-        // Serialize the data associated with this element. IE only supports the Text drag type
-        event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
+        event.dataTransfer.setData("Text", id);
+        cache.put(id, scope.$eval(attr.dndDraggable));
 
         // Only allow actions specified in dnd-effect-allowed attribute
         event.dataTransfer.effectAllowed = attr.dndEffectAllowed || "move";
@@ -99,7 +110,7 @@ angular.module('dndLists', [])
         dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
         // Invoke callback
-        $parse(attr.dndDragstart)(scope, {event: event});
+        $parse(attr.dndDragstart)(scope, {event: event, item: cache.get(id)});
 
         event.stopPropagation();
       });
@@ -120,11 +131,11 @@ angular.module('dndLists', [])
         scope.$apply(function() {
           switch (dropEffect) {
             case "move":
-              $parse(attr.dndMoved)(scope, {event: event});
+              $parse(attr.dndMoved)(scope, {event: event, item: cache.get(id)});
               break;
 
             case "copy":
-              $parse(attr.dndCopied)(scope, {event: event});
+              $parse(attr.dndCopied)(scope, {event: event, item: cache.get(id)});
               break;
           }
         });
@@ -134,6 +145,11 @@ angular.module('dndLists', [])
         element.removeClass("dndDraggingSource");
         dndDragTypeWorkaround.isDragging = false;
         event.stopPropagation();
+
+        // remove the data from the cache, but not before the drop occurs.
+        $timeout(function() {
+          cache.remove(id);
+        })
       });
 
       /**
@@ -144,7 +160,7 @@ angular.module('dndLists', [])
         event = event.originalEvent || event;
 
         scope.$apply(function() {
-          $parse(attr.dndSelected)(scope, {event: event});
+          $parse(attr.dndSelected)(scope, {event: event, item: cache.get(id)});
         });
 
         event.stopPropagation();
@@ -207,8 +223,11 @@ angular.module('dndLists', [])
    *                        dndPlaceholder set.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', '$cacheFactory',
+                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround,   $cacheFactory) {
+
+    var cache = $cacheFactory.get('dndLists') || $cacheFactory('dndLists');
+
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
@@ -302,13 +321,8 @@ angular.module('dndLists', [])
 
         // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
         // the "Text" drag type will be converted to text/plain, but IE does not do that.
-        var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
-        var transferredObject;
-        try {
-          transferredObject = JSON.parse(data);
-        } catch(e) {
-          return stopDragover();
-        }
+        var id = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
+        var transferredObject = cache.get(id);
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         if (attr.dndDrop) {
@@ -426,10 +440,11 @@ angular.module('dndLists', [])
        * Invokes a callback with some interesting parameters and returns the callbacks return value.
        */
       function invokeCallback(expression, event, item) {
+        var item = item || cache.get(event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain"));
         return $parse(expression)(scope, {
           event: event,
           index: getPlaceholderIndex(),
-          item: item || undefined,
+          item: item,
           external: !dndDragTypeWorkaround.isDragging,
           type: dndDragTypeWorkaround.isDragging ? dndDragTypeWorkaround.dragType : undefined
         });
@@ -457,7 +472,7 @@ angular.module('dndLists', [])
    * here. When a dropover event occurs, we only allow the drop if we are already dragging, because
    * that means the element is ours.
    */
-  .factory('dndDragTypeWorkaround', function(){ return {} })
+  .value('dndDragTypeWorkaround', {})
 
   /**
    * Chrome on Windows does not set the dropEffect field, which we need in dragend to determine
@@ -465,4 +480,4 @@ angular.module('dndLists', [])
    * variable. The bug report for that has been open for years:
    * https://code.google.com/p/chromium/issues/detail?id=39399
    */
-  .factory('dndDropEffectWorkaround', function(){ return {} });
+  .value('dndDropEffectWorkaround', {});

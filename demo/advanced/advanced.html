@@ -8,9 +8,9 @@
         dnd-draggable="items"
         dnd-type="'containerType'"
         dnd-effect-allowed="copyMove"
-        dnd-dragstart="logEvent('Started to drag a container', event)"
-        dnd-moved="containers.splice($index, 1); logEvent('Container moved', event)"
-        dnd-copied="logEvent('Container copied', event)">
+        dnd-dragstart="logEvent('Started to drag a container', event, item)"
+        dnd-moved="containers.splice($index, 1); logEvent('Container moved', event, item);"
+        dnd-copied="logEvent('Container copied', event, item)">
         <div class="container-element box box-blue">
             <h3>Container</h3>
             <ul dnd-list="items"
@@ -24,9 +24,9 @@
                     dnd-draggable="item"
                     dnd-type="'itemType'"
                     dnd-effect-allowed="copyMove"
-                    dnd-dragstart="logEvent('Started to drag an item', event)"
-                    dnd-moved="items.splice($index, 1); logEvent('Item moved', event)"
-                    dnd-copied="logEvent('Item copied', event)">
+                    dnd-dragstart="logEvent('Started to drag an item', event, item)"
+                    dnd-moved="items.splice($index, 1); logEvent('Item moved', event, item); item.moved()"
+                    dnd-copied="logEvent('Item copied', event, item); item.copied()">
                     {{item.label}}
                 </li>
             </ul>
