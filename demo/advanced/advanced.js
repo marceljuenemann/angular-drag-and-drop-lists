@@ -14,18 +14,33 @@ angular.module("demo").controller("AdvancedDemoController", function($scope) {
         return item;
     };
 
-    $scope.logEvent = function(message, event) {
-        console.log(message, '(triggered by the following', event.type, 'event)');
+    $scope.logEvent = function(message, event, item) {
+        console.log(message + ' (triggered by the following ' + event.type + ' event)%s',
+          (item ? ' of "' + item.label + '"': ''));
         console.log(event);
     };
 
-    $scope.logListEvent = function(action, event, index, external, type) {
+    $scope.logListEvent = function(action, event, index, external, type, item) {
         var message = external ? 'External ' : '';
         message += type + ' element is ' + action + ' position ' + index;
-        $scope.logEvent(message, event);
+        $scope.logEvent(message, event, item);
     };
 
     $scope.model = [];
+
+    var Item = function Item(label) {
+      this.label = label;
+      this.moveCount = 0;
+      this.copyCount = 0;
+    };
+
+    Item.prototype.moved = function moved() {
+      this.moveCount++;
+    };
+
+    Item.prototype.copied = function copied() {
+      this.copyCount++;
+    };
 
     // Initialize model
     var id = 10;
@@ -34,13 +49,15 @@ angular.module("demo").controller("AdvancedDemoController", function($scope) {
         for (var j = 0; j < 2; ++j) {
             $scope.model[i].push([]);
             for (var k = 0; k < 7; ++k) {
-                $scope.model[i][j].push({label: 'Item ' + id++});
+                $scope.model[i][j].push(new Item('Item ' + id++));
             }
         }
     }
 
-    $scope.$watch('model', function(model) {
-        $scope.modelAsJson = angular.toJson(model, true);
-    }, true);
+    // this will replace the $watch, which will no longer work, because the
+    // item references do not change.
+    $scope.toJson = function toJson(model) {
+      return angular.toJson(model, true);
+    };
 
 });
