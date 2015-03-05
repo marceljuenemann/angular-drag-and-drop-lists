@@ -65,6 +65,15 @@ angular.module('dndLists', [])
     return {
       controller: ['$scope', '$element', '$attrs',
            function($scope,   $element,   $attrs) {
+        var ctrl = this;
+
+        // Array of elements that should be allowed to start the drag. If the array is empty, the drag can start from
+        // anywhere inside the element.
+        this.handles = [];
+
+        // Whether one of the handles registered a mousedown event
+        this.handleGrabbed = false;
+
         // Set the HTML5 draggable attribute on the element
         $element.attr("draggable", "true");
 
@@ -81,6 +90,17 @@ angular.module('dndLists', [])
          */
         $element.on('dragstart', function(event) {
           event = event.originalEvent || event;
+
+          // Check whether any handles have been registered, and if so, if the drag started in
+          // one of them. If it started by dragging an element that is not a handle, don't let
+          // the drag actually start
+          if (ctrl.handles.length) {
+            if (!ctrl.handleGrabbed) {
+              event.preventDefault();
+              return;
+            }
+            ctrl.handleGrabbed = false; // reset for the next drag operation on this element
+          }
 
           // Serialize the data associated with this element. IE only supports the Text drag type
           event.dataTransfer.setData("Text", angular.toJson($scope.$eval($attrs.dndDraggable)));
@@ -162,6 +182,36 @@ angular.module('dndLists', [])
       }]
     };
   }])
+
+  /**
+   * Use the dnd-handle attribute to allow a drag operation to start from this element. You place
+   * the dnd-handle attribute on one or more elements inside of the draggable element.
+   */
+  .directive('dndHandle', function() {
+    return {
+      require: '^dndDraggable', // require the dnd-draggable directive on some ancestor element
+
+      link: function(scope, element, attr, dndDraggable) {
+        // Register this handle with the draggable
+        dndDraggable.handles.push(element[0]);
+
+        // Track mouse events, and update the grabbed status of the draggable accordingly
+        element.on('mousedown', function() {
+          dndDraggable.handleGrabbed = true;
+        }).on('mouseup', function() {
+          dndDraggable.handleGrabbed = false;
+        });
+
+        // Unregister this handle when the scope is destroyed
+        scope.$on('$destroy', function() {
+          var index = dndDraggable.handles.indexOf(element[0]);
+          if (index != -1) {
+            dndDraggable.handles.splice(index, 1);
+          }
+        });
+      }
+    }
+  })
 
   /**
    * Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single
