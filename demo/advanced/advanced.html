@@ -12,7 +12,7 @@
         dnd-moved="containers.splice($index, 1); logEvent('Container moved', event)"
         dnd-copied="logEvent('Container copied', event)">
         <div class="container-element box box-blue">
-            <h3>Container</h3>
+            <h3 dnd-handle>Container</h3>
             <ul dnd-list="items"
                 dnd-allowed-types="['itemType']"
                 dnd-horizontal-list="true"
