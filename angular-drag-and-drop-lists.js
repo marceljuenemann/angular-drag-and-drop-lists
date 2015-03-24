@@ -60,8 +60,8 @@ angular.module('dndLists', [])
    *                      it's source position, and not the "element" that the user is dragging with
    *                      his mouse pointer.
    */
-  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndDraggable', ['$parse', '$timeout', '$q', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                      function($parse,   $timeout,   $q,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
     return function(scope, element, attr) {
       // Set the HTML5 draggable attribute on the element
       element.attr("draggable", "true");
