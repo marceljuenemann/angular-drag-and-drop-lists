@@ -57,6 +57,7 @@ Use the dnd-draggable directive to make your element draggable
 **CSS classes**
 * `dndDragging` This class will be added to the element while the element is being dragged. It will affect both the element you see while dragging and the source element that stays at it's position. Do not try to hide the source element with this class, because that will abort the drag operation.
 * `dndDraggingSource` This class will be added to the element after the drag operation was started, meaning it only affects the original element that is still at it's source position, and not the "element" that the user is dragging with his mouse pointer
+* `dndHandle` Add this class to a child of the element to designate it as the handle. When a handle is used, the element can only be dragged from that child. Dragging events from any other targets will be canceled.
 
 ### dnd-list directive
 Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single li element as child with the ng-repeat directive. If you don't do that, we will not be able to position the dropped element correctly. If you want your list to be sortable, also add the dnd-draggable directive to your li element(s). Both the dnd-list and it's direct children must have position: relative CSS style, otherwise the positioning algorithm will not be able to determine the correct placeholder position in all browsers.

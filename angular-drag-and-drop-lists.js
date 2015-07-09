@@ -59,6 +59,9 @@ angular.module('dndLists', [])
    *                      started, meaning it only affects the original element that is still at
    *                      it's source position, and not the "element" that the user is dragging with
    *                      his mouse pointer.
+   * - dndHandle          Add this class to a child of the element to designate it as the handle. 
+   *                      When a handle is used, the element can only be dragged from that child.
+   *                      Dragging events from any other targets will be canceled.
    */
   .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
                       function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
@@ -73,12 +76,34 @@ angular.module('dndLists', [])
         });
       }
 
+      // Get handleElement, if any.
+      var handleElement = element[0].querySelector('.dndHandle');
+      // If handleCheck is not set to true on mousedown, dragging event in stopped.
+      var handleCheck = false;
+
+      /**
+       * When the mouse is clicked on the element, set var handleCheck to true if either there
+       * is no handleElement (thus no need) or if the target is contained by a handleElement.
+       * Else: false!
+       */
+      element.on('mousedown', function (event) {
+        handleCheck = (handleElement === null) || handleElement.contains(event.target);
+      });
+
       /**
        * When the drag operation is started we have to prepare the dataTransfer object,
        * which is the primary way we communicate with the target element
        */
       element.on('dragstart', function(event) {
+
         event = event.originalEvent || event;
+
+        // If the handleCheck is false, stop the event; no dragging allowed.
+        if (!handleCheck) {
+          event.preventDefault();
+          event.stopPropagation();
+          return false;            
+        }
 
         // Serialize the data associated with this element. IE only supports the Text drag type
         event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
