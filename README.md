@@ -102,6 +102,7 @@ Take a look at the code in the [Simple Lists](http://marceljuenemann.github.io/a
 ## License
 
 Copyright (c) 2014 [Marcel Juenemann](mailto:mail@marcel-juenemann.de)
+
 Copyright (c) 2014-2015 Google Inc.
 
 This is not an official Google product (experimental or otherwise), it is just code that happens to be owned by Google.
