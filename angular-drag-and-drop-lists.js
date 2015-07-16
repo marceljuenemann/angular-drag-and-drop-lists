@@ -90,6 +90,8 @@ angular.module('dndLists', [])
         // Add CSS classes. See documentation above
         element.addClass("dndDragging");
         $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
+        if (attr.dndCopied)
+          element.addClass("dndCopiedSource");
 
         // Workarounds for stupid browsers, see description below
         dndDropEffectWorkaround.dropEffect = "none";
@@ -133,6 +135,10 @@ angular.module('dndLists', [])
         // Clean up
         element.removeClass("dndDragging");
         element.removeClass("dndDraggingSource");
+        
+        if (attr.dndCopied)
+          element.removeClass("dndCopiedSource");
+
         dndDragTypeWorkaround.isDragging = false;
         event.stopPropagation();
       });
