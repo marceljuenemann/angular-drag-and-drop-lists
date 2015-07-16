@@ -61,8 +61,8 @@ angular.module('dndLists', [])
    *                      it's source position, and not the "element" that the user is dragging with
    *                      his mouse pointer.
    */
-  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndDraggable', ['$parse', '$timeout', '$q', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                      function($parse,   $timeout,   $q,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
     return function(scope, element, attr) {
       // Set the HTML5 draggable attribute on the element
       element.attr("draggable", "true");
@@ -293,56 +293,83 @@ angular.module('dndLists', [])
        * one child element per array element.
        */
       element.on('drop', function(event) {
-        event = event.originalEvent || event;
+            var deferred = $q.defer();
 
-        if (!isDropAllowed(event)) return true;
+            event = event.originalEvent || event;
 
-        // The default behavior in Firefox is to interpret the dropped element as URL and
-        // forward to it. We want to prevent that even if our drop is aborted.
-        event.preventDefault();
+            if (!isDropAllowed(event)) {
+                deferred.resolve(stopDragover());
+                return deferred.promise;
+            };
 
-        // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
-        // the "Text" drag type will be converted to text/plain, but IE does not do that.
-        var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
-        var transferredObject;
-        try {
-          transferredObject = JSON.parse(data);
-        } catch(e) {
-          return stopDragover();
-        }
+            // The default behavior in Firefox is to interpret the dropped element as URL and
+            // forward to it. We want to prevent that even if our drop is aborted.
+            event.preventDefault();
 
-        // Invoke the callback, which can transform the transferredObject and even abort the drop.
-        if (attr.dndDrop) {
-          transferredObject = invokeCallback(attr.dndDrop, event, transferredObject);
-          if (!transferredObject) {
-            return stopDragover();
-          }
-        }
+            // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
+            // the "Text" drag type will be converted to text/plain, but IE does not do that.
+            var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
+            var transferredObject;
+            try {
+                transferredObject = JSON.parse(data);
+            } catch (e) {
+                deferred.resolve(stopDragover());
+                return deferred.promise;
+            }
 
-        // Retrieve the JSON array and insert the transferred object into it.
-        var targetArray = scope.$eval(attr.dndList);
-        scope.$apply(function() {
-          targetArray.splice(getPlaceholderIndex(), 0, transferredObject);
+            // Invoke the callback, which can transform the transferredObject and even abort the drop.
+            if (attr.dndDrop) {
+                transferredObject = invokeCallback(attr.dndDrop, event, transferredObject);
+                $q.when(transferredObject).then(function(result) {
+                    if (!result) {
+                        deferred.resolve(stopDragover());
+                        return;
+                    }
+                    
+                    // Retrieve the JSON array and insert the transferred object into it.
+                    var targetArray = scope.$eval(attr.dndList);
+                    if (!scope.$$phase) {
+                        //  github.com/angular/angular.js/wiki/Anti-Patterns
+                        //  this link says is a bad idea to do this
+                        //  but so how? 
+                        //  if it is promise you dont need $apply 
+                        //  but if it a function you need it
+                        scope.$apply(function() {
+                            targetArray.splice(getPlaceholderIndex(), 0, result);
+                        });
+                    } else {
+                        targetArray.splice(getPlaceholderIndex(), 0, result);
+                    }
+
+                    // In Chrome on Windows the dropEffect will always be none...
+                    // We have to determine the actual effect manually from the allowed effects
+                    if (event.dataTransfer.dropEffect === "none") {
+                        if (event.dataTransfer.effectAllowed === "copy" ||
+                            event.dataTransfer.effectAllowed === "move") {
+                            dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed;
+                        } else {
+                            dndDropEffectWorkaround.dropEffect = event.ctrlKey ? "copy" : "move";
+                        }
+                    } else {
+                        dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
+                    }
+                    
+                    // Clean up
+                    event.stopPropagation();
+                    deferred.resolve(!stopDragover());
+                    return;
+                }, function(error) {
+                    event.stopPropagation();
+                    deferred.reject(!stopDragover());
+                    console.log('callback rejected ' + error);
+                    return;
+                });
+            }
+            
+            event.stopPropagation();
+            deferred.resolve(!stopDragover());
+            return deferred.promise;
         });
-
-        // In Chrome on Windows the dropEffect will always be none...
-        // We have to determine the actual effect manually from the allowed effects
-        if (event.dataTransfer.dropEffect === "none") {
-          if (event.dataTransfer.effectAllowed === "copy" ||
-              event.dataTransfer.effectAllowed === "move") {
-            dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed;
-          } else {
-            dndDropEffectWorkaround.dropEffect = event.ctrlKey ? "copy" : "move";
-          }
-        } else {
-          dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
-        }
-
-        // Clean up
-        stopDragover();
-        event.stopPropagation();
-        return false;
-      });
 
       /**
        * We have to remove the placeholder when the element is no longer dragged over our list. The
