@@ -50,6 +50,10 @@ angular.module('dndLists', [])
    *                      select text or images inside of it. Since a selection is always draggable,
    *                      this breaks your UI. You most likely want to disable user selection via
    *                      CSS (see user-select).
+   * - dnd-handle-class   Use this attribute if you want to use a different element as your drag
+   *                      handler (instead of the whole element). Add the class to your drag handle
+   *                      element and include this attribute with your class name here.  Note that
+   *                      the "drag handler" element must be a child of the draggable element.
    *
    * CSS classes:
    * - dndDragging        This class will be added to the element while the element is being
@@ -64,8 +68,7 @@ angular.module('dndLists', [])
   .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
                       function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
     return function(scope, element, attr) {
-      // Set the HTML5 draggable attribute on the element
-      element.attr("draggable", "true");
+      var mouseTarget;
 
       // If the dnd-disable-if attribute is set, we have to watch that
       if (attr.dndDisableIf) {
@@ -75,10 +78,29 @@ angular.module('dndLists', [])
       }
 
       /**
+       * Keep track of the mouseTarget so we can use a custom handle.
+       */
+      element.on('mousedown', function (event) {
+        mouseTarget = event.target;
+
+        if (!attr.dndHandleClass || mouseTarget.classList.contains(attr.dndHandleClass)) {
+          // Set the HTML5 draggable attribute on the element
+          element.attr("draggable", "true");
+        } else {
+          element.attr("draggable", "false");
+        }
+      });
+
+      /**
        * When the drag operation is started we have to prepare the dataTransfer object,
        * which is the primary way we communicate with the target element
        */
       element.on('dragstart', function(event) {
+        if (attr.dndHandleClass && !mouseTarget.classList.contains(attr.dndHandleClass)) {
+          event.preventDefault();
+          return;
+        }
+
         event = event.originalEvent || event;
 
         // Serialize the data associated with this element. IE only supports the Text drag type
@@ -147,16 +169,6 @@ angular.module('dndLists', [])
         scope.$apply(function() {
           $parse(attr.dndSelected)(scope, {event: event});
         });
-
-        event.stopPropagation();
-      });
-
-      /**
-       * Workaround to make element draggable in IE9
-       */
-      element.on('selectstart', function() {
-        if (this.dragDrop) this.dragDrop();
-        return false;
       });
     };
   }])
