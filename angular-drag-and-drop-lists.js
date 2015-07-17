@@ -63,103 +63,156 @@ angular.module('dndLists', [])
    */
   .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
                       function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
-    return function(scope, element, attr) {
-      // Set the HTML5 draggable attribute on the element
-      element.attr("draggable", "true");
+    return {
+      controller: ['$scope', '$element', '$attrs',
+           function($scope,   $element,   $attrs) {
+        var ctrl = this;
 
-      // If the dnd-disable-if attribute is set, we have to watch that
-      if (attr.dndDisableIf) {
-        scope.$watch(attr.dndDisableIf, function(disabled) {
-          element.attr("draggable", !disabled);
-        });
-      }
+        // Array of elements that should be allowed to start the drag. If the array is empty, the drag can start from
+        // anywhere inside the element.
+        this.handles = [];
 
-      /**
-       * When the drag operation is started we have to prepare the dataTransfer object,
-       * which is the primary way we communicate with the target element
-       */
-      element.on('dragstart', function(event) {
-        event = event.originalEvent || event;
+        // Whether one of the handles registered a mousedown event
+        this.handleGrabbed = false;
 
-        // Serialize the data associated with this element. IE only supports the Text drag type
-        event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
+        // Set the HTML5 draggable attribute on the element
+        $element.attr("draggable", "true");
 
-        // Only allow actions specified in dnd-effect-allowed attribute
-        event.dataTransfer.effectAllowed = attr.dndEffectAllowed || "move";
+        // If the dnd-disable-if attribute is set, we have to watch that
+        if ($attrs.dndDisableIf) {
+          $scope.$watch($attrs.dndDisableIf, function(disabled) {
+            $element.attr("draggable", !disabled);
+          });
+        }
 
-        // Add CSS classes. See documentation above
-        element.addClass("dndDragging");
-        $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
+        /**
+         * When the drag operation is started we have to prepare the dataTransfer object,
+         * which is the primary way we communicate with the target element
+         */
+        $element.on('dragstart', function(event) {
+          event = event.originalEvent || event;
 
-        // Workarounds for stupid browsers, see description below
-        dndDropEffectWorkaround.dropEffect = "none";
-        dndDragTypeWorkaround.isDragging = true;
-
-        // Save type of item in global state. Usually, this would go into the dataTransfer
-        // typename, but we have to use "Text" there to support IE
-        dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
-
-        // Invoke callback
-        $parse(attr.dndDragstart)(scope, {event: event});
-
-        event.stopPropagation();
-      });
-
-      /**
-       * The dragend event is triggered when the element was dropped or when the drag
-       * operation was aborted (e.g. hit escape button). Depending on the executed action
-       * we will invoke the callbacks specified with the dnd-moved or dnd-copied attribute.
-       */
-      element.on('dragend', function(event) {
-        event = event.originalEvent || event;
-
-        // Invoke callbacks. Usually we would use event.dataTransfer.dropEffect to determine
-        // the used effect, but Chrome has not implemented that field correctly. On Windows
-        // it always sets it to 'none', while Chrome on Linux sometimes sets it to something
-        // else when it's supposed to send 'none' (drag operation aborted).
-        var dropEffect = dndDropEffectWorkaround.dropEffect;
-        scope.$apply(function() {
-          switch (dropEffect) {
-            case "move":
-              $parse(attr.dndMoved)(scope, {event: event});
-              break;
-
-            case "copy":
-              $parse(attr.dndCopied)(scope, {event: event});
-              break;
+          // Check whether any handles have been registered, and if so, if the drag started in
+          // one of them. If it started by dragging an element that is not a handle, don't let
+          // the drag actually start
+          if (ctrl.handles.length) {
+            if (!ctrl.handleGrabbed) {
+              event.preventDefault();
+              return;
+            }
+            ctrl.handleGrabbed = false; // reset for the next drag operation on this element
           }
+
+          // Serialize the data associated with this element. IE only supports the Text drag type
+          event.dataTransfer.setData("Text", angular.toJson($scope.$eval($attrs.dndDraggable)));
+
+          // Only allow actions specified in dnd-effect-allowed attribute
+          event.dataTransfer.effectAllowed = $attrs.dndEffectAllowed || "move";
+
+          // Add CSS classes. See documentation above
+          $element.addClass("dndDragging");
+          $timeout(function() { $element.addClass("dndDraggingSource"); }, 0);
+
+          // Workarounds for stupid browsers, see description below
+          dndDropEffectWorkaround.dropEffect = "none";
+          dndDragTypeWorkaround.isDragging = true;
+
+          // Save type of item in global state. Usually, this would go into the dataTransfer
+          // typename, but we have to use "Text" there to support IE
+          dndDragTypeWorkaround.dragType = $attrs.dndType ? $scope.$eval($attrs.dndType) : undefined;
+
+          // Invoke callback
+          $parse($attrs.dndDragstart)($scope, {event: event});
+
+          event.stopPropagation();
         });
 
-        // Clean up
-        element.removeClass("dndDragging");
-        element.removeClass("dndDraggingSource");
-        dndDragTypeWorkaround.isDragging = false;
-        event.stopPropagation();
-      });
+        /**
+         * The dragend event is triggered when the element was dropped or when the drag
+         * operation was aborted (e.g. hit escape button). Depending on the executed action
+         * we will invoke the callbacks specified with the dnd-moved or dnd-copied attribute.
+         */
+        $element.on('dragend', function(event) {
+          event = event.originalEvent || event;
 
-      /**
-       * When the element is clicked we invoke the callback function
-       * specified with the dnd-selected attribute.
-       */
-      element.on('click', function(event) {
-        event = event.originalEvent || event;
+          // Invoke callbacks. Usually we would use event.dataTransfer.dropEffect to determine
+          // the used effect, but Chrome has not implemented that field correctly. On Windows
+          // it always sets it to 'none', while Chrome on Linux sometimes sets it to something
+          // else when it's supposed to send 'none' (drag operation aborted).
+          var dropEffect = dndDropEffectWorkaround.dropEffect;
+          $scope.$apply(function() {
+            switch (dropEffect) {
+              case "move":
+                $parse($attrs.dndMoved)($scope, {event: event});
+                break;
 
-        scope.$apply(function() {
-          $parse(attr.dndSelected)(scope, {event: event});
+              case "copy":
+                $parse($attrs.dndCopied)($scope, {event: event});
+                break;
+            }
+          });
+
+          // Clean up
+          $element.removeClass("dndDragging");
+          $element.removeClass("dndDraggingSource");
+          dndDragTypeWorkaround.isDragging = false;
+          event.stopPropagation();
         });
 
-        event.stopPropagation();
-      });
+        /**
+         * When the element is clicked we invoke the callback function
+         * specified with the dnd-selected attribute.
+         */
+        $element.on('click', function(event) {
+          event = event.originalEvent || event;
 
-      /**
-       * Workaround to make element draggable in IE9
-       */
-      element.on('selectstart', function() {
-        if (this.dragDrop) this.dragDrop();
-        return false;
-      });
+          $scope.$apply(function() {
+            $parse($attrs.dndSelected)($scope, {event: event});
+          });
+
+          event.stopPropagation();
+        });
+
+        /**
+         * Workaround to make element draggable in IE9
+         */
+        $element.on('selectstart', function() {
+          if (this.dragDrop) this.dragDrop();
+          return false;
+        });
+      }]
     };
   }])
+
+  /**
+   * Use the dnd-handle attribute to allow a drag operation to start from this element. You place
+   * the dnd-handle attribute on one or more elements inside of the draggable element.
+   */
+  .directive('dndHandle', function() {
+    return {
+      require: '^dndDraggable', // require the dnd-draggable directive on some ancestor element
+
+      link: function(scope, element, attr, dndDraggable) {
+        // Register this handle with the draggable
+        dndDraggable.handles.push(element[0]);
+
+        // Track mouse events, and update the grabbed status of the draggable accordingly
+        element.on('mousedown', function() {
+          dndDraggable.handleGrabbed = true;
+        }).on('mouseup', function() {
+          dndDraggable.handleGrabbed = false;
+        });
+
+        // Unregister this handle when the scope is destroyed
+        scope.$on('$destroy', function() {
+          var index = dndDraggable.handles.indexOf(element[0]);
+          if (index != -1) {
+            dndDraggable.handles.splice(index, 1);
+          }
+        });
+      }
+    }
+  })
 
   /**
    * Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single

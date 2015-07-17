@@ -38,6 +38,7 @@ Download `angular-drag-and-drop-lists.js` (or the minified version) and include 
 Use the dnd-draggable directive to make your element draggable
 
 **Attributes**
+
 * `dnd-draggable` Required attribute. The value has to be an object that represents the data of the element. In case of a drag and drop operation the object will be serialized and unserialized on the receiving end.
 * `dnd-selected` Callback that is invoked when the element was clicked but not dragged. The original click event will be provided in the local `event` variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/nested) 
 * `dnd-effect-allowed` Use this attribute to limit the operations that can be performed. Options are:
@@ -55,13 +56,24 @@ Use the dnd-draggable directive to make your element draggable
 * `dnd-disable-if` You can use this attribute to dynamically disable the draggability of the element. This is useful if you have certain list items that you don't want to be draggable, or if you want to disable drag & drop completely without having two different code branches (e.g. only allow for admins). *Note*: If your element is not draggable, the user is probably able to select text or images inside of it. Since a selection is always draggable, this breaks your UI. You most likely want to disable user selection via CSS (see [user-select](http://stackoverflow.com/a/4407335)). [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types) 
 
 **CSS classes**
+
 * `dndDragging` This class will be added to the element while the element is being dragged. It will affect both the element you see while dragging and the source element that stays at it's position. Do not try to hide the source element with this class, because that will abort the drag operation.
 * `dndDraggingSource` This class will be added to the element after the drag operation was started, meaning it only affects the original element that is still at it's source position, and not the "element" that the user is dragging with his mouse pointer
+
+### dnd-handle directive
+You can use the dnd-handle inside your draggable element to make only specific descendant elements of it start the drag. These are commonly referred to as drag handles or grabbers.
+
+This directive is used without a value.
+
+    <li dnd-draggable="item">
+      <span dnd-grabber></span> {{ item.label }}
+    </li>
 
 ### dnd-list directive
 Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single li element as child with the ng-repeat directive. If you don't do that, we will not be able to position the dropped element correctly. If you want your list to be sortable, also add the dnd-draggable directive to your li element(s). Both the dnd-list and it's direct children must have position: relative CSS style, otherwise the positioning algorithm will not be able to determine the correct placeholder position in all browsers.
 
 **Attributes**
+
 * `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted.
 * `dnd-allowed-types` Optional array of allowed item types. When used, only items that had a matching dnd-type attribute will be dropable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types) 
 * `dnd-disable-if` Optional boolean expresssion. When it evaluates to true, no dropping into the list is possible. Note that this also disables rearranging items inside the list. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types) 
@@ -80,17 +92,16 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 * `dnd-external-sources` Optional boolean expression. When it evaluates to true, the list accepts drops from sources outside of the current browser tab. This allows to drag and drop accross different browser tabs. Note that this will allow to drop arbitrary text into the list, thus it is highly recommended to implement the dnd-drop callback to check the incoming element for sanity. Furthermore, the dnd-type of external sources can not be determined, therefore do not rely on restrictions of dnd-allowed-type. Also note that this feature does not work very well in Internet Explorer. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 
 **CSS classes**
+
 * `dndPlaceholder` When an element is dragged over the list, a new placeholder child element will be added. This element is of type li and has the class dndPlaceholder set.
 * `dndDragover` This class will be added to the list while an element is being dragged over the list.
 
 ### Required CSS styles 
 Both the dnd-list and it's children require relative positioning, so that the directive can determine the mouse position relative to the list and thus calculate the correct drop position.
 
-<pre>
-ul[dnd-list], ul[dnd-list] > li { 
-    position: relative;
-}
-</pre>
+    ul[dnd-list], ul[dnd-list] > li { 
+      position: relative;
+    }
 
 *Since 1.2.0 `pointer-events: none` is no longer required*
 
