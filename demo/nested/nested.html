@@ -21,7 +21,7 @@
      the above list template to render each container column -->
 <script type="text/ng-template" id="container.html">
     <div class="container-element box box-blue">
-        <h3>Container {{item.id}}</h3>
+        <h3><span class="dndHandle glyphicon glyphicon-align-justify"></span> Container {{item.id}}</h3>
         <div class="column" ng-repeat="list in item.columns" ng-include="'list.html'"></div>
         <div class="clearfix"></div>
     </div>
