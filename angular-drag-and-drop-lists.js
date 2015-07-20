@@ -131,7 +131,7 @@ angular.module('dndLists', [])
               break;
           }
 
-          $parse(attr.dndDragend)(scope, {event: event, dropEffet: dropEffect});
+          $parse(attr.dndDragend)(scope, {event: event, dropEffect: dropEffect});
         });
 
         // Clean up
