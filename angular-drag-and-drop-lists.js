@@ -38,6 +38,9 @@ angular.module('dndLists', [])
    *                      event variable.
    * - dnd-dragstart      Callback that is invoked when the element was dragged. The original
    *                      dragstart event will be provided in the local event variable.
+   * - dnd-dragend        Callback that is invoked when the drag operation ended. The original
+   *                      dragend event will be provided in the local event variable. Also the dropEffect
+   *                      will be provided as local variable.
    * - dnd-type           Use this attribute if you have different kinds of items in your
    *                      application and you want to limit which items can be dropped into which
    *                      lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute
@@ -128,6 +131,8 @@ angular.module('dndLists', [])
               $parse(attr.dndCopied)(scope, {event: event});
               break;
           }
+
+          $parse(attr.dndDragend)(scope, {event: event, dropEffect: dropEffect});
         });
 
         // Clean up
