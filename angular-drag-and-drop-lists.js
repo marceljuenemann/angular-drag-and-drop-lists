@@ -150,12 +150,14 @@ angular.module('dndLists', [])
        * specified with the dnd-selected attribute.
        */
       element.on('click', function(event) {
-        event = event.originalEvent || event;
+        if (!attr.dndSelected) return;
 
+        event = event.originalEvent || event;
         scope.$apply(function() {
           $parse(attr.dndSelected)(scope, {event: event});
         });
 
+        // Prevent triggering dndSelected in parant elements.
         event.stopPropagation();
       });
 
