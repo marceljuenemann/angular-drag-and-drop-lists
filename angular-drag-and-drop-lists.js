@@ -140,7 +140,7 @@ angular.module('dndLists', [])
 
         // Clean up
         element.removeClass("dndDragging");
-        element.removeClass("dndDraggingSource");
+        $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
         dndDragTypeWorkaround.isDragging = false;
         event.stopPropagation();
       });
