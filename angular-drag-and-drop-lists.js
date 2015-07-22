@@ -164,7 +164,6 @@ angular.module('dndLists', [])
        */
       element.on('selectstart', function() {
         if (this.dragDrop) this.dragDrop();
-        return false;
       });
     };
   }])
