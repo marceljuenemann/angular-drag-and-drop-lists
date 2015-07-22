@@ -203,6 +203,11 @@ angular.module('dndLists', [])
    *                        - index: The position in the list at which the element would be dropped.
    *                        - item: The transferred object.
    *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
+   * - dnd-inserted         Optional expression that is invoked after a drop if the element was
+   *                        actually inserted into the list. The same local variables as for
+   *                        dnd-drop will be available. Note that for reorderings inside the same
+   *                        list the old element will still be in the list due to the fact that
+   *                        dnd-moved was not called yet.
    * - dnd-external-sources Optional boolean expression. When it evaluates to true, the list accepts
    *                        drops from sources outside of the current browser tab. This allows to
    *                        drag and drop accross different browser tabs. Note that this will allow
@@ -286,7 +291,7 @@ angular.module('dndLists', [])
 
         // At this point we invoke the callback, which still can disallow the drop.
         // We can't do this earlier because we want to pass the index of the placeholder.
-        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event)) {
+        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, getPlaceholderIndex())) {
           return stopDragover();
         }
 
@@ -321,8 +326,9 @@ angular.module('dndLists', [])
         }
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
+        var index = getPlaceholderIndex();
         if (attr.dndDrop) {
-          transferredObject = invokeCallback(attr.dndDrop, event, transferredObject);
+          transferredObject = invokeCallback(attr.dndDrop, event, index, transferredObject);
           if (!transferredObject) {
             return stopDragover();
           }
@@ -331,8 +337,9 @@ angular.module('dndLists', [])
         // Retrieve the JSON array and insert the transferred object into it.
         var targetArray = scope.$eval(attr.dndList);
         scope.$apply(function() {
-          targetArray.splice(getPlaceholderIndex(), 0, transferredObject);
+          targetArray.splice(index, 0, transferredObject);
         });
+        invokeCallback(attr.dndInserted, event, index, transferredObject);
 
         // In Chrome on Windows the dropEffect will always be none...
         // We have to determine the actual effect manually from the allowed effects
@@ -435,10 +442,10 @@ angular.module('dndLists', [])
       /**
        * Invokes a callback with some interesting parameters and returns the callbacks return value.
        */
-      function invokeCallback(expression, event, item) {
+      function invokeCallback(expression, event, index, item) {
         return $parse(expression)(scope, {
           event: event,
-          index: getPlaceholderIndex(),
+          index: index,
           item: item || undefined,
           external: !dndDragTypeWorkaround.isDragging,
           type: dndDragTypeWorkaround.isDragging ? dndDragTypeWorkaround.dragType : undefined

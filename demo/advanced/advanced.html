@@ -17,6 +17,7 @@
                 dnd-external-sources="true"
                 dnd-dragover="dragoverCallback(event, index, external, type)"
                 dnd-drop="dropCallback(event, index, item, external, type, 'itemType')"
+                dnd-inserted="logEvent('Element was inserted at position ' + index, event)"
                 class="itemlist">
                 <li ng-repeat="item in items"
                     dnd-draggable="item"
