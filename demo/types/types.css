@@ -67,10 +67,31 @@
  */
 .typesDemo ul[dnd-list] li.background-man {
 	background-color: #CAE0FC;
-	color: #2F4D99;
 }
 
 .typesDemo ul[dnd-list] li.background-woman {
 	background-color: #FFE2F5;
+}
+
+.typesDemo ul[dnd-list] input.background-man {
+	background-color: #D8E9FF;
+	color: #2F4D99;
+}
+
+.typesDemo ul[dnd-list] input.background-woman {
+	background-color: #FFF0FA;
 	color: #D84FA7;
+}
+
+/**
+ * Handle positioning
+ */
+.typesDemo .handle {
+    cursor: move;
+    position: absolute;
+    top: 14px;
+}
+
+.typesDemo .name {
+    margin-left: 20px;
 }
