@@ -3,7 +3,7 @@ angular.module("demo").controller("AdvancedDemoController", function($scope) {
     $scope.dragoverCallback = function(event, index, external, type) {
         $scope.logListEvent('dragged over', event, index, external, type);
         // Disallow dropping in the third row. Could also be done with dnd-disable-if.
-        return index < 8;
+        return index < 10;
     };
 
     $scope.dropCallback = function(event, index, item, external, type, allowedType) {
