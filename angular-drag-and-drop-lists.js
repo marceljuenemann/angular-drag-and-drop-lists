@@ -219,7 +219,8 @@ angular.module('dndLists', [])
    * CSS classes:
    * - dndPlaceholder       When an element is dragged over the list, a new placeholder child
    *                        element will be added. This element is of type li and has the class
-   *                        dndPlaceholder set.
+   *                        dndPlaceholder set. Alternatively, you can define your own placeholder
+   *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
   .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
@@ -227,9 +228,10 @@ angular.module('dndLists', [])
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
-      var placeholder = angular.element("<li class='dndPlaceholder'></li>");
+      var placeholder = getPlaceholderElement();
       var placeholderNode = placeholder[0];
       var listNode = element[0];
+      placeholder.remove();
 
       var horizontal = attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList);
       var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
@@ -394,6 +396,21 @@ angular.module('dndLists', [])
         var targetPosition = horizontal ? targetNode.offsetLeft : targetNode.offsetTop;
         targetPosition = relativeToParent ? targetPosition : 0;
         return mousePointer < targetPosition + targetSize / 2;
+      }
+
+      /**
+       * Tries to find a child element that has the dndPlaceholder class set. If none was found, a
+       * new li element is created.
+       */
+      function getPlaceholderElement() {
+        var placeholder;
+        angular.forEach(element.children(), function(childNode) {
+          var child = angular.element(childNode);
+          if (child.hasClass('dndPlaceholder')) {
+            placeholder = child;
+          }
+        });
+        return placeholder || angular.element("<li class='dndPlaceholder'></li>");
       }
 
       /**
