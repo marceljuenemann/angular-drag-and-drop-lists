@@ -174,6 +174,10 @@ angular.module('dndLists', [])
    *                        the dropped element should be inserted.
    * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
    *                        matching dnd-type attribute will be dropable.
+   *
+   * - dnd-element-template
+   *                        List element template, "<li></li>" used by default
+   *
    * - dnd-disable-if       Optional boolean expresssion. When it evaluates to true, no dropping
    *                        into the list is possible. Note that this also disables rearranging
    *                        items inside the list.
@@ -213,7 +217,9 @@ angular.module('dndLists', [])
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
-      var placeholder = angular.element("<li class='dndPlaceholder'></li>");
+      var elTemplate = attr.dndElementTemplate || "<li></li>";
+      var placeholder = angular.element(elTemplate);
+      placeholder.addClass("dndPlaceholder");
       var placeholderNode = placeholder[0];
       var listNode = element[0];
 
