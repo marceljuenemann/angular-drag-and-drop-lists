@@ -64,6 +64,7 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 **Attributes**
 * `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted.
 * `dnd-allowed-types` Optional array of allowed item types. When used, only items that had a matching dnd-type attribute will be dropable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types) 
+* `dnd-element-template` Optional template of the placeholder item. <li></li> used by default. 
 * `dnd-disable-if` Optional boolean expresssion. When it evaluates to true, no dropping into the list is possible. Note that this also disables rearranging items inside the list. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types) 
 * `dnd-horizontal-list` Optional boolean expresssion. When it evaluates to true, the positioning algorithm will use the left and right halfs of the list items instead of the upper and lower halfs. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-dragover` Optional expression that is invoked when an element is dragged over the list. If the expression is set, but does not return true, the element is not allowed to be dropped. The following variables will be available:
