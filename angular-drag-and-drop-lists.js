@@ -66,8 +66,8 @@ angular.module('dndLists', [])
    *                      it's source position, and not the "element" that the user is dragging with
    *                      his mouse pointer.
    */
-  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', 'dndStopDragover',
+                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround, dndStopDragover) {
     return function(scope, element, attr) {
       // Set the HTML5 draggable attribute on the element
       element.attr("draggable", "true");
@@ -142,6 +142,9 @@ angular.module('dndLists', [])
         element.removeClass("dndDragging");
         $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
         dndDragTypeWorkaround.isDragging = false;
+        if (dndStopDragover.stopDragover) {
+          dndStopDragover.stopDragover();
+        }
         event.stopPropagation();
       });
 
@@ -223,8 +226,8 @@ angular.module('dndLists', [])
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', 'dndStopDragover',
+                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround, dndStopDragover) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
@@ -235,6 +238,8 @@ angular.module('dndLists', [])
 
       var horizontal = attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList);
       var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
+
+      dndStopDragover.stopDragover = stopDragover;
 
       /**
        * The dragover event is triggered "every few hundred milliseconds" while an element
@@ -535,4 +540,10 @@ angular.module('dndLists', [])
    * variable. The bug report for that has been open for years:
    * https://code.google.com/p/chromium/issues/detail?id=39399
    */
-  .factory('dndDropEffectWorkaround', function(){ return {} });
+  .factory('dndDropEffectWorkaround', function(){ return {} })
+
+  /**
+   * The dndList register its stopDragover function through this factory. It is then called on dragend to ensure the placeholder is removed.
+   * https://github.com/marceljuenemann/angular-drag-and-drop-lists/issues/103
+   */
+  .factory('dndStopDragover', function(){ return {} });
