@@ -221,6 +221,18 @@ angular.module('dndLists', [])
       var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
 
       /**
+       * The dragenter is triggered prior to the dragover and to allow
+       * a drop the event handler must preventDefault().
+       */
+      element.on('dragenter', function (event) {
+        event = event.originalEvent || event;
+
+        if (!isDropAllowed(event)) return true;
+
+        event.preventDefault();
+      });
+
+      /**
        * The dragover event is triggered "every few hundred milliseconds" while an element
        * is being dragged over our list, or over an child element.
        */
