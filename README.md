@@ -78,7 +78,7 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 
 ## dnd-nodrag directive
 
-Use the `dnd-nodrag` attribute inside of `dnd-draggable` elements to prevent them from starting drag operations. This is especially useful if you want to use input elements inside of `dnd-draggable` elements or create specific handle elements.
+Use the `dnd-nodrag` attribute inside of `dnd-draggable` elements to prevent them from starting drag operations. This is especially useful if you want to use input elements inside of `dnd-draggable` elements or create specific handle elements. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 
 ## Required CSS styles 
 Both the dnd-list and it's children require relative positioning, so that the directive can determine the mouse position relative to the list and thus calculate the correct drop position.
