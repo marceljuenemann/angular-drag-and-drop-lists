@@ -10,7 +10,14 @@
         dnd-effect-allowed="move"
         class="background-{{person.type}}"
         >
-        {{person.name}}
+        <div class="handle">:::</div>
+        <div class="name" dnd-nodrag>
+            <input type="text" ng-model="person.name" class="background-{{person.type}} form-control input-sm">
+        </div>
+    </li>
+
+    <li class="dndPlaceholder">
+        Drop any <strong>{{list.allowedTypes.join(' or ')}}</strong> here
     </li>
 
 </ul>
