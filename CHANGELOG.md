@@ -1,3 +1,27 @@
+# 1.3.0 (2015-08-20)
+
+## Features
+
+- **New callbacks**: `dnd-dragend`, `dnd-canceled` and `dnd-inserted`.
+- **Custom placeholder elements**: `dnd-list` elements can have custom elements by creating a child element with `dnd-placeholder` class. This is useful for cases where a simple `li` element is not sufficient.
+- **dnd-nodrag directive**: This directive can be used inside `dnd-draggable` to prevent dragging certain areas. This is useful for input elements inside the draggable or creating handle elements.
+
+## Bug Fixes
+
+- **Fix user selection inside dnd-draggable**: The `selectstart` event is no longer cancelled.
+- **Fix click handler compatibility**: Propagation of click events is now only stopped if the `dnd-selected` attribute is present.
+- **Fix IE9 glitch**: Double clicks in IE9 previously would trigger the `dnd-moved` callback, and therefore remove items accidentially. (issue #21)
+
+## Tested browsers
+
+- Chrome 43 (Win7)
+- Chrome 44 (Ubuntu)
+- Chrome 44 (Mac)
+- Firefox 40 (Win7)
+- Firefox 39 (Ubuntu)
+- Safari 8.0.8 (Mac)
+- Internet Explorer 11 (IE9 & 10 in compatibility mode)
+
 # 1.2.0 (2014-11-30)
 
 ## Bug Fixes

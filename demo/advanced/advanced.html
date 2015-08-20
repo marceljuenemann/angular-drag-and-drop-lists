@@ -8,9 +8,7 @@
         dnd-draggable="items"
         dnd-type="'containerType'"
         dnd-effect-allowed="copyMove"
-        dnd-dragstart="logEvent('Started to drag a container', event)"
-        dnd-moved="containers.splice($index, 1); logEvent('Container moved', event)"
-        dnd-copied="logEvent('Container copied', event)">
+        dnd-moved="containers.splice($index, 1)">
         <div class="container-element box box-blue">
             <h3>Container</h3>
             <ul dnd-list="items"
@@ -19,6 +17,7 @@
                 dnd-external-sources="true"
                 dnd-dragover="dragoverCallback(event, index, external, type)"
                 dnd-drop="dropCallback(event, index, item, external, type, 'itemType')"
+                dnd-inserted="logEvent('Element was inserted at position ' + index, event)"
                 class="itemlist">
                 <li ng-repeat="item in items"
                     dnd-draggable="item"
@@ -26,7 +25,9 @@
                     dnd-effect-allowed="copyMove"
                     dnd-dragstart="logEvent('Started to drag an item', event)"
                     dnd-moved="items.splice($index, 1); logEvent('Item moved', event)"
-                    dnd-copied="logEvent('Item copied', event)">
+                    dnd-copied="logEvent('Item copied', event)"
+                    dnd-canceled="logEvent('Drag operation canceled', event)"
+                    dnd-dragend="logEvent('Drag operation ended', event)">
                     {{item.label}}
                 </li>
             </ul>
