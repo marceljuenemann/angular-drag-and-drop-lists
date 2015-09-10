@@ -158,7 +158,9 @@ angular.module('dndLists', [])
         });
 
         // Prevent triggering dndSelected in parant elements.
-        event.stopPropagation();
+        if ($element.attr('draggable') == 'true') {
+          event.stopPropagation();
+        }
       });
 
       /**
