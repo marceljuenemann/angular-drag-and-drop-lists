@@ -86,6 +86,12 @@ angular.module('dndLists', [])
       element.on('dragstart', function(event) {
         event = event.originalEvent || event;
 
+        //IE 11 doesn't respect draggable on input elements causes crashing
+        var draggable = event.target.attributes.getNamedItem('draggable');
+        if(draggable != null && draggable.value === 'false') {
+          return false;
+        }
+
         // Serialize the data associated with this element. IE only supports the Text drag type
         event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
 
