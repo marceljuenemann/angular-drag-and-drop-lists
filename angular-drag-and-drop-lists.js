@@ -342,10 +342,10 @@ angular.module('dndLists', [])
 
         // Retrieve the JSON array and insert the transferred object into it.
         var targetArray = scope.$eval(attr.dndList);
-        scope.$apply(function() {
+        $timeout(function() {
           targetArray.splice(index, 0, transferredObject);
-        });
-        invokeCallback(attr.dndInserted, event, index, transferredObject);
+		  invokeCallback(attr.dndInserted, event, index, transferredObject);
+        }, 0);
 
         // In Chrome on Windows the dropEffect will always be none...
         // We have to determine the actual effect manually from the allowed effects
