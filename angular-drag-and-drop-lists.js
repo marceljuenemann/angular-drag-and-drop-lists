@@ -66,8 +66,8 @@ angular.module('dndLists', [])
    *                      it's source position, and not the "element" that the user is dragging with
    *                      his mouse pointer.
    */
-  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', '$window',
+                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround, $window) {
     return function(scope, element, attr) {
       // Set the HTML5 draggable attribute on the element
       element.attr("draggable", "true");
@@ -87,7 +87,9 @@ angular.module('dndLists', [])
         event = event.originalEvent || event;
 
         // Serialize the data associated with this element. IE only supports the Text drag type
-        event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
+        var dragged = scope.$eval(attr.dndDraggable)
+        event.dataTransfer.setData("Text", angular.toJson(dragged));
+        $window["dndList.draggedData"] = dragged;
 
         // Only allow actions specified in dnd-effect-allowed attribute
         event.dataTransfer.effectAllowed = attr.dndEffectAllowed || "move";
@@ -223,8 +225,8 @@ angular.module('dndLists', [])
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', '$window',
+                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround, $window) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
@@ -319,12 +321,14 @@ angular.module('dndLists', [])
 
         // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
         // the "Text" drag type will be converted to text/plain, but IE does not do that.
-        var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
-        var transferredObject;
-        try {
-          transferredObject = JSON.parse(data);
-        } catch(e) {
-          return stopDragover();
+        var transferredObject = $window["dndList.draggedData"];
+        if(transferredObject === undefined) {
+          var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
+          try {
+            transferredObject = JSON.parse(data);
+          } catch(e) {
+            return stopDragover();
+          }
         }
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
@@ -338,10 +342,10 @@ angular.module('dndLists', [])
 
         // Retrieve the JSON array and insert the transferred object into it.
         var targetArray = scope.$eval(attr.dndList);
-        scope.$apply(function() {
+        $timeout(function() {
           targetArray.splice(index, 0, transferredObject);
-        });
-        invokeCallback(attr.dndInserted, event, index, transferredObject);
+		  invokeCallback(attr.dndInserted, event, index, transferredObject);
+        }, 0);
 
         // In Chrome on Windows the dropEffect will always be none...
         // We have to determine the actual effect manually from the allowed effects
