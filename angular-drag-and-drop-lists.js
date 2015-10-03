@@ -338,9 +338,9 @@ angular.module('dndLists', [])
 
         // Retrieve the JSON array and insert the transferred object into it.
         var targetArray = scope.$eval(attr.dndList);
-        scope.$apply(function() {
-          targetArray.splice(index, 0, transferredObject);
-        });
+        // scope.$apply(function() {
+        //   targetArray.splice(index, 0, transferredObject);
+        // });
         invokeCallback(attr.dndInserted, event, index, transferredObject);
 
         // In Chrome on Windows the dropEffect will always be none...
@@ -410,7 +410,7 @@ angular.module('dndLists', [])
             placeholder = child;
           }
         });
-        return placeholder || angular.element("<li class='dndPlaceholder'></li>");
+        return placeholder || angular.element("<h5 class='dndPlaceholder'></h5>");
       }
 
       /**
