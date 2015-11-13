@@ -328,7 +328,7 @@ angular.module('dndLists', [])
         }
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
-        var index = getPlaceholderIndex();
+        var index = getInsertIndex();
         if (attr.dndDrop) {
           transferredObject = invokeCallback(attr.dndDrop, event, index, transferredObject);
           if (!transferredObject) {
@@ -411,6 +411,30 @@ angular.module('dndLists', [])
           }
         });
         return placeholder || angular.element("<li class='dndPlaceholder'></li>");
+      }
+
+      /**
+       * We use the previous or next item's index of the original list to find the insert id
+       */
+      function getInsertIndex() {
+        var index = getPlaceholderIndex();
+        var direction = index == 0 ? 1 : -1;
+
+        index += direction;
+        if (index > listNode.children.length)
+          return 0;
+
+        var sibling = $(listNode.children[index]);
+        var draggable = sibling.attr("dnd-draggable");
+        var list = sibling.parent("[dnd-list]").attr("dnd-list");
+
+        var scope = sibling.scope();
+        var result = scope[list].indexOf(scope[draggable]);
+
+        if (direction == -1)
+          result += 1;
+        
+        return result;
       }
 
       /**
