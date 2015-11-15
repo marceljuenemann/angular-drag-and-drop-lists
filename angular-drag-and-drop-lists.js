@@ -429,7 +429,7 @@ angular.module('dndLists', [])
         var list = sibling.parent("[dnd-list]").attr("dnd-list");
 
         var scope = sibling.scope();
-        var result = scope[list].indexOf(scope[draggable]);
+        var result = scope.$eval(list).indexOf(scope.$eval(draggable));
 
         if (direction == -1)
           result += 1;
