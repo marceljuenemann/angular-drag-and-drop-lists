@@ -417,21 +417,17 @@ angular.module('dndLists', [])
        * We use the previous or next item's index of the original list to find the insert id
        */
       function getInsertIndex() {
-        var index = getPlaceholderIndex();
-        var direction = index == 0 ? 1 : -1;
-
-        index += direction;
-        if (index > listNode.children.length)
-          return 0;
-
-        var sibling = $(listNode.children[index]);
+        var prevSibling = $(placeholderNode).prevAll("[dnd-draggable]").eq(0);
+        var nextSibling = $(placeholderNode).nextAll("[dnd-draggable]").eq(0);
+        
+        var sibling = prevSibling.length == 1 ? prevSibling : nextSibling;
         var draggable = sibling.attr("dnd-draggable");
         var list = sibling.parent("[dnd-list]").attr("dnd-list");
 
         var scope = sibling.scope();
         var result = scope.$eval(list).indexOf(scope.$eval(draggable));
 
-        if (direction == -1)
+        if (prevSibling.length == 1)
           result += 1;
         
         return result;
