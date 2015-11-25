@@ -5,7 +5,7 @@
   "homepage": "https://github.com/Cidro/angular-drag-and-drop-lists",
   "authors": [
     "Marcel Juenemann <mail@marcel-juenemann.de>",
-    "Pablo Canales <pablo.canaleshernandez@gmail.com>",
+    "Pablo Canales <pablo.canaleshernandez@gmail.com>"
   ],
   "description": "Angular directives for sorting nested lists using the HTML5 Drag & Drop API",
   "keywords": [
