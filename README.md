@@ -89,7 +89,9 @@ ul[dnd-list], ul[dnd-list] > li {
 }
 </pre>
 
+## dnd-draghandle directive
 
+Use the `dnd-draghandle` attribute on elements that are inside of `dnd-nodrag` elements to allow them to start drag operations event inside the `dnd-nodrag` context.
 
 ## Why another drag & drop library?
 There are tons of other drag & drop libraries out there, but none of them met my three requirements:

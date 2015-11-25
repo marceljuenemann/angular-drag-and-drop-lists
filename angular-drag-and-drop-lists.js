@@ -1,5 +1,5 @@
 /**
- * angular-drag-and-drop-lists v1.3.0
+ * angular-drag-and-drop-lists v1.3.1
  *
  * Copyright (c) 2014 Marcel Juenemann mail@marcel-juenemann.de
  * Copyright (c) 2014-2015 Google Inc.
@@ -501,12 +501,16 @@ angular.module('dndLists', [])
       element.on('dragstart', function(event) {
         event = event.originalEvent || event;
 
-        // If a child element already reacted to dragstart and set a dataTransfer object, we will
-        // allow that. For example, this is the case for user selections inside of input elements.
-        if (!(event.dataTransfer.types && event.dataTransfer.types.length)) {
-          event.preventDefault();
+        // Check if the event is comming from an dnd-draghandle element before preventing 
+        // the event propagation
+        if(!event.dataTransfer.isDragHandle){
+          // If a child element already reacted to dragstart and set a dataTransfer object, we will
+          // allow that. For example, this is the case for user selections inside of input elements.
+          if (!(event.dataTransfer.types && event.dataTransfer.types.length)) {
+            event.preventDefault();
+          }
+          event.stopPropagation();
         }
-        event.stopPropagation();
       });
 
       /**
@@ -515,9 +519,35 @@ angular.module('dndLists', [])
        */
       element.on('dragend', function(event) {
         event = event.originalEvent || event;
-        event.stopPropagation();
+        // Check if the event is comming from an dnd-draghandle element before preventing 
+        // the event propagation
+        if(!event.dataTransfer.isDragHandle) {
+          event.stopPropagation();
+        }
       });
     };
+  })
+
+  /**
+   * Use the dnd-draghandle directive inside of dnd-nodrag elements to allow drag operations
+   */
+  .directive('dndDraghandle', function(){
+    return function(scope, element, attr) {
+      // Set as draggable so that we can add listeners to the drag events
+      element.attr("draggable", "true");
+
+      element.on('dragstart', function(event) {
+        event = event.originalEvent || event;
+        // Add the isDragHandle property to the data transfer object
+        event.dataTransfer.isDragHandle = true;
+      });
+
+      element.on('dragend', function(event) {
+        event = event.originalEvent || event;
+        // Add the isDragHandle property to the data transfer object
+        event.dataTransfer.isDragHandle = true;
+      });
+    }
   })
 
   /**

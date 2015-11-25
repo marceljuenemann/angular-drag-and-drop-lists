@@ -1,3 +1,9 @@
+# 1.3.1 (2015-12-25)
+
+## Features
+
+- **New directive dnd-draghandle**: `dnd-draghandle`, will allow elements inside an `dnd-nodrag` element to still fire a drag event.
+
 # 1.3.0 (2015-08-20)
 
 ## Features
