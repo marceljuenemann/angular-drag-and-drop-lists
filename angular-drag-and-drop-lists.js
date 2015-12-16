@@ -223,12 +223,13 @@ angular.module('dndLists', [])
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndList', ['$parse', '$timeout', '$compile', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
+                 function($parse,   $timeout,   $compile,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
-      var placeholder = getPlaceholderElement();
+      var placeholderScope = scope.$new();
+      var placeholder = $compile(getPlaceholderElement())(placeholderScope);
       var placeholderNode = placeholder[0];
       var listNode = element[0];
       placeholder.remove();
@@ -249,6 +250,15 @@ angular.module('dndLists', [])
         // This is especially important if the list is empty
         if (placeholderNode.parentNode != listNode) {
           element.append(placeholder);
+
+          // Unserialize the data that was serialized in dragstart and add to the placeholder
+          // scope. According to the HTML5 specs, the "Text" drag type will be converted to
+          // text/plain, but IE does not do that.
+          var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
+          try {
+            placeholderScope.draggedItem = JSON.parse(data);
+            placeholderScope.$apply();
+          } catch(e) { }
         }
 
         if (event.target !== listNode) {
@@ -377,6 +387,7 @@ angular.module('dndLists', [])
         $timeout(function() {
           if (!element.hasClass("dndDragover")) {
             placeholder.remove();
+            delete placeholderScope.draggedItem;
           }
         }, 100);
       });
@@ -453,6 +464,7 @@ angular.module('dndLists', [])
       function stopDragover() {
         placeholder.remove();
         element.removeClass("dndDragover");
+        delete placeholderScope.draggedItem;
         return true;
       }
 
