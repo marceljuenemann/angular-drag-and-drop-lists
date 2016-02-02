@@ -7,7 +7,11 @@
     "license": "MIT",
     "main": "angular-drag-and-drop-lists.js",
     "devDependencies": {
-        "http-server": "~0.6.1"
+        "angular": "~1.4.9",
+        "angular-mocks": "~1.4.9",
+        "http-server": "~0.6.1",
+        "jasmine-core": "~2.4.1",
+        "jquery": "~2.2.0"
     },
     "scripts": {
         "start": "http-server -p 8000"
