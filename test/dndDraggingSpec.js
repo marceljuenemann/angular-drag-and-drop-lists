@@ -22,7 +22,7 @@ describe('dndDragging', function() {
     });
   });
 
-  describe('dragstart', function() {
+  describe('dragstart handler', function() {
     var element, event;
 
     beforeEach(function() {
@@ -78,5 +78,67 @@ describe('dndDragging', function() {
       event._triggerOn(element);
       expect(dndDragTypeWorkaround.dragType).toEqual(4);
     }));
+  });
+
+  describe('dragend handler', function() {
+    var element, event;
+
+    beforeEach(function() {
+      element = compileAndLink(SIMPLE_HTML);
+      event = createEvent('dragend');
+    });
+
+    it('stops propagation', function() {
+      event._triggerOn(element);
+      expect(event._propagationStopped).toBe(true);
+    });
+
+    it('removes CSS classes from element', inject(function($timeout) {
+      element.addClass('dndDragging');
+      element.addClass('dndDraggingSource');
+      event._triggerOn(element);
+
+      expect(element.hasClass('dndDragging')).toBe(false);
+      expect(element.hasClass('dndDraggingSource')).toBe(true);
+
+      $timeout.flush(0);
+      expect(element.hasClass('dndDraggingSource')).toBe(false);
+    }));
+
+    it('resets workarounds', inject(function(dndDragTypeWorkaround) {
+      event._triggerOn(element);
+      expect(dndDragTypeWorkaround.isDragging).toBe(false);
+    }));
+
+    var dropEffects = {move: 'moved', copy: 'copied', none: 'canceled'};
+    angular.forEach(dropEffects, function(callback, dropEffect) {
+      it('calls callbacks for dropEffect ' + dropEffect, inject(function(dndDropEffectWorkaround) {
+        var html = '<div dnd-draggable dnd-dragend="de = dropEffect" '
+                 + 'dnd-' + callback + '="ev = event"></div>';
+        element = compileAndLink(html);
+        dndDropEffectWorkaround.dropEffect = dropEffect;
+
+        event._triggerOn(element);
+        expect(element.scope().ev).toBe(event.originalEvent);
+        expect(element.scope().de).toBe(dropEffect);
+      }));
+    });
+  });
+
+  describe('click handler', function() {
+    it('does nothing if dnd-selected is not set', function() {
+      var element = compileAndLink(SIMPLE_HTML);
+      var event = createEvent('click');
+      event._triggerOn(element);
+      expect(event._propagationStopped).toBeFalsy();
+    });
+
+    it('invokes dnd-selected callback and stops propagation', function() {
+      var element = compileAndLink('<div dnd-draggable dnd-selected="selected = true"></div>');
+      var event = createEvent('click');
+      event._triggerOn(element);
+      expect(event._propagationStopped).toBe(true);
+      expect(element.scope().selected).toBe(true);
+    });
   });
 });
