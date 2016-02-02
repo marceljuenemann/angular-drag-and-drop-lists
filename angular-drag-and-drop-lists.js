@@ -231,6 +231,8 @@ angular.module('dndLists', [])
       var placeholder = getPlaceholderElement();
       var placeholderNode = placeholder[0];
       var listNode = element[0];
+      var debounceDelay = 100;
+      var pendingDebounce = null;
       placeholder.remove();
 
       var horizontal = attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList);
@@ -241,63 +243,72 @@ angular.module('dndLists', [])
        * is being dragged over our list, or over an child element.
        */
       element.on('dragover', function(event) {
-        event = event.originalEvent || event;
-
-        if (!isDropAllowed(event)) return true;
-
-        // First of all, make sure that the placeholder is shown
-        // This is especially important if the list is empty
-        if (placeholderNode.parentNode != listNode) {
-          element.append(placeholder);
+        if (debounceDelay) {
+          pendingDebounce = $timeout(function() {
+            invokeDragOver(event);
+          }, debounceDelay);
         }
 
-        if (event.target !== listNode) {
-          // Try to find the node direct directly below the list node.
-          var listItemNode = event.target;
-          while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
-            listItemNode = listItemNode.parentNode;
+        function invokeDragOver(event) {
+          event = event.originalEvent || event;
+
+          if (!isDropAllowed(event)) return true;
+
+          // First of all, make sure that the placeholder is shown
+          // This is especially important if the list is empty
+          if (placeholderNode.parentNode != listNode) {
+            element.append(placeholder);
           }
 
-          if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
-            // If the mouse pointer is in the upper half of the child element,
-            // we place it before the child element, otherwise below it.
-            if (isMouseInFirstHalf(event, listItemNode)) {
-              listNode.insertBefore(placeholderNode, listItemNode);
-            } else {
-              listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+          if (event.target !== listNode) {
+            // Try to find the node direct directly below the list node.
+            var listItemNode = event.target;
+            while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
+              listItemNode = listItemNode.parentNode;
             }
-          }
-        } else {
-          // This branch is reached when we are dragging directly over the list element.
-          // Usually we wouldn't need to do anything here, but the IE does not fire it's
-          // events for the child element, only for the list directly. Therefore we repeat
-          // the positioning algorithm for IE here.
-          if (isMouseInFirstHalf(event, placeholderNode, true)) {
-            // Check if we should move the placeholder element one spot towards the top.
-            // Note that display none elements will have offsetTop and offsetHeight set to
-            // zero, therefore we need a special check for them.
-            while (placeholderNode.previousElementSibling
-                 && (isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true)
-                 || placeholderNode.previousElementSibling.offsetHeight === 0)) {
-              listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
+
+            if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
+              // If the mouse pointer is in the upper half of the child element,
+              // we place it before the child element, otherwise below it.
+              if (isMouseInFirstHalf(event, listItemNode)) {
+                listNode.insertBefore(placeholderNode, listItemNode);
+              } else {
+                listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+              }
             }
           } else {
-            // Check if we should move the placeholder element one spot towards the bottom
-            while (placeholderNode.nextElementSibling &&
-                 !isMouseInFirstHalf(event, placeholderNode.nextElementSibling, true)) {
-              listNode.insertBefore(placeholderNode,
-                  placeholderNode.nextElementSibling.nextElementSibling);
+            // This branch is reached when we are dragging directly over the list element.
+            // Usually we wouldn't need to do anything here, but the IE does not fire it's
+            // events for the child element, only for the list directly. Therefore we repeat
+            // the positioning algorithm for IE here.
+            if (isMouseInFirstHalf(event, placeholderNode, true)) {
+              // Check if we should move the placeholder element one spot towards the top.
+              // Note that display none elements will have offsetTop and offsetHeight set to
+              // zero, therefore we need a special check for them.
+              while (placeholderNode.previousElementSibling
+              && (isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true)
+              || placeholderNode.previousElementSibling.offsetHeight === 0)) {
+                listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
+              }
+            } else {
+              // Check if we should move the placeholder element one spot towards the bottom
+              while (placeholderNode.nextElementSibling &&
+              !isMouseInFirstHalf(event, placeholderNode.nextElementSibling, true)) {
+                listNode.insertBefore(placeholderNode,
+                    placeholderNode.nextElementSibling.nextElementSibling);
+              }
             }
           }
-        }
 
-        // At this point we invoke the callback, which still can disallow the drop.
-        // We can't do this earlier because we want to pass the index of the placeholder.
-        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, getPlaceholderIndex())) {
-          return stopDragover();
-        }
+          // At this point we invoke the callback, which still can disallow the drop.
+          // We can't do this earlier because we want to pass the index of the placeholder.
+          if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, getPlaceholderIndex())) {
+            return stopDragover();
+          }
 
-        element.addClass("dndDragover");
+          element.addClass("dndDragover");
+
+        }
         event.preventDefault();
         event.stopPropagation();
         return false;
