@@ -157,7 +157,7 @@ angular.module('dndLists', [])
           $parse(attr.dndSelected)(scope, {event: event});
         });
 
-        // Prevent triggering dndSelected in parant elements.
+        // Prevent triggering dndSelected in parent elements.
         event.stopPropagation();
       });
 
