@@ -270,7 +270,7 @@ angular.module('dndLists', [])
         } else {
           // This branch is reached when we are dragging directly over the list element.
           // Usually we wouldn't need to do anything here, but the IE does not fire it's
-          // events for the child element, only for the list directly. Therefore we repeat
+          // events for the child element, only for the list directly. Therefore, we repeat
           // the positioning algorithm for IE here.
           if (isMouseInFirstHalf(event, placeholderNode, true)) {
             // Check if we should move the placeholder element one spot towards the top.
