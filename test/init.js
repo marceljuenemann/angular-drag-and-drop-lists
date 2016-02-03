@@ -31,14 +31,25 @@ function createEvent(type, dataTransfer) {
     _dt: dataTransfer,
     _triggerOn: function(element) {
       // Retrieve event handlers from jQuery and invoke.
-      $._data($(element).get(0), "events")[type][0].handler(event);
+      return $._data($(element).get(0), "events")[type][0].handler(event);
     },
   };
+
   switch (type) {
     case 'dragstart':
       dataTransfer.setData = function(type, value) {
         event._data[type] = value;
       };
+      break;
+    case 'drop':
+      dataTransfer.getData = function(type) { return event._data[type]; };
+      // continue
+    case 'dragover':
+      event._data['image/jpeg'] = '???';
+      event._data['text/plain'] = '{"example":"data"}';
+      dataTransfer.types = ["image/jpeg", "text/plain"];
+      dataTransfer.effectAllowed = 'move';
+      dataTransfer.dropEffect = 'move';
       break;
   }
 
