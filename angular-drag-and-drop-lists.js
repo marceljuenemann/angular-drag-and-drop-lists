@@ -1,8 +1,8 @@
 /**
  * angular-drag-and-drop-lists v1.3.0
  *
- * Copyright (c) 2014 Marcel Juenemann mail@marcel-juenemann.de
- * Copyright (c) 2014-2015 Google Inc.
+ * Copyright (c) 2014 Marcel Juenemann marcel@juenemann.cc
+ * Copyright (c) 2014-2016 Google Inc.
  * https://github.com/marceljuenemann/angular-drag-and-drop-lists
  *
  * License: MIT
@@ -270,7 +270,7 @@ angular.module('dndLists', [])
         } else {
           // This branch is reached when we are dragging directly over the list element.
           // Usually we wouldn't need to do anything here, but the IE does not fire it's
-          // events for the child element, only for the list directly. Therefore we repeat
+          // events for the child element, only for the list directly. Therefore, we repeat
           // the positioning algorithm for IE here.
           if (isMouseInFirstHalf(event, placeholderNode, true)) {
             // Check if we should move the placeholder element one spot towards the top.
