@@ -192,6 +192,12 @@ describe('dndList', function() {
       verifyDragoverStopped(element, dropEvent, 3);
     });
 
+    it('dnd-drop can take care of inserting the element', function() {
+      element.scope().dropHandler = function() { return true; };
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().list).toEqual([1, 2, 3]);
+    });
+
     it('invokes callbacks with correct type', function() {
       dragTypeWorkaround.dragType = 'mytype';
       verifyDropAllowed(element, dropEvent);

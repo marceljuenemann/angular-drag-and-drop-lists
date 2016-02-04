@@ -195,14 +195,21 @@ angular.module('dndLists', [])
    *                        - event: The original dragover event sent by the browser.
    *                        - index: The position in the list at which the element would be dropped.
    *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
-   * - dnd-drop             Optional expression that is invoked when an element is dropped over the
-   *                        list. If the expression is set, it must return the object that will be
-   *                        inserted into the list. If it returns false, the drop will be aborted
-   *                        and the event is propagated. The following variables will be available:
+   *                        - external: Whether the element was dragged from an external source.
+   * - dnd-drop             Optional expression that is invoked when an element is dropped on the
+   *                        list. The following variables will be available:
    *                        - event: The original drop event sent by the browser.
    *                        - index: The position in the list at which the element would be dropped.
    *                        - item: The transferred object.
    *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
+   *                        - external: Whether the element was dragged from an external source.
+   *                        The return value determines the further handling of the drop:
+   *                        - false: The drop will be canceled and the element won't be inserted.
+   *                        - true: Signalises that the drop is allowed, but the dnd-drop
+   *                          callback already took care of inserting the element.
+   *                        - otherwise: All other return values will be treated as the object to
+   *                          insert into the array. In most cases you want to simply return the
+   *                          item parameter, but there are no restrictions on what you can return.
    * - dnd-inserted         Optional expression that is invoked after a drop if the element was
    *                        actually inserted into the list. The same local variables as for
    *                        dnd-drop will be available. Note that for reorderings inside the same
@@ -336,11 +343,12 @@ angular.module('dndLists', [])
           }
         }
 
-        // Retrieve the JSON array and insert the transferred object into it.
-        var targetArray = scope.$eval(attr.dndList);
-        scope.$apply(function() {
-          targetArray.splice(index, 0, transferredObject);
-        });
+        // Insert the object into the array, unless dnd-drop took care of that (returned true).
+        if (transferredObject !== true) {
+          scope.$apply(function() {
+            scope.$eval(attr.dndList).splice(index, 0, transferredObject);
+          });
+        }
         invokeCallback(attr.dndInserted, event, index, transferredObject);
 
         // In Chrome on Windows the dropEffect will always be none...
