@@ -1,28 +1,32 @@
 describe('dndList', function() {
-  var element,
-      event,
-      dragTypeWorkaround,
+  var dragTypeWorkaround,
       dropEffectWorkaround;
 
   beforeEach(inject(function(dndDropEffectWorkaround, dndDragTypeWorkaround) {
-    element = compileAndLink('<div dnd-list="list"></div>');
-    element.scope().list = [];
     dragTypeWorkaround = dndDragTypeWorkaround;
     dropEffectWorkaround = dndDropEffectWorkaround;
-
     // Initialise internal state by calling dragstart.
     createEvent('dragstart')._triggerOn(compileAndLink('<div dnd-draggable="{}"></div>'));
   }));
 
   describe('constructor', function() {
     it('hides the placeholder element', function() {
-      element = compileAndLink('<dnd-list><img class="dndPlaceholder"></dnd-list>');
+      var element = compileAndLink('<dnd-list><img class="dndPlaceholder"></dnd-list>');
       expect(element.children().length).toBe(0);
     });
   });
 
   describe('dragover handler', function() {
     commonTests('dragover');
+
+    var element, event;
+
+    beforeEach(function() {
+      element = compileAndLink('<div dnd-list="list"></div>');
+      element.scope().list = [];
+      event = createEvent('dragover');
+      event.originalEvent.target = element[0];
+    });
 
     it('adds dndDragover CSS class', function() {
       verifyDropAllowed(element, event);
@@ -66,9 +70,14 @@ describe('dndList', function() {
       expect(element.scope().dragover.external).toBe(true);
     });
 
+    it('dnd-dragover callback can cancel the drop', function() {
+      element = compileAndLink('<div dnd-list="list" dnd-dragover="false"></div>');
+      verifyDropDisallowed(element, event);
+    });
+
     describe('placeholder positioning (vertical)', positioningTests(false, false));
     describe('placeholder positioning (vertical, IE)', positioningTests(false, true));
-    describe('placeholder positioning (horizontal', positioningTests(true, false));
+    describe('placeholder positioning (horizontal)', positioningTests(true, false));
     describe('placeholder positioning (horizontal, IE)', positioningTests(true, true));
 
     function positioningTests(horizontal, relative) {
@@ -124,74 +133,218 @@ describe('dndList', function() {
 
   describe('drop handler', function() {
     commonTests('drop');
+
+    var element, dragoverEvent, dropEvent;
+
+    beforeEach(function() {
+      element = createListWithItemsAndCallbacks();
+      dragoverEvent = createEvent('dragover');
+      dragoverEvent.originalEvent.target = element.children()[0];
+      dragoverEvent._triggerOn(element);
+      dropEvent = createEvent('drop');
+    });
+
+    it('inserts into the list and removes dndDragover class', function() {
+      expect(element.hasClass("dndDragover")).toBe(true);
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().list).toEqual([1, {example: 'data'}, 2, 3]);
+      expect(element.hasClass("dndDragover")).toBe(false);
+      expect(element.children().length).toBe(3);
+    });
+
+    it('inserts in correct position', function() {
+      dragoverEvent.originalEvent.target = element.children()[2];
+      dragoverEvent._triggerOn(element);
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().list).toEqual([1, 2, {example: 'data'}, 3]);
+      expect(element.scope().inserted.index).toBe(2);
+    });
+
+    it('invokes the dnd-inserted callback', function() {
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().inserted.event).toBe(dropEvent.originalEvent);
+      expect(element.scope().inserted.index).toBe(1);
+      expect(element.scope().inserted.external).toBe(false);
+      expect(element.scope().inserted.type).toBeUndefined();
+      expect(element.scope().inserted.item).toBe(element.scope().list[1]);
+    });
+
+    it('dnd-drop can transform the object', function() {
+      var testObject = {transformed: true};
+      element.scope().dropHandler = function(params) {
+        expect(params.event).toBe(dropEvent.originalEvent);
+        expect(params.index).toBe(1);
+        expect(params.external).toBe(false);
+        expect(params.type).toBeUndefined();
+        expect(params.item).toEqual({example: 'data'});
+        return testObject;
+      };
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().list[1]).toBe(testObject);
+    });
+
+    it('dnd-drop can cancel the drop', function() {
+      element.scope().dropHandler = function() { return false; };
+      expect(dropEvent._triggerOn(element)).toBe(true);
+      expect(dropEvent._defaultPrevented).toBe(true);
+      expect(element.scope().list).toEqual([1, 2, 3]);
+      expect(element.scope().inserted).toBeUndefined();
+      verifyDragoverStopped(element, dropEvent, 3);
+    });
+
+    it('invokes callbacks with correct type', function() {
+      dragTypeWorkaround.dragType = 'mytype';
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().drop.type).toBe('mytype');
+      expect(element.scope().inserted.type).toBe('mytype');
+    });
+
+    it('invokes callbacks for external elements', function() {
+      dragTypeWorkaround.isDragging = undefined;
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().drop.external).toBe(true);
+      expect(element.scope().inserted.external).toBe(true);
+    });
+
+    it('can handle Text mime type', function() {
+      dropEvent._data = {'Text': '{"lorem":"ipsum"}'};
+      dropEvent._dt.types = ['Text'];
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().list[1]).toEqual({lorem: 'ipsum'});
+    });
+
+    it('cancels drop when JSON is invalid', function() {
+      dropEvent._data = {'text/plain': 'Lorem ipsum'};
+      dropEvent._dt.types = ['Text'];
+      expect(dropEvent._triggerOn(element)).toBe(true);
+      expect(dropEvent._defaultPrevented).toBe(true);
+      verifyDragoverStopped(element, dropEvent, 3);
+    });
+
+    describe('dropEffect calculation', function() {
+      testDropEffect('move', 'move');
+      testDropEffect('blub', 'blub');
+      testDropEffect('copy', 'none', 'copy');
+      testDropEffect('move', 'none', 'move');
+      testDropEffect('move', 'none', 'link');
+      testDropEffect('copy', 'none', 'link', true);
+
+      function testDropEffect(expected, dropEffect, effectAllowed, ctrlKey) {
+        it('stores ' + expected + ' for ' + [dropEffect, effectAllowed, ctrlKey], function() {
+          dropEvent._dt.dropEffect = dropEffect;
+          dropEvent._dt.effectAllowed = effectAllowed;
+          dropEvent.originalEvent.ctrlKey = ctrlKey;
+          verifyDropAllowed(element, dropEvent);
+          expect(dropEffectWorkaround.dropEffect).toBe(expected);
+        });
+      }
+    });
+  });
+
+  describe('dragleave handler', function() {
+    var element, event;
+
+    beforeEach(function() {
+      element = createListWithItemsAndCallbacks();
+      event = createEvent('dragover');
+      event.originalEvent.target = element[0];
+      event._triggerOn(element);
+    });
+
+    it('removes the dndDragover CSS class', function() {
+      expect(element.hasClass('dndDragover')).toBe(true);
+      createEvent('dragleave')._triggerOn(element);
+      expect(element.hasClass('dndDragover')).toBe(false);
+    });
+
+    it('removes the placeholder after a timeout', inject(function($timeout) {
+      expect(element.children().length).toBe(4);
+      createEvent('dragleave')._triggerOn(element);
+      $timeout.flush(50);
+      expect(element.children().length).toBe(4);
+      $timeout.flush(50);
+      expect(element.children().length).toBe(3);
+    }));
+
+    it('does not remove the placeholder if dndDragover was set again', inject(function($timeout) {
+      createEvent('dragleave')._triggerOn(element);
+      element.addClass('dndDragover');
+      $timeout.flush(1000);
+      expect(element.children().length).toBe(4);
+    }));
   });
 
   function commonTests(eventType) {
-    beforeEach(function() {
-      event = createEvent(eventType);
-      event.originalEvent.target = element[0];
-    });
+    describe('(common tests)', function() {
+      var element, event;
 
-    it('disallows dropping from external sources', function() {
-      dragTypeWorkaround.isDragging = false;
-      verifyDropDisallowed(element, event);
-    });
+      beforeEach(function() {
+        element = compileAndLink('<div dnd-list="[]"></div>');
+        event = createEvent(eventType);
+        event.originalEvent.target = element[0];
+      });
 
-    it('allows dropping from external sources if dnd-external-sources is set', function() {
-      element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-      dragTypeWorkaround.isDragging = false;
-      verifyDropAllowed(element, event);
-    });
+      it('disallows dropping from external sources', function() {
+        dragTypeWorkaround.isDragging = false;
+        verifyDropDisallowed(element, event);
+      });
 
-    it('disallows mimetypes other than text', function() {
-      event._dt.types = ['text/html'];
-      verifyDropDisallowed(element, event);
-    });
+      it('allows dropping from external sources if dnd-external-sources is set', function() {
+        element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+        dragTypeWorkaround.isDragging = false;
+        verifyDropAllowed(element, event);
+      });
 
-    it('allows drop if dataTransfer.types contains "Text"', function() {
-      event._dt.types = ['image/jpeg', 'Text'];
-      verifyDropAllowed(element, event);
-    });
+      it('disallows mimetypes other than text', function() {
+        event._dt.types = ['text/html'];
+        verifyDropDisallowed(element, event);
+      });
 
-    // Old Internet Explorer versions don't have dataTransfer.types.
-    it('allows drop if dataTransfer.types is undefined', function() {
-      event._dt.types = undefined;
-      verifyDropAllowed(element, event);
-    });
+      it('allows drop if dataTransfer.types contains "Text"', function() {
+        event._dt.types = ['image/jpeg', 'Text'];
+        verifyDropAllowed(element, event);
+      });
 
-    it('disallows dropping if dnd-disable-if is true', function() {
-      element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
-      element.scope().disabled = true;
-      verifyDropDisallowed(element, event);
-    });
+      // Old Internet Explorer versions don't have dataTransfer.types.
+      it('allows drop if dataTransfer.types is undefined', function() {
+        event._dt.types = undefined;
+        verifyDropAllowed(element, event);
+      });
 
-    it('allows drop if dnd-disable-if is false', function() {
-      element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
-      verifyDropAllowed(element, event);
-    });
+      it('disallows dropping if dnd-disable-if is true', function() {
+        element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
+        element.scope().disabled = true;
+        verifyDropDisallowed(element, event);
+      });
 
-    it('disallows dropping untyped elements if dnd-allowed-types is set', function() {
-      element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-      verifyDropDisallowed(element, event);
-    });
+      it('allows drop if dnd-disable-if is false', function() {
+        element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
+        verifyDropAllowed(element, event);
+      });
 
-    it('disallows dropping elements of the wrong type if dnd-allowed-types is set', function() {
-      element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-      dragTypeWorkaround.dragType = 'othertype';
-      verifyDropDisallowed(element, event);
-    });
+      it('disallows dropping untyped elements if dnd-allowed-types is set', function() {
+        element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+        verifyDropDisallowed(element, event);
+      });
 
-    it('allows dropping elements of the correct type if dnd-allowed-types is set', function() {
-      element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-      dragTypeWorkaround.dragType = 'mytype';
-      verifyDropAllowed(element, event);
-    });
+      it('disallows dropping elements of the wrong type if dnd-allowed-types is set', function() {
+        element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+        dragTypeWorkaround.dragType = 'othertype';
+        verifyDropDisallowed(element, event);
+      });
 
-    it('allows dropping external elements even if dnd-allowed-types is set', function() {
-      element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']" ' +
-                               'dnd-external-sources="true"></div>');
-      dragTypeWorkaround.isDragging = false;
-      verifyDropAllowed(element, event);
+      it('allows dropping elements of the correct type if dnd-allowed-types is set', function() {
+        element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+        dragTypeWorkaround.dragType = 'mytype';
+        verifyDropAllowed(element, event);
+      });
+
+      it('allows dropping external elements even if dnd-allowed-types is set', function() {
+        element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']" ' +
+                                 'dnd-external-sources="true"></div>');
+        dragTypeWorkaround.isDragging = false;
+        verifyDropAllowed(element, event);
+      });
     });
   }
 
@@ -207,9 +360,9 @@ describe('dndList', function() {
     verifyDragoverStopped(element, event);
   }
 
-  function verifyDragoverStopped(element, event) {
+  function verifyDragoverStopped(element, event, children) {
     expect(element.hasClass("dndDragover")).toBe(false);
-    expect(element.children().length).toBe(0);
+    expect(element.children().length).toBe(children || 0);
     expect(event._propagationStopped).toBeFalsy();
   }
 
@@ -218,11 +371,15 @@ describe('dndList', function() {
     var element = compileAndLink('<ul dnd-list="list" dnd-external-sources="true" ' +
                   'dnd-horizontal-list="' + (horizontal || 'false') + '" ' +
                   'dnd-dragover="dragover = ' + params + '" ' +
-                  'dnd-drop="dragover = ' + params + '" ' +
-                  'dnd-inserted="dragover = ' + params + '">' +
+                  'dnd-drop="dropHandler(' + params + ')" ' +
+                  'dnd-inserted="inserted = ' + params + '">' +
                   '<li>A</li><li>B</li><li>C</li></ul>');
+    element.scope().dropHandler = function(params) {
+      element.scope().drop = params;
+      return params.item;
+    };
+    element.scope().list = [1, 2, 3];
     element.css('position', 'relative');
-    element.scope().list = [];
     return element;
   }
 });
