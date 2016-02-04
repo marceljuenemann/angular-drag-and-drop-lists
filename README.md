@@ -71,6 +71,7 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
     * `type` The dnd-type set on the dnd-draggable, or undefined if unset.
     * [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-inserted` Optional expression that is invoked after a drop if the element was actually inserted into the list. The same local variables as for `dnd-drop` will be available. Note that for reorderings inside the same list the old element will still be in the list due to the fact that `dnd-moved` was not called yet. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
+* `dnd-inserter` Optional expression that is invoked when a drop is done to do the insertion into the list overriding the default list insertion behaviour.
 
 **CSS classes**
 * `dndPlaceholder` When an element is dragged over the list, a new placeholder child element will be added. This element is of type `li` and has the class `dndPlaceholder` set. Alternatively, you can define your own placeholder by creating a child element with `dndPlaceholder` class.

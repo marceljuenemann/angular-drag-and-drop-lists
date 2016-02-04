@@ -208,6 +208,12 @@ angular.module('dndLists', [])
    *                        dnd-drop will be available. Note that for reorderings inside the same
    *                        list the old element will still be in the list due to the fact that
    *                        dnd-moved was not called yet.
+   * - dnd-inserter         Optional expression that is invoked when a drop is done
+   *                        to do the insertion into the list overriding the default list insertion behaviour.
+   *                        - event: The original drop event sent by the browser.
+   *                        - index: The position in the list at which the element would be dropped.
+   *                        - item: The transferred object.
+   *                        - targetArray: The target list
    * - dnd-external-sources Optional boolean expression. When it evaluates to true, the list accepts
    *                        drops from sources outside of the current browser tab. This allows to
    *                        drag and drop accross different browser tabs. Note that this will allow
@@ -338,9 +344,14 @@ angular.module('dndLists', [])
 
         // Retrieve the JSON array and insert the transferred object into it.
         var targetArray = scope.$eval(attr.dndList);
-        scope.$apply(function() {
-          targetArray.splice(index, 0, transferredObject);
-        });
+        if (attr.dndInserter) {
+            invokeCallback(attr.dndInserter, event, index, transferredObject, targetArray);
+        } else {
+            // Retrieve the JSON array and insert the transferred object into it.
+            scope.$apply(function() {
+              targetArray.splice(index, 0, transferredObject);
+            });
+        }
         invokeCallback(attr.dndInserted, event, index, transferredObject);
 
         // In Chrome on Windows the dropEffect will always be none...
