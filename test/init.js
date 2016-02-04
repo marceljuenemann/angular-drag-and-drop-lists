@@ -26,6 +26,7 @@ function createEvent(type, dataTransfer) {
       stopPropagation: function() {
         event._propagationStopped = true;
       },
+      type: type,
     },
     _data: {},
     _dt: dataTransfer,

@@ -244,14 +244,14 @@ angular.module('dndLists', [])
       var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
 
       /**
-       * The dragenter is triggered prior to the dragover and to allow
-       * a drop the event handler must preventDefault().
+       * The dragenter event is fired when a dragged element or text selection enters a valid drop
+       * target. According to the spec, we either need to have a dropzone attribute or listen on
+       * dragenter events and call preventDefault(). It should be noted though that no browser seems
+       * to enforce this behaviour.
        */
       element.on('dragenter', function (event) {
         event = event.originalEvent || event;
-
         if (!isDropAllowed(event)) return true;
-
         event.preventDefault();
       });
 

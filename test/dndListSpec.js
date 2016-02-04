@@ -16,6 +16,10 @@ describe('dndList', function() {
     });
   });
 
+  describe('dragenter handler', function() {
+    commonTests('dragenter');
+  });
+
   describe('dragover handler', function() {
     commonTests('dragover');
 
@@ -355,9 +359,14 @@ describe('dndList', function() {
   }
 
   function verifyDropAllowed(element, event) {
-    expect(event._triggerOn(element)).toBe(false);
+    if (event.originalEvent.type == 'dragenter') {
+      expect(event._triggerOn(element)).toBeUndefined();
+      expect(event._propagationStopped).toBeUndefined();
+    } else {
+      expect(event._triggerOn(element)).toBe(false);
+      expect(event._propagationStopped).toBe(true);
+    }
     expect(event._defaultPrevented).toBe(true);
-    expect(event._propagationStopped).toBe(true);
   }
 
   function verifyDropDisallowed(element, event) {
