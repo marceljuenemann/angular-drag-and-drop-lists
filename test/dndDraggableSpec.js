@@ -78,6 +78,13 @@ describe('dndDraggable', function() {
       event._triggerOn(element);
       expect(dndDragTypeWorkaround.dragType).toEqual(4);
     }));
+
+    it('does not start dragging if dnd-disable-if is true', function() {
+      element = compileAndLink('<div dnd-draggable dnd-disable-if="true"></div>');
+      expect(event._triggerOn(element)).toBe(true);
+      expect(event._defaultPrevented).toBeFalsy();
+      expect(event._propagationStopped).toBeFalsy();
+    });
   });
 
   describe('dragend handler', function() {
