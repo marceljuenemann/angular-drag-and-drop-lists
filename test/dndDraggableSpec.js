@@ -1,4 +1,4 @@
-describe('dndDragging', function() {
+describe('dndDraggable', function() {
 
   var SIMPLE_HTML = '<div dnd-draggable="{hello: \'world\'}"></div>';
 
