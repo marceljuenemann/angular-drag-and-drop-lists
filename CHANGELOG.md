@@ -2,8 +2,8 @@
 
 ## Features
 
-- **dnd-handle directive**: This directive can be used in combination with `dnd-nodrag` so that a `dnd-draggable` can only be dragged by using certain handle elements. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
-- **dnd-drop can handle insertion**: The `dnd-drop` callback can now return true to signalize that it will take care if inserting the dropped element itself. `dnd-list` will no longer insert any element into the list, but still call the `dnd-inserted` callback.
+- **dnd-handle directive**: This directive can be used in combination with `dnd-nodrag`, so that a `dnd-draggable` can only be dragged by using certain handle elements. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
+- **dnd-drop can handle insertion**: The `dnd-drop` callback can now return true to signalize that it will take care of inserting the dropped element itself. `dnd-list` will then no longer insert any elements into the list, but will still call the `dnd-inserted` callback.
 
 ## Bug Fixes
 
