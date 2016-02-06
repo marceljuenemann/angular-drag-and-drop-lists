@@ -15,6 +15,7 @@
         "jquery": "~2.2.0"
     },
     "scripts": {
+        "minify": "minify angular-drag-and-drop-lists.js",
         "start": "http-server -p 8000"
     }
 }
