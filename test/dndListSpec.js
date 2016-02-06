@@ -361,7 +361,7 @@ describe('dndList', function() {
   function verifyDropAllowed(element, event) {
     if (event.originalEvent.type == 'dragenter') {
       expect(event._triggerOn(element)).toBeUndefined();
-      expect(event._propagationStopped).toBeUndefined();
+      expect(event._propagationStopped).toBe(false);
     } else {
       expect(event._triggerOn(element)).toBe(false);
       expect(event._propagationStopped).toBe(true);
@@ -371,14 +371,14 @@ describe('dndList', function() {
 
   function verifyDropDisallowed(element, event) {
     expect(event._triggerOn(element)).toBe(true);
-    expect(event._defaultPrevented).toBeFalsy();
+    expect(event._defaultPrevented).toBe(false);
     verifyDragoverStopped(element, event);
   }
 
   function verifyDragoverStopped(element, event, children) {
     expect(element.hasClass("dndDragover")).toBe(false);
     expect(element.children().length).toBe(children || 0);
-    expect(event._propagationStopped).toBeFalsy();
+    expect(event._propagationStopped).toBe(false);
   }
 
   function createListWithItemsAndCallbacks(horizontal) {

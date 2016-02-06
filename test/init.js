@@ -29,7 +29,9 @@ function createEvent(type, dataTransfer) {
       type: type,
     },
     _data: {},
+    _defaultPrevented: false,
     _dt: dataTransfer,
+    _propagationStopped: false,
     _triggerOn: function(element) {
       // Retrieve event handlers from jQuery and invoke.
       return $._data($(element).get(0), "events")[type][0].handler(event);

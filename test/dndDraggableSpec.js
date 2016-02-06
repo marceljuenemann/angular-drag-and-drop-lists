@@ -82,8 +82,8 @@ describe('dndDraggable', function() {
     it('does not start dragging if dnd-disable-if is true', function() {
       element = compileAndLink('<div dnd-draggable dnd-disable-if="true"></div>');
       expect(event._triggerOn(element)).toBe(true);
-      expect(event._defaultPrevented).toBeFalsy();
-      expect(event._propagationStopped).toBeFalsy();
+      expect(event._defaultPrevented).toBe(false);
+      expect(event._propagationStopped).toBe(false);
     });
 
     it('sets the dragImage if event was triggered on a dnd-handle', function() {
@@ -145,7 +145,7 @@ describe('dndDraggable', function() {
       var element = compileAndLink(SIMPLE_HTML);
       var event = createEvent('click');
       event._triggerOn(element);
-      expect(event._propagationStopped).toBeFalsy();
+      expect(event._propagationStopped).toBe(false);
     });
 
     it('invokes dnd-selected callback and stops propagation', function() {
