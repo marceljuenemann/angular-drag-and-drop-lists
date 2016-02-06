@@ -42,6 +42,20 @@ describe('dndList', function() {
       expect(element.children()[0].tagName).toBe('IMG');
     });
 
+    it('removes placeholder element of parent list', function() {
+      var childList = compileAndLink('<div dnd-list="list"></div>');
+      element.append(childList);
+      // Drag over parent list.
+      event._triggerOn(element);
+      expect(element.children().length).toBe(2);
+      expect(childList.children().length).toBe(0);
+      // Drag over child list.
+      event.originalEvent.target = childList[0];
+      event._triggerOn(childList);
+      expect(element.children().length).toBe(1);
+      expect(childList.children().length).toBe(1);
+    });
+
     it('invokes dnd-dragover callback', function() {
       element = createListWithItemsAndCallbacks();
       verifyDropAllowed(element, event);
@@ -72,15 +86,14 @@ describe('dndList', function() {
     });
 
     describe('placeholder positioning (vertical)', positioningTests(false, false));
-    describe('placeholder positioning (vertical, IE)', positioningTests(false, true));
     describe('placeholder positioning (horizontal)', positioningTests(true, false));
-    describe('placeholder positioning (horizontal, IE)', positioningTests(true, true));
 
-    function positioningTests(horizontal, relative) {
+    function positioningTests(horizontal) {
       return function() {
-        var offsetYField = (relative ? 'layer' : 'offset') + (horizontal ? 'X' : 'Y');
-        var offsetHeightField = 'offset' + (horizontal ? 'Width' : 'Height');
-        var offsetTopField = 'offset' + (horizontal ? 'Left' : 'Top');
+        var clientYField = 'client' + (horizontal ? 'X' : 'Y');
+        var heightField = horizontal ? 'width' : 'height';
+        var topField = horizontal ? 'left' : 'top';
+        var oe;
 
         beforeEach(function() {
           element = createListWithItemsAndCallbacks(horizontal);
@@ -88,6 +101,7 @@ describe('dndList', function() {
           if (horizontal) {
             element.children().css('float','left');
           }
+          oe = event.originalEvent;
         });
 
         afterEach(function() {
@@ -95,31 +109,25 @@ describe('dndList', function() {
         });
 
         it('adds actual placeholder element', function() {
-          event.originalEvent.target = element.children()[0];
-          event.originalEvent[offsetYField] = 1;
+          oe.target = element.children()[0];
+          oe[clientYField] = 1;
           verifyDropAllowed(element, event);
           expect(element.scope().dragover.index).toBe(0);
           expect(angular.element(element.children()[0]).hasClass('dndPlaceholder')).toBe(true);
         });
 
         it('inserts before element if mouse is in first half', function() {
-          event.originalEvent.target = element.children()[1];
-          event.originalEvent[offsetYField] = event.originalEvent.target[offsetHeightField] / 2 - 1;
-          if (relative) {
-            event.originalEvent[offsetYField] += event.originalEvent.target[offsetTopField];
-            event.originalEvent.target = element[0];
-          }
+          oe.target = element.children()[1];
+          var rect = oe.target.getBoundingClientRect();
+          oe[clientYField] = rect[topField] + rect[heightField] / 2 - 1;
           verifyDropAllowed(element, event);
           expect(element.scope().dragover.index).toBe(1);
         });
 
         it('inserts after element if mouse is in second half', function() {
-          event.originalEvent.target = element.children()[1];
-          event.originalEvent[offsetYField] = event.originalEvent.target[offsetHeightField] / 2 + 1;
-          if (relative) {
-            event.originalEvent[offsetYField] += event.originalEvent.target[offsetTopField];
-            event.originalEvent.target = element[0];
-          }
+          oe.target = element.children()[1];
+          var rect = oe.target.getBoundingClientRect();
+          oe[clientYField] = rect[topField] + rect[heightField] / 2 + 1;
           verifyDropAllowed(element, event);
           expect(element.scope().dragover.index).toBe(2);
         });
@@ -250,32 +258,40 @@ describe('dndList', function() {
     beforeEach(function() {
       triggerDragstart();
       element = createListWithItemsAndCallbacks();
-      event = createEvent('dragover');
-      event.originalEvent.target = element[0];
-      event._triggerOn(element);
-    });
+      angular.element(document.body).append(element);
 
-    it('removes the dndDragover CSS class', function() {
+      var dragoverEvent = createEvent('dragover');
+      dragoverEvent.originalEvent.target = element[0];
+      dragoverEvent._triggerOn(element);
       expect(element.hasClass('dndDragover')).toBe(true);
-      createEvent('dragleave')._triggerOn(element);
-      expect(element.hasClass('dndDragover')).toBe(false);
+      expect(element.children().length).toBe(4);
+
+      event = createEvent('dragleave');
     });
 
-    it('removes the placeholder after a timeout', inject(function($timeout) {
-      expect(element.children().length).toBe(4);
-      createEvent('dragleave')._triggerOn(element);
-      $timeout.flush(50);
-      expect(element.children().length).toBe(4);
-      $timeout.flush(50);
-      expect(element.children().length).toBe(3);
-    }));
+    afterEach(function() {
+      element.remove();
+    });
 
-    it('does not remove the placeholder if dndDragover was set again', inject(function($timeout) {
-      createEvent('dragleave')._triggerOn(element);
-      element.addClass('dndDragover');
-      $timeout.flush(1000);
+    it('removes the placeholder and dndDragover class', function() {
+      var rect = element.children()[1].getBoundingClientRect();
+      event.originalEvent.clientX = rect.left + 100;
+      event.originalEvent.clientY = rect.top + 100;
+
+      event._triggerOn(element);
+      expect(element.hasClass('dndDragover')).toBe(false);
+      expect(element.children().length).toBe(3);
+    });
+
+    it('does nothing if mouse is still inside dnd-list', function() {
+      var rect = element.children()[1].getBoundingClientRect();
+      event.originalEvent.clientX = rect.left + 2;
+      event.originalEvent.clientY = rect.top + 2;
+
+      event._triggerOn(element);
+      expect(element.hasClass('dndDragover')).toBe(true);
       expect(element.children().length).toBe(4);
-    }));
+    });
   });
 
   function commonTests(eventType) {

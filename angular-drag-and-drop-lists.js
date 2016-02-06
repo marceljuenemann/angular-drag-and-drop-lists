@@ -232,7 +232,7 @@
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  dndLists.directive('dndList', ['$parse', '$timeout', function($parse, $timeout) {
+  dndLists.directive('dndList', ['$parse', function($parse) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
@@ -265,49 +265,34 @@
 
         if (!isDropAllowed(event)) return true;
 
-        // First of all, make sure that the placeholder is shown
-        // This is especially important if the list is empty
+        // Make sure the placeholder is shown, which is especially important if the list is empty.
         if (placeholderNode.parentNode != listNode) {
           element.append(placeholder);
+          // In nested lists, the parent list might be showing a placeholder that we have to remove.
+          if (dndState.onNewDropTarget && dndState.onNewDropTarget != stopDragover) {
+            dndState.onNewDropTarget();
+          }
+          dndState.onNewDropTarget = stopDragover;
         }
 
-        if (event.target !== listNode) {
+        if (event.target != listNode) {
           // Try to find the node direct directly below the list node.
           var listItemNode = event.target;
-          while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
+          while (listItemNode.parentNode != listNode && listItemNode.parentNode) {
             listItemNode = listItemNode.parentNode;
           }
 
-          if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
-            // If the mouse pointer is in the upper half of the child element,
-            // we place it before the child element, otherwise below it.
-            if (isMouseInFirstHalf(event, listItemNode)) {
-              listNode.insertBefore(placeholderNode, listItemNode);
+          if (listItemNode.parentNode == listNode && listItemNode != placeholderNode) {
+            // If the mouse pointer is in the upper half of the list item element,
+            // we position the placeholder before the list item, otherwise after it.
+            var rect = listItemNode.getBoundingClientRect();
+            if (horizontal) {
+              var isFirstHalf = event.clientX < rect.left + rect.width / 2;
             } else {
-              listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+              var isFirstHalf = event.clientY < rect.top + rect.height / 2;
             }
-          }
-        } else {
-          // This branch is reached when we are dragging directly over the list element.
-          // Usually we wouldn't need to do anything here, but the IE does not fire it's
-          // events for the child element, only for the list directly. Therefore, we repeat
-          // the positioning algorithm for IE here.
-          if (isMouseInFirstHalf(event, placeholderNode, true)) {
-            // Check if we should move the placeholder element one spot towards the top.
-            // Note that display none elements will have offsetTop and offsetHeight set to
-            // zero, therefore we need a special check for them.
-            while (placeholderNode.previousElementSibling
-                 && (isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true)
-                 || placeholderNode.previousElementSibling.offsetHeight === 0)) {
-              listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
-            }
-          } else {
-            // Check if we should move the placeholder element one spot towards the bottom
-            while (placeholderNode.nextElementSibling &&
-                 !isMouseInFirstHalf(event, placeholderNode.nextElementSibling, true)) {
-              listNode.insertBefore(placeholderNode,
-                  placeholderNode.nextElementSibling.nextElementSibling);
-            }
+            listNode.insertBefore(placeholderNode,
+                isFirstHalf ? listItemNode : listItemNode.nextSibling);
           }
         }
 
@@ -386,38 +371,18 @@
       /**
        * We have to remove the placeholder when the element is no longer dragged over our list. The
        * problem is that the dragleave event is not only fired when the element leaves our list,
-       * but also when it leaves a child element -- so practically it's fired all the time. As a
-       * workaround we wait a few milliseconds and then check if the dndDragover class was added
-       * again. If it is there, dragover must have been called in the meantime, i.e. the element
-       * is still dragging over the list. If you know a better way of doing this, please tell me!
+       * but also when it leaves a child element. As a workaround we check which element is below
+       * the mouse pointer, and whether it is a descendant. Note that this will not take care of
+       * the case where the drop target was moved to a child dnd-list. That will be handled by
+       * the dragover handler.
        */
       element.on('dragleave', function(event) {
         event = event.originalEvent || event;
-
-        element.removeClass("dndDragover");
-        $timeout(function() {
-          if (!element.hasClass("dndDragover")) {
-            placeholder.remove();
-          }
-        }, 100);
+        var newTarget = document.elementFromPoint(event.clientX, event.clientY);
+        if (!listNode.contains(newTarget)) {
+          stopDragover();
+        }
       });
-
-      /**
-       * Checks whether the mouse pointer is in the first half of the given target element.
-       *
-       * In Chrome we can just use offsetY, but in Firefox we have to use layerY, which only
-       * works if the child element has position relative. In IE the events are only triggered
-       * on the listNode instead of the listNodeItem, therefore the mouse positions are
-       * relative to the parent element of targetNode.
-       */
-      function isMouseInFirstHalf(event, targetNode, relativeToParent) {
-        var mousePointer = horizontal ? (event.offsetX || event.layerX)
-                                      : (event.offsetY || event.layerY);
-        var targetSize = horizontal ? targetNode.offsetWidth : targetNode.offsetHeight;
-        var targetPosition = horizontal ? targetNode.offsetLeft : targetNode.offsetTop;
-        targetPosition = relativeToParent ? targetPosition : 0;
-        return mousePointer < targetPosition + targetSize / 2;
-      }
 
       /**
        * Tries to find a child element that has the dndPlaceholder class set. If none was found, a
@@ -499,7 +464,6 @@
         for (var i = 0; i < types.length; i++) {
           if (types[i] === "Text" || types[i] === "text/plain") return true;
         }
-
         return false;
       }
     };
@@ -573,6 +537,7 @@
    *   rely on the dropEffect passed by the browser, since there are various bugs in Chrome and
    *   Safari, and Internet Explorer defaults to copy if effectAllowed is copyMove.
    * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
+   * - onNewDropTarget: Callback managed by the dragover handler to remove parent placeholders.
    */
   var dndState = {};
 
