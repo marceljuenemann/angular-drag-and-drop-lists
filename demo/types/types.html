@@ -1,4 +1,4 @@
-<ul dnd-list="list.people" 
+<ul dnd-list="list.people"
     dnd-allowed-types="list.allowedTypes"
     dnd-disable-if="list.people.length >= list.max">
 
@@ -10,10 +10,12 @@
         dnd-effect-allowed="move"
         class="background-{{person.type}}"
         >
-        <div class="handle">:::</div>
-        <div class="name" dnd-nodrag>
-            <input type="text" ng-model="person.name" class="background-{{person.type}} form-control input-sm">
-        </div>
+        <dnd-nodrag>
+          <div dnd-handle class="handle">:::</div>
+          <div class="name">
+              <input type="text" ng-model="person.name" class="background-{{person.type}} form-control input-sm">
+          </div>
+        </dnd-nodrag>
     </li>
 
     <li class="dndPlaceholder">
