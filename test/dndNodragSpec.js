@@ -23,11 +23,26 @@ describe('dndNodrag', function() {
     expect(event._defaultPrevented).toBeFalsy();
   });
 
+  it('does nothing in dragstart if the event was triggered on a dnd-handle', function() {
+    event.originalEvent._dndHandle = true;
+    event._triggerOn(element);
+    expect(event._propagationStopped).toBeFalsy();
+    expect(event._defaultPrevented).toBeFalsy();
+  });
+
   it('stops propagation of dragend events', function() {
     event = createEvent('dragend');
     event._triggerOn(element);
 
     expect(event._propagationStopped).toBe(true);
+    expect(event._defaultPrevented).toBeFalsy();
+  });
+
+  it('does nothing in dragend if the event was triggered on a dnd-handle', function() {
+    event = createEvent('dragend');
+    event.originalEvent._dndHandle = true;
+    event._triggerOn(element);
+    expect(event._propagationStopped).toBeFalsy();
     expect(event._defaultPrevented).toBeFalsy();
   });
 });

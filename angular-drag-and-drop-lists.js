@@ -107,6 +107,11 @@ angular.module('dndLists', [])
         // typename, but we have to use "Text" there to support IE
         dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
+        // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
+        if (event._dndHandle && event.dataTransfer.setDragImage) {
+          event.dataTransfer.setDragImage(element[0], 0, 0);
+        }
+
         // Invoke callback
         $parse(attr.dndDragstart)(scope, {event: event});
 
@@ -510,7 +515,8 @@ angular.module('dndLists', [])
   /**
    * Use the dnd-nodrag attribute inside of dnd-draggable elements to prevent them from starting
    * drag operations. This is especially useful if you want to use input elements inside of
-   * dnd-draggable elements or create specific handle elements.
+   * dnd-draggable elements or create specific handle elements. Note: This directive does not work
+   * in Internet Explorer 9.
    */
   .directive('dndNodrag', function() {
     return function(scope, element, attr) {
@@ -524,12 +530,14 @@ angular.module('dndLists', [])
       element.on('dragstart', function(event) {
         event = event.originalEvent || event;
 
-        // If a child element already reacted to dragstart and set a dataTransfer object, we will
-        // allow that. For example, this is the case for user selections inside of input elements.
-        if (!(event.dataTransfer.types && event.dataTransfer.types.length)) {
-          event.preventDefault();
+        if (!event._dndHandle) {
+          // If a child element already reacted to dragstart and set a dataTransfer object, we will
+          // allow that. For example, this is the case for user selections inside of input elements.
+          if (!(event.dataTransfer.types && event.dataTransfer.types.length)) {
+            event.preventDefault();
+          }
+          event.stopPropagation();
         }
-        event.stopPropagation();
       });
 
       /**
@@ -538,7 +546,28 @@ angular.module('dndLists', [])
        */
       element.on('dragend', function(event) {
         event = event.originalEvent || event;
-        event.stopPropagation();
+        if (!event._dndHandle) {
+          event.stopPropagation();
+        }
+      });
+    };
+  })
+
+  /**
+   * Use the dnd-handle directive within a dnd-nodrag element in order to allow dragging with that
+   * element after all. Therefore, by combining dnd-nodrag and dnd-handle you can allow
+   * dnd-draggable elements to only be dragged via specific "handle" elements. Note that Internet
+   * Explorer will show the handle element as drag image instead of the dnd-draggable element. You
+   * can work around this by styling the handle element differently when it is being dragged. Use
+   * the CSS selector .dndDragging:not(.dndDraggingSource) [dnd-handle] for that.
+   */
+  .directive('dndHandle', function() {
+    return function(scope, element, attr) {
+      element.attr("draggable", "true");
+
+      element.on('dragstart dragend', function(event) {
+        event = event.originalEvent || event;
+        event._dndHandle = true;
       });
     };
   })

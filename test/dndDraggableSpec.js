@@ -85,6 +85,14 @@ describe('dndDraggable', function() {
       expect(event._defaultPrevented).toBeFalsy();
       expect(event._propagationStopped).toBeFalsy();
     });
+
+    it('sets the dragImage if event was triggered on a dnd-handle', function() {
+      var dragImage;
+      event._dt.setDragImage = function(img) { dragImage = img; };
+      event.originalEvent._dndHandle = true;
+      event._triggerOn(element);
+      expect(dragImage).toBe(element[0]);
+    });
   });
 
   describe('dragend handler', function() {

@@ -4,7 +4,7 @@
  */
 .typesDemo ul[dnd-list],
 .typesDemo ul[dnd-list] > li {
-	position: relative;
+  position: relative;
 }
 
 /**
@@ -12,8 +12,8 @@
  * otherwise you can't drop to it once it's empty
  */
 .typesDemo ul[dnd-list] {
-    min-height: 42px;
-    padding-left: 0px;
+  min-height: 42px;
+  padding-left: 0px;
 }
 
 /**
@@ -23,7 +23,7 @@
  * that he's actually moving it.
  */
 .typesDemo ul[dnd-list] .dndDraggingSource {
-    display: none;
+  display: none;
 }
 
 /**
@@ -32,9 +32,10 @@
  * over it.
  */
 .typesDemo ul[dnd-list] .dndPlaceholder {
-    display: block;
-    background-color: #ddd;
-    min-height: 42px;
+  display: block;
+  background-color: #ddd;
+  padding: 10px 15px;
+  min-height: 42px;
 }
 
 /**
@@ -45,53 +46,57 @@
  * browsers we can use event.offsetY for this.
  */
 .typesDemo ul[dnd-list] li {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-top-right-radius: 4px;
-    border-top-left-radius: 4px;
-    display: block;
-    padding: 10px 15px;
-    margin-bottom: -1px;
-    
-    /* Disable text selection if item is not draggable */
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-top-right-radius: 4px;
+  border-top-left-radius: 4px;
+  display: block;
+  margin-bottom: -1px;
+
+  /* Disable text selection if item is not draggable */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.typesDemo ul[dnd-list] li dnd-nodrag {
+  display: block;
+  padding: 10px 15px;
 }
 
 /**
  * Gender-specifc background
  */
 .typesDemo ul[dnd-list] li.background-man {
-	background-color: #CAE0FC;
+  background-color: #CAE0FC;
 }
 
 .typesDemo ul[dnd-list] li.background-woman {
-	background-color: #FFE2F5;
+  background-color: #FFE2F5;
 }
 
 .typesDemo ul[dnd-list] input.background-man {
-	background-color: #D8E9FF;
-	color: #2F4D99;
+  background-color: #D8E9FF;
+  color: #2F4D99;
 }
 
 .typesDemo ul[dnd-list] input.background-woman {
-	background-color: #FFF0FA;
-	color: #D84FA7;
+  background-color: #FFF0FA;
+  color: #D84FA7;
 }
 
 /**
  * Handle positioning
  */
 .typesDemo .handle {
-    cursor: move;
-    position: absolute;
-    top: 14px;
+  cursor: move;
+  position: absolute;
+  top: 14px;
 }
 
 .typesDemo .name {
-    margin-left: 20px;
+  margin-left: 20px;
 }
