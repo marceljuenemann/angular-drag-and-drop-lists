@@ -1,5 +1,5 @@
 /**
- * angular-drag-and-drop-lists v1.3.0
+ * angular-drag-and-drop-lists v1.4.0
  *
  * Copyright (c) 2014 Marcel Juenemann marcel@juenemann.cc
  * Copyright (c) 2014-2016 Google Inc.
