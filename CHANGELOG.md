@@ -1,3 +1,24 @@
+# 1.4.0 (2016-02-06)
+
+## Features
+
+- **dnd-handle directive**: This directive can be used in combination with `dnd-nodrag` so that a `dnd-draggable` can only be dragged by using certain handle elements. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
+- **dnd-drop can handle insertion**: The `dnd-drop` callback can now return true to signalize that it will take care if inserting the dropped element itself. `dnd-list` will no longer insert any element into the list, but still call the `dnd-inserted` callback.
+
+## Bug Fixes
+
+- **Fix dnd-disable-if on dnd-draggable**: When you disabled a `dnd-draggable` with `dnd-disable-if`, the user was still able to trigger a drag of that element by selecting some text inside the element. (issue #159)
+- **dnd-list now handles the dragenter event**: According to the HTML5 standard dropzones need to handle the `dragenter` event, although there doesn't seem to be any browser that enforces this. (issue #118)
+
+## Tested browsers
+
+- Chrome 48 (Mac, Ubuntu & Windows 10)
+- Firefox 44 (Ubuntu)
+- Safari 9 (Mac)
+- Microsoft Edge 20 (Windows 10)
+- Internet Explorer 11 (Windows 10)
+- Internet Explorer 10 & 9 in compatibility mode (Windows 10)
+
 # 1.3.0 (2015-08-20)
 
 ## Features
@@ -83,3 +104,4 @@ Initial release
 - Merge to master
 - Tag release
 - Merge to gh-pages
+- Publish to npm

@@ -23,9 +23,11 @@ angular.module("demo").controller("MultiDemoController", function($scope) {
      */
     $scope.onDragstart = function(list, event) {
        list.dragging = true;
-       var img = new Image();
-       img.src = 'framework/vendor/ic_content_copy_black_24dp_2x.png';
-       event.dataTransfer.setDragImage(img, 0, 0);
+       if (event.dataTransfer.setDragImage) {
+         var img = new Image();
+         img.src = 'framework/vendor/ic_content_copy_black_24dp_2x.png';
+         event.dataTransfer.setDragImage(img, 0, 0);
+       }
     };
 
     /**
