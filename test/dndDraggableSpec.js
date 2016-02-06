@@ -66,19 +66,6 @@ describe('dndDraggable', function() {
       expect(element.scope().ev).toBe(event.originalEvent);
     });
 
-    it('initializes workarounds', inject(function(dndDropEffectWorkaround, dndDragTypeWorkaround) {
-      event._triggerOn(element);
-      expect(dndDragTypeWorkaround.isDragging).toBe(true);
-      expect(dndDragTypeWorkaround.dragType).toBeUndefined();
-      expect(dndDropEffectWorkaround.dropEffect).toBe('none');
-    }));
-
-    it('initializes workarounds respecting dnd-type', inject(function(dndDragTypeWorkaround) {
-      element = compileAndLink('<div dnd-draggable dnd-type="2 * 2"></div>');
-      event._triggerOn(element);
-      expect(dndDragTypeWorkaround.dragType).toEqual(4);
-    }));
-
     it('does not start dragging if dnd-disable-if is true', function() {
       element = compileAndLink('<div dnd-draggable dnd-disable-if="true"></div>');
       expect(event._triggerOn(element)).toBe(true);
@@ -120,23 +107,26 @@ describe('dndDraggable', function() {
       expect(element.hasClass('dndDraggingSource')).toBe(false);
     }));
 
-    it('resets workarounds', inject(function(dndDragTypeWorkaround) {
-      event._triggerOn(element);
-      expect(dndDragTypeWorkaround.isDragging).toBe(false);
-    }));
-
     var dropEffects = {move: 'moved', copy: 'copied', none: 'canceled'};
     angular.forEach(dropEffects, function(callback, dropEffect) {
-      it('calls callbacks for dropEffect ' + dropEffect, inject(function(dndDropEffectWorkaround) {
+      it('calls callbacks for dropEffect ' + dropEffect, function() {
         var html = '<div dnd-draggable dnd-dragend="de = dropEffect" '
                  + 'dnd-' + callback + '="ev = event"></div>';
         element = compileAndLink(html);
-        dndDropEffectWorkaround.dropEffect = dropEffect;
 
+        // Simulate dragstart and drop to initialize internal state.
+        createEvent('dragstart')._triggerOn(element);
+        if (dropEffect != 'none') {
+          var dropEvent = createEvent('drop');
+          dropEvent._dt.dropEffect = dropEffect
+          dropEvent._triggerOn(compileAndLink('<div dnd-list="[]"></div>'));
+        }
+
+        // Verify dragend event.
         event._triggerOn(element);
         expect(element.scope().ev).toBe(event.originalEvent);
         expect(element.scope().de).toBe(dropEffect);
-      }));
+      });
     });
   });
 

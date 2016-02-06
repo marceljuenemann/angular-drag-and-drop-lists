@@ -7,7 +7,7 @@
  *
  * License: MIT
  */
-angular.module('dndLists', [])
+(function(dndLists) {
 
   /**
    * Use the dnd-draggable attribute to make your element draggable
@@ -66,13 +66,12 @@ angular.module('dndLists', [])
    *                      it's source position, and not the "element" that the user is dragging with
    *                      his mouse pointer.
    */
-  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  dndLists.directive('dndDraggable', ['$parse', '$timeout', function($parse, $timeout) {
     return function(scope, element, attr) {
-      // Set the HTML5 draggable attribute on the element
+      // Set the HTML5 draggable attribute on the element.
       element.attr("draggable", "true");
 
-      // If the dnd-disable-if attribute is set, we have to watch that
+      // If the dnd-disable-if attribute is set, we have to watch that.
       if (attr.dndDisableIf) {
         scope.$watch(attr.dndDisableIf, function(disabled) {
           element.attr("draggable", !disabled);
@@ -89,30 +88,25 @@ angular.module('dndLists', [])
         // Check whether the element is draggable, since dragstart might be triggered on a child.
         if (element.attr('draggable') == 'false') return true;
 
-        // Serialize the data associated with this element. IE only supports the Text drag type
+        // Serialize the data associated with this element. IE only supports the Text drag type.
         event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
 
-        // Only allow actions specified in dnd-effect-allowed attribute
+        // Only allow actions specified in dnd-effect-allowed attribute.
         event.dataTransfer.effectAllowed = attr.dndEffectAllowed || "move";
 
-        // Add CSS classes. See documentation above
+        // Add CSS classes. See documentation above.
         element.addClass("dndDragging");
         $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
-
-        // Workarounds for stupid browsers, see description below
-        dndDropEffectWorkaround.dropEffect = "none";
-        dndDragTypeWorkaround.isDragging = true;
-
-        // Save type of item in global state. Usually, this would go into the dataTransfer
-        // typename, but we have to use "Text" there to support IE
-        dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
           event.dataTransfer.setDragImage(element[0], 0, 0);
         }
 
-        // Invoke callback
+        // Initialize global state and invoke the callback.
+        dndState.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
+        dndState.dropEffect = "none";
+        dndState.isDragging = true;
         $parse(attr.dndDragstart)(scope, {event: event});
 
         event.stopPropagation();
@@ -130,7 +124,7 @@ angular.module('dndLists', [])
         // the used effect, but Chrome has not implemented that field correctly. On Windows
         // it always sets it to 'none', while Chrome on Linux sometimes sets it to something
         // else when it's supposed to send 'none' (drag operation aborted).
-        var dropEffect = dndDropEffectWorkaround.dropEffect;
+        var dropEffect = dndState.dropEffect;
         scope.$apply(function() {
           switch (dropEffect) {
             case "move":
@@ -149,7 +143,7 @@ angular.module('dndLists', [])
         // Clean up
         element.removeClass("dndDragging");
         $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
-        dndDragTypeWorkaround.isDragging = false;
+        dndState.isDragging = false;
         event.stopPropagation();
       });
 
@@ -176,7 +170,7 @@ angular.module('dndLists', [])
         if (this.dragDrop) this.dragDrop();
       });
     };
-  }])
+  }]);
 
   /**
    * Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single
@@ -238,8 +232,7 @@ angular.module('dndLists', [])
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  dndLists.directive('dndList', ['$parse', '$timeout', function($parse, $timeout) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
@@ -376,12 +369,12 @@ angular.module('dndLists', [])
         if (event.dataTransfer.dropEffect === "none") {
           if (event.dataTransfer.effectAllowed === "copy" ||
               event.dataTransfer.effectAllowed === "move") {
-            dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed;
+            dndState.dropEffect = event.dataTransfer.effectAllowed;
           } else {
-            dndDropEffectWorkaround.dropEffect = event.ctrlKey ? "copy" : "move";
+            dndState.dropEffect = event.ctrlKey ? "copy" : "move";
           }
         } else {
-          dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
+          dndState.dropEffect = event.dataTransfer.dropEffect;
         }
 
         // Clean up
@@ -454,7 +447,7 @@ angular.module('dndLists', [])
        */
       function isDropAllowed(event) {
         // Disallow drop from external source unless it's allowed explicitly.
-        if (!dndDragTypeWorkaround.isDragging && !externalSources) return false;
+        if (!dndState.isDragging && !externalSources) return false;
 
         // Check mimetype. Usually we would use a custom drag type instead of Text, but IE doesn't
         // support that.
@@ -462,9 +455,9 @@ angular.module('dndLists', [])
 
         // Now check the dnd-allowed-types against the type of the incoming element. For drops from
         // external sources we don't know the type, so it will need to be checked via dnd-drop.
-        if (attr.dndAllowedTypes && dndDragTypeWorkaround.isDragging) {
+        if (attr.dndAllowedTypes && dndState.isDragging) {
           var allowed = scope.$eval(attr.dndAllowedTypes);
-          if (angular.isArray(allowed) && allowed.indexOf(dndDragTypeWorkaround.dragType) === -1) {
+          if (angular.isArray(allowed) && allowed.indexOf(dndState.dragType) === -1) {
             return false;
           }
         }
@@ -492,8 +485,8 @@ angular.module('dndLists', [])
           event: event,
           index: index,
           item: item || undefined,
-          external: !dndDragTypeWorkaround.isDragging,
-          type: dndDragTypeWorkaround.isDragging ? dndDragTypeWorkaround.dragType : undefined
+          external: !dndState.isDragging,
+          type: dndState.isDragging ? dndState.dragType : undefined
         });
       }
 
@@ -510,7 +503,7 @@ angular.module('dndLists', [])
         return false;
       }
     };
-  }])
+  }]);
 
   /**
    * Use the dnd-nodrag attribute inside of dnd-draggable elements to prevent them from starting
@@ -518,7 +511,7 @@ angular.module('dndLists', [])
    * dnd-draggable elements or create specific handle elements. Note: This directive does not work
    * in Internet Explorer 9.
    */
-  .directive('dndNodrag', function() {
+  dndLists.directive('dndNodrag', function() {
     return function(scope, element, attr) {
       // Set as draggable so that we can cancel the events explicitly
       element.attr("draggable", "true");
@@ -551,7 +544,7 @@ angular.module('dndLists', [])
         }
       });
     };
-  })
+  });
 
   /**
    * Use the dnd-handle directive within a dnd-nodrag element in order to allow dragging with that
@@ -561,7 +554,7 @@ angular.module('dndLists', [])
    * can work around this by styling the handle element differently when it is being dragged. Use
    * the CSS selector .dndDragging:not(.dndDraggingSource) [dnd-handle] for that.
    */
-  .directive('dndHandle', function() {
+  dndLists.directive('dndHandle', function() {
     return function(scope, element, attr) {
       element.attr("draggable", "true");
 
@@ -570,21 +563,17 @@ angular.module('dndLists', [])
         event._dndHandle = true;
       });
     };
-  })
+  });
 
   /**
-   * This workaround handles the fact that Internet Explorer does not support drag types other than
-   * "Text" and "URL". That means we can not know whether the data comes from one of our elements or
-   * is just some other data like a text selection. As a workaround we save the isDragging flag in
-   * here. When a dropover event occurs, we only allow the drop if we are already dragging, because
-   * that means the element is ours.
+   * For some features we need to maintain global state. This is done here, with these fields:
+   * - dragType: Set in dragstart. In Internet Explorer we can't pass the dnd-type in the mime type,
+   *   or at least not read it out during dragover. Therefore, we save it here as well.
+   * - dropEffect: Set in dragstart to "none" and to the actual value in the drop handler. We don't
+   *   rely on the dropEffect passed by the browser, since there are various bugs in Chrome and
+   *   Safari, and Internet Explorer defaults to copy if effectAllowed is copyMove.
+   * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
    */
-  .factory('dndDragTypeWorkaround', function(){ return {} })
+  var dndState = {};
 
-  /**
-   * Chrome on Windows does not set the dropEffect field, which we need in dragend to determine
-   * whether a drag operation was successful. Therefore we have to maintain it in this global
-   * variable. The bug report for that has been open for years:
-   * https://code.google.com/p/chromium/issues/detail?id=39399
-   */
-  .factory('dndDropEffectWorkaround', function(){ return {} });
+})(angular.module('dndLists', []));

@@ -1,13 +1,4 @@
 describe('dndList', function() {
-  var dragTypeWorkaround,
-      dropEffectWorkaround;
-
-  beforeEach(inject(function(dndDropEffectWorkaround, dndDragTypeWorkaround) {
-    dragTypeWorkaround = dndDragTypeWorkaround;
-    dropEffectWorkaround = dndDropEffectWorkaround;
-    // Initialise internal state by calling dragstart.
-    createEvent('dragstart')._triggerOn(compileAndLink('<div dnd-draggable="{}"></div>'));
-  }));
 
   describe('constructor', function() {
     it('hides the placeholder element', function() {
@@ -26,6 +17,7 @@ describe('dndList', function() {
     var element, event;
 
     beforeEach(function() {
+      triggerDragstart();
       element = compileAndLink('<div dnd-list="list"></div>');
       element.scope().list = [];
       event = createEvent('dragover');
@@ -61,15 +53,15 @@ describe('dndList', function() {
     });
 
     it('invokes dnd-dragover callback with correct type', function() {
+      triggerDragstart('mytype');
       element = createListWithItemsAndCallbacks();
-      dragTypeWorkaround.dragType = 'mytype';
       verifyDropAllowed(element, event);
       expect(element.scope().dragover.type).toBe('mytype');
     });
 
     it('invokes dnd-dragover callback for external elements', function() {
+      triggerDragend();
       element = createListWithItemsAndCallbacks();
-      dragTypeWorkaround.isDragging = undefined;
       verifyDropAllowed(element, event);
       expect(element.scope().dragover.external).toBe(true);
     });
@@ -141,6 +133,7 @@ describe('dndList', function() {
     var element, dragoverEvent, dropEvent;
 
     beforeEach(function() {
+      triggerDragstart();
       element = createListWithItemsAndCallbacks();
       dragoverEvent = createEvent('dragover');
       dragoverEvent.originalEvent.target = element.children()[0];
@@ -203,14 +196,14 @@ describe('dndList', function() {
     });
 
     it('invokes callbacks with correct type', function() {
-      dragTypeWorkaround.dragType = 'mytype';
+      triggerDragstart('mytype');
       verifyDropAllowed(element, dropEvent);
       expect(element.scope().drop.type).toBe('mytype');
       expect(element.scope().inserted.type).toBe('mytype');
     });
 
     it('invokes callbacks for external elements', function() {
-      dragTypeWorkaround.isDragging = undefined;
+      triggerDragend();
       verifyDropAllowed(element, dropEvent);
       expect(element.scope().drop.external).toBe(true);
       expect(element.scope().inserted.external).toBe(true);
@@ -245,7 +238,7 @@ describe('dndList', function() {
           dropEvent._dt.effectAllowed = effectAllowed;
           dropEvent.originalEvent.ctrlKey = ctrlKey;
           verifyDropAllowed(element, dropEvent);
-          expect(dropEffectWorkaround.dropEffect).toBe(expected);
+          expect(triggerDragend()).toBe(expected);
         });
       }
     });
@@ -255,6 +248,7 @@ describe('dndList', function() {
     var element, event;
 
     beforeEach(function() {
+      triggerDragstart();
       element = createListWithItemsAndCallbacks();
       event = createEvent('dragover');
       event.originalEvent.target = element[0];
@@ -289,19 +283,20 @@ describe('dndList', function() {
       var element, event;
 
       beforeEach(function() {
+        triggerDragstart();
         element = compileAndLink('<div dnd-list="[]"></div>');
         event = createEvent(eventType);
         event.originalEvent.target = element[0];
       });
 
       it('disallows dropping from external sources', function() {
-        dragTypeWorkaround.isDragging = false;
+        triggerDragend();
         verifyDropDisallowed(element, event);
       });
 
       it('allows dropping from external sources if dnd-external-sources is set', function() {
+        triggerDragend();
         element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-        dragTypeWorkaround.isDragging = false;
         verifyDropAllowed(element, event);
       });
 
@@ -338,21 +333,21 @@ describe('dndList', function() {
       });
 
       it('disallows dropping elements of the wrong type if dnd-allowed-types is set', function() {
+        triggerDragstart('othertype');
         element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-        dragTypeWorkaround.dragType = 'othertype';
         verifyDropDisallowed(element, event);
       });
 
       it('allows dropping elements of the correct type if dnd-allowed-types is set', function() {
+        triggerDragstart('mytype');
         element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-        dragTypeWorkaround.dragType = 'mytype';
         verifyDropAllowed(element, event);
       });
 
       it('allows dropping external elements even if dnd-allowed-types is set', function() {
+        triggerDragend();
         element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']" ' +
                                  'dnd-external-sources="true"></div>');
-        dragTypeWorkaround.isDragging = false;
         verifyDropAllowed(element, event);
       });
     });
@@ -379,6 +374,17 @@ describe('dndList', function() {
     expect(element.hasClass("dndDragover")).toBe(false);
     expect(element.children().length).toBe(children || 0);
     expect(event._propagationStopped).toBe(false);
+  }
+
+  function triggerDragstart(type) {
+    var html = '<div dnd-draggable="{}"' + (type ? ' dnd-type="\'' + type + '\'"' : '') + '></div>';
+    createEvent('dragstart')._triggerOn(compileAndLink(html));
+  }
+
+  function triggerDragend() {
+    var element = compileAndLink('<div dnd-draggable dnd-dragend="result = dropEffect"></div>');
+    createEvent('dragend')._triggerOn(element);
+    return element.scope().result;
   }
 
   function createListWithItemsAndCallbacks(horizontal) {
