@@ -78,6 +78,21 @@ describe('dndDraggable', function() {
       event._triggerOn(element);
       expect(dndDragTypeWorkaround.dragType).toEqual(4);
     }));
+
+    it('does not start dragging if dnd-disable-if is true', function() {
+      element = compileAndLink('<div dnd-draggable dnd-disable-if="true"></div>');
+      expect(event._triggerOn(element)).toBe(true);
+      expect(event._defaultPrevented).toBe(false);
+      expect(event._propagationStopped).toBe(false);
+    });
+
+    it('sets the dragImage if event was triggered on a dnd-handle', function() {
+      var dragImage;
+      event._dt.setDragImage = function(img) { dragImage = img; };
+      event.originalEvent._dndHandle = true;
+      event._triggerOn(element);
+      expect(dragImage).toBe(element[0]);
+    });
   });
 
   describe('dragend handler', function() {
@@ -130,7 +145,7 @@ describe('dndDraggable', function() {
       var element = compileAndLink(SIMPLE_HTML);
       var event = createEvent('click');
       event._triggerOn(element);
-      expect(event._propagationStopped).toBeFalsy();
+      expect(event._propagationStopped).toBe(false);
     });
 
     it('invokes dnd-selected callback and stops propagation', function() {

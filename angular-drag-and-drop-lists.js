@@ -1,5 +1,5 @@
 /**
- * angular-drag-and-drop-lists v1.3.0
+ * angular-drag-and-drop-lists v1.4.0
  *
  * Copyright (c) 2014 Marcel Juenemann marcel@juenemann.cc
  * Copyright (c) 2014-2016 Google Inc.
@@ -86,6 +86,9 @@ angular.module('dndLists', [])
       element.on('dragstart', function(event) {
         event = event.originalEvent || event;
 
+        // Check whether the element is draggable, since dragstart might be triggered on a child.
+        if (element.attr('draggable') == 'false') return true;
+
         // Serialize the data associated with this element. IE only supports the Text drag type
         event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
 
@@ -103,6 +106,11 @@ angular.module('dndLists', [])
         // Save type of item in global state. Usually, this would go into the dataTransfer
         // typename, but we have to use "Text" there to support IE
         dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
+
+        // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
+        if (event._dndHandle && event.dataTransfer.setDragImage) {
+          event.dataTransfer.setDragImage(element[0], 0, 0);
+        }
 
         // Invoke callback
         $parse(attr.dndDragstart)(scope, {event: event});
@@ -195,14 +203,21 @@ angular.module('dndLists', [])
    *                        - event: The original dragover event sent by the browser.
    *                        - index: The position in the list at which the element would be dropped.
    *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
-   * - dnd-drop             Optional expression that is invoked when an element is dropped over the
-   *                        list. If the expression is set, it must return the object that will be
-   *                        inserted into the list. If it returns false, the drop will be aborted
-   *                        and the event is propagated. The following variables will be available:
+   *                        - external: Whether the element was dragged from an external source.
+   * - dnd-drop             Optional expression that is invoked when an element is dropped on the
+   *                        list. The following variables will be available:
    *                        - event: The original drop event sent by the browser.
    *                        - index: The position in the list at which the element would be dropped.
    *                        - item: The transferred object.
    *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
+   *                        - external: Whether the element was dragged from an external source.
+   *                        The return value determines the further handling of the drop:
+   *                        - false: The drop will be canceled and the element won't be inserted.
+   *                        - true: Signalises that the drop is allowed, but the dnd-drop
+   *                          callback already took care of inserting the element.
+   *                        - otherwise: All other return values will be treated as the object to
+   *                          insert into the array. In most cases you want to simply return the
+   *                          item parameter, but there are no restrictions on what you can return.
    * - dnd-inserted         Optional expression that is invoked after a drop if the element was
    *                        actually inserted into the list. The same local variables as for
    *                        dnd-drop will be available. Note that for reorderings inside the same
@@ -235,6 +250,18 @@ angular.module('dndLists', [])
 
       var horizontal = attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList);
       var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
+
+      /**
+       * The dragenter event is fired when a dragged element or text selection enters a valid drop
+       * target. According to the spec, we either need to have a dropzone attribute or listen on
+       * dragenter events and call preventDefault(). It should be noted though that no browser seems
+       * to enforce this behaviour.
+       */
+      element.on('dragenter', function (event) {
+        event = event.originalEvent || event;
+        if (!isDropAllowed(event)) return true;
+        event.preventDefault();
+      });
 
       /**
        * The dragover event is triggered "every few hundred milliseconds" while an element
@@ -336,11 +363,12 @@ angular.module('dndLists', [])
           }
         }
 
-        // Retrieve the JSON array and insert the transferred object into it.
-        var targetArray = scope.$eval(attr.dndList);
-        scope.$apply(function() {
-          targetArray.splice(index, 0, transferredObject);
-        });
+        // Insert the object into the array, unless dnd-drop took care of that (returned true).
+        if (transferredObject !== true) {
+          scope.$apply(function() {
+            scope.$eval(attr.dndList).splice(index, 0, transferredObject);
+          });
+        }
         invokeCallback(attr.dndInserted, event, index, transferredObject);
 
         // In Chrome on Windows the dropEffect will always be none...
@@ -487,7 +515,8 @@ angular.module('dndLists', [])
   /**
    * Use the dnd-nodrag attribute inside of dnd-draggable elements to prevent them from starting
    * drag operations. This is especially useful if you want to use input elements inside of
-   * dnd-draggable elements or create specific handle elements.
+   * dnd-draggable elements or create specific handle elements. Note: This directive does not work
+   * in Internet Explorer 9.
    */
   .directive('dndNodrag', function() {
     return function(scope, element, attr) {
@@ -501,12 +530,14 @@ angular.module('dndLists', [])
       element.on('dragstart', function(event) {
         event = event.originalEvent || event;
 
-        // If a child element already reacted to dragstart and set a dataTransfer object, we will
-        // allow that. For example, this is the case for user selections inside of input elements.
-        if (!(event.dataTransfer.types && event.dataTransfer.types.length)) {
-          event.preventDefault();
+        if (!event._dndHandle) {
+          // If a child element already reacted to dragstart and set a dataTransfer object, we will
+          // allow that. For example, this is the case for user selections inside of input elements.
+          if (!(event.dataTransfer.types && event.dataTransfer.types.length)) {
+            event.preventDefault();
+          }
+          event.stopPropagation();
         }
-        event.stopPropagation();
       });
 
       /**
@@ -515,7 +546,28 @@ angular.module('dndLists', [])
        */
       element.on('dragend', function(event) {
         event = event.originalEvent || event;
-        event.stopPropagation();
+        if (!event._dndHandle) {
+          event.stopPropagation();
+        }
+      });
+    };
+  })
+
+  /**
+   * Use the dnd-handle directive within a dnd-nodrag element in order to allow dragging with that
+   * element after all. Therefore, by combining dnd-nodrag and dnd-handle you can allow
+   * dnd-draggable elements to only be dragged via specific "handle" elements. Note that Internet
+   * Explorer will show the handle element as drag image instead of the dnd-draggable element. You
+   * can work around this by styling the handle element differently when it is being dragged. Use
+   * the CSS selector .dndDragging:not(.dndDraggingSource) [dnd-handle] for that.
+   */
+  .directive('dndHandle', function() {
+    return function(scope, element, attr) {
+      element.attr("draggable", "true");
+
+      element.on('dragstart dragend', function(event) {
+        event = event.originalEvent || event;
+        event._dndHandle = true;
       });
     };
   })

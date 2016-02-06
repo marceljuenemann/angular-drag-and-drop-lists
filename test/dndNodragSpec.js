@@ -20,7 +20,14 @@ describe('dndNodrag', function() {
     event._dt.types = ['text/plain'];
     event._triggerOn(element);
     expect(event._propagationStopped).toBe(true);
-    expect(event._defaultPrevented).toBeFalsy();
+    expect(event._defaultPrevented).toBe(false);
+  });
+
+  it('does nothing in dragstart if the event was triggered on a dnd-handle', function() {
+    event.originalEvent._dndHandle = true;
+    event._triggerOn(element);
+    expect(event._propagationStopped).toBe(false);
+    expect(event._defaultPrevented).toBe(false);
   });
 
   it('stops propagation of dragend events', function() {
@@ -28,6 +35,14 @@ describe('dndNodrag', function() {
     event._triggerOn(element);
 
     expect(event._propagationStopped).toBe(true);
-    expect(event._defaultPrevented).toBeFalsy();
+    expect(event._defaultPrevented).toBe(false);
+  });
+
+  it('does nothing in dragend if the event was triggered on a dnd-handle', function() {
+    event = createEvent('dragend');
+    event.originalEvent._dndHandle = true;
+    event._triggerOn(element);
+    expect(event._propagationStopped).toBe(false);
+    expect(event._defaultPrevented).toBe(false);
   });
 });

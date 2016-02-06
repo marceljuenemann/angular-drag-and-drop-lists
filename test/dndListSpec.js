@@ -16,6 +16,10 @@ describe('dndList', function() {
     });
   });
 
+  describe('dragenter handler', function() {
+    commonTests('dragenter');
+  });
+
   describe('dragover handler', function() {
     commonTests('dragover');
 
@@ -192,6 +196,12 @@ describe('dndList', function() {
       verifyDragoverStopped(element, dropEvent, 3);
     });
 
+    it('dnd-drop can take care of inserting the element', function() {
+      element.scope().dropHandler = function() { return true; };
+      verifyDropAllowed(element, dropEvent);
+      expect(element.scope().list).toEqual([1, 2, 3]);
+    });
+
     it('invokes callbacks with correct type', function() {
       dragTypeWorkaround.dragType = 'mytype';
       verifyDropAllowed(element, dropEvent);
@@ -349,21 +359,26 @@ describe('dndList', function() {
   }
 
   function verifyDropAllowed(element, event) {
-    expect(event._triggerOn(element)).toBe(false);
+    if (event.originalEvent.type == 'dragenter') {
+      expect(event._triggerOn(element)).toBeUndefined();
+      expect(event._propagationStopped).toBe(false);
+    } else {
+      expect(event._triggerOn(element)).toBe(false);
+      expect(event._propagationStopped).toBe(true);
+    }
     expect(event._defaultPrevented).toBe(true);
-    expect(event._propagationStopped).toBe(true);
   }
 
   function verifyDropDisallowed(element, event) {
     expect(event._triggerOn(element)).toBe(true);
-    expect(event._defaultPrevented).toBeFalsy();
+    expect(event._defaultPrevented).toBe(false);
     verifyDragoverStopped(element, event);
   }
 
   function verifyDragoverStopped(element, event, children) {
     expect(element.hasClass("dndDragover")).toBe(false);
     expect(element.children().length).toBe(children || 0);
-    expect(event._propagationStopped).toBeFalsy();
+    expect(event._propagationStopped).toBe(false);
   }
 
   function createListWithItemsAndCallbacks(horizontal) {
