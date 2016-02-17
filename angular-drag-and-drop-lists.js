@@ -295,6 +295,9 @@ angular.module('dndLists', [])
             }
           }
         } else {
+          // This branch is reached when we are dragging directly over the list element.
+          // This is for IE, which only fires events on the list directly, and for
+          // list elements with margin between them.
           var index = findInsertPoint(event);
           insertPlaceholderAt(index);
         }
@@ -403,6 +406,10 @@ angular.module('dndLists', [])
         }, 100);
       });
 
+      /**
+       * Find the insertion point in the list by binary search of the midpoint
+       * of the elements in the list.
+       */
       function findInsertPoint (event) {
         var value = horizontal ? event.clientX : event.clientY;
         var low = 0;
