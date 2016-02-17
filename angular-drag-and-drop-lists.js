@@ -318,12 +318,12 @@ angular.module('dndLists', [])
        * Insert the placeholder node at the given index
        */
       function insertPlaceholderAt (index) {
-        var children = element.children();
+        var children = listChildren();
 
-        if (index < children.length) {
-          angular.element(children[index]).before(placeholderNode);
+        if (index <= 0) {
+          angular.element(listNode).prepend(placeholderNode);
         } else {
-          angular.element(children[children.length]).after(placeholderNode);
+          angular.element(children[index - 1]).after(placeholderNode);
         }
       }
 
@@ -407,13 +407,9 @@ angular.module('dndLists', [])
       });
 
       /**
-       * Find the insertion point in the list by binary search of the midpoint
-       * of the elements in the list.
+       * Get the child nodes, excluding the placeholder
        */
-      function findInsertPoint (event) {
-        var value = horizontal ? event.clientX : event.clientY;
-        var low = 0;
-
+      function listChildren () {
         var array = [];
 
         angular.forEach(element.children(), function (node) {
@@ -421,6 +417,19 @@ angular.module('dndLists', [])
             array.push(node);
           }
         });
+
+        return array;
+      }
+
+      /**
+       * Find the insertion point in the list by binary search of the midpoint
+       * of the elements in the list.
+       */
+      function findInsertPoint (event) {
+        var value = horizontal ? event.clientX : event.clientY;
+        var low = 0;
+
+        var array = listChildren();
 
         var high = array.length;
 
