@@ -406,7 +406,15 @@ angular.module('dndLists', [])
       function findInsertPoint (event) {
         var value = horizontal ? event.clientX : event.clientY;
         var low = 0;
-        var array = element.children();
+
+        var array = [];
+
+        angular.forEach(element.children(), function (node) {
+          if (node !== placeholderNode) {
+            array.push(node);
+          }
+        });
+
         var high = array.length;
 
         while (low < high) {
