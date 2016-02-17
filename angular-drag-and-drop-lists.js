@@ -278,29 +278,8 @@ angular.module('dndLists', [])
           element.append(placeholder);
         }
 
-        if (event.target !== listNode) {
-          // Try to find the node direct directly below the list node.
-          var listItemNode = event.target;
-          while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
-            listItemNode = listItemNode.parentNode;
-          }
-
-          if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
-            // If the mouse pointer is in the upper half of the child element,
-            // we place it before the child element, otherwise below it.
-            if (isMouseInFirstHalf(event, listItemNode)) {
-              listNode.insertBefore(placeholderNode, listItemNode);
-            } else {
-              listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
-            }
-          }
-        } else {
-          // This branch is reached when we are dragging directly over the list element.
-          // This is for IE, which only fires events on the list directly, and for
-          // list elements with margin between them.
-          var index = findInsertPoint(event);
-          insertPlaceholderAt(index);
-        }
+        var index = findInsertPoint(event);
+        insertPlaceholderAt(index);
 
         // At this point we invoke the callback, which still can disallow the drop.
         // We can't do this earlier because we want to pass the index of the placeholder.
