@@ -19,12 +19,14 @@ class DragstartDataTransfer extends DataTransferMock {
     super();
     this.$allowSetDragImage = options.allowSetDragImage || false;
     this.$allowedMimeTypes = options.allowedMimeTypes || null;
+    this.$presetTypes = options.presetTypes || [];
     this.$results.data = {};
   }
 
-  set effectAllowed(value) {
-    this.$results.effectAllowed = value;
-  }
+  get effectAllowed() { throw "Unexcepted effectAllowed getter invocation"; }
+  set effectAllowed(value) { this.$results.effectAllowed = value; }
+  get types() { return this.$presetTypes; }
+  set types(value) { throw "Unexcepted types setter invocation"; }
 
   setData(format, data) {
     if (this.$allowedMimeTypes && !this.$allowedMimeTypes.includes(format)) {
@@ -43,20 +45,21 @@ class DropzoneDataTransfer extends DataTransferMock {
   constructor(data, options) {
     super();
     this.$data = data;
+    this.$dropEffect = options.dropEffect || 'move';
     this.$effectAllowed = options.effectAllowed || 'move';
     this.$types = options.undefinedTypes ? undefined : Object.keys(data);
   }
 
-  set dropEffect(value) { this.$results.dropEffect = value; }
+  get dropEffect() { return this.$dropEffect; }
+  set dropEffect(value) { throw "Unexcepted dropEffect setter invocation"; }
   get effectAllowed() { return this.$effectAllowed; }
+  set effectAllowed(value) { throw "Unexcepted effectAllowed setter invocation"; }
   get types() { return this.$types; }
+  set types(value) { throw "Unexcepted types setter invocation"; }
 }
 
 class DropDataTransfer extends DropzoneDataTransfer {
-  getData(format) {
-    if (this.$types && !this.$types.includes(format)) throw "Invalid format " + format;
-    return this.$data[format];
-  }
+  getData(format) { return this.$data[format]; }
 }
 
 class DragEventMock {
@@ -67,8 +70,11 @@ class DragEventMock {
     this.$results = {dataTransfer: dataTransfer.getResults()};
   }
 
-  get originalEvent() { return this; }
+  get clientX() { return this.$options.clientX || 0; }
+  get clientY() { return this.$options.clientY || 0; }
+  get ctrlKey() { return this.$options.ctrlKey || false; }
   get dataTransfer() { return this.$dataTransfer; }
+  get originalEvent() { return this; }
   get target() { return this.$options.target || undefined; }
   get type() { return this.$type; }
   get _dndHandle() { return this.$options.dndHandle || undefined; }
@@ -106,13 +112,32 @@ class Dragstart extends DragEventResult {
     return new Dragenter(element, this.$results.dataTransfer.data, opt_options || {});
   }
 
+  dragover(element, opt_options) {
+    return this.dragenter(element, opt_options).dragover(element);
+  }
+
+  dragend(element) {
+    return Dragend.on(element);
+  }
+
   static on(element, opt_options) {
     return new Dragstart(element, opt_options || {});
   }
 }
 
+class Dragend extends DragEventResult {
+  constructor(element, options) {
+    super(element, 'dragend', new DataTransferMock(), options);
+  }
+
+  static on(element, opt_options) {
+    return new Dragend(element, opt_options || {});
+  }
+}
+
 class DropzoneEventResult extends DragEventResult {
   constructor(element, type, data, dataTransfer, options) {
+    options.target = options.target || element[0];
     super(element, type, dataTransfer, options);
     this.$originalData = $.extend({}, data);
     this.$options = options;
@@ -133,7 +158,7 @@ class Dragenter extends DropzoneEventResult {
   }
 
   static validExternalOn(element, opt_options) {
-    return Dragenter.externalOn(element, {'Text': '{"hello":"world"}'}, opt_options);
+    return Dragenter.externalOn(element, {'text/plain': '{"hello":"world"}'}, opt_options);
   }
 }
 
@@ -142,13 +167,27 @@ class Dragover extends DropzoneEventResult {
     super(element, 'dragover', data, new DropzoneDataTransfer(data, options), options);
   }
 
-  drop(element) {
-    return new Drop(element, this.$originalData, this.$options);
+  dragleave(element, opt_options) {
+    return new Dragleave(element, this.$originalData, $.extend({}, this.$options, opt_options));
+  }
+
+  drop(element, opt_options) {
+    return new Drop(element, this.$originalData, $.extend({}, this.$options, opt_options));
+  }
+}
+
+class Dragleave extends DropzoneEventResult {
+  constructor(element, data, options) {
+    super(element, 'dragleave', data, new DataTransferMock(), options);
   }
 }
 
 class Drop extends DropzoneEventResult {
   constructor(element, data, options) {
     super(element, 'drop', data, new DropDataTransfer(data, options), options);
+  }
+
+  dragend(element) {
+    return Dragend.on(element);
   }
 }

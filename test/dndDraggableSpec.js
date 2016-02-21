@@ -76,23 +76,23 @@ describe('dndDraggable', function() {
   });
 
   describe('dragend handler', function() {
-    var element, event;
+    var element, dragstart;
 
     beforeEach(function() {
       element = compileAndLink(SIMPLE_HTML);
-      event = createEvent('dragend');
+      dragstart = Dragstart.on(element);
     });
 
     it('stops propagation', function() {
-      event._triggerOn(element);
-      expect(event._propagationStopped).toBe(true);
+      expect(dragstart.dragend(element).propagationStopped).toBe(true);
     });
 
     it('removes CSS classes from element', inject(function($timeout) {
-      element.addClass('dndDragging');
-      element.addClass('dndDraggingSource');
-      event._triggerOn(element);
+      $timeout.flush(0);
+      expect(element.hasClass('dndDragging')).toBe(true);
+      expect(element.hasClass('dndDraggingSource')).toBe(true);
 
+      dragstart.dragend(element);
       expect(element.hasClass('dndDragging')).toBe(false);
       expect(element.hasClass('dndDraggingSource')).toBe(true);
 
@@ -103,21 +103,20 @@ describe('dndDraggable', function() {
     var dropEffects = {move: 'moved', copy: 'copied', none: 'canceled'};
     angular.forEach(dropEffects, function(callback, dropEffect) {
       it('calls callbacks for dropEffect ' + dropEffect, function() {
-        var html = '<div dnd-draggable dnd-dragend="de = dropEffect" '
+        var html = '<div dnd-draggable="{}" dnd-dragend="de = dropEffect" '
                  + 'dnd-' + callback + '="ev = event"></div>';
-        element = compileAndLink(html);
+        var element = compileAndLink(html);
 
-        // Simulate dragstart and drop to initialize internal state.
-        createEvent('dragstart')._triggerOn(element);
+        var dragstart = Dragstart.on(element);
         if (dropEffect != 'none') {
-          var dropEvent = createEvent('drop');
-          dropEvent._dt.dropEffect = dropEffect
-          dropEvent._triggerOn(compileAndLink('<div dnd-list="[]"></div>'));
+          var target = compileAndLink('<div dnd-list="[]"></div>');
+          var options = {dropEffect: dropEffect};
+          dragstart.dragover(target, options).drop(target).dragend(element);
+        } else {
+          dragstart.dragend(element);
         }
 
-        // Verify dragend event.
-        event._triggerOn(element);
-        expect(element.scope().ev).toBe(event.originalEvent);
+        expect(element.scope().ev).toEqual(jasmine.any(DragEventMock));
         expect(element.scope().de).toBe(dropEffect);
       });
     });
