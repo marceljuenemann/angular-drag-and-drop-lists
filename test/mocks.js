@@ -158,7 +158,7 @@ class Dragenter extends DropzoneEventResult {
   }
 
   static validExternalOn(element, opt_options) {
-    return Dragenter.externalOn(element, {'text/plain': '{"hello":"world"}'}, opt_options);
+    return Dragenter.externalOn(element, {'application/x-dnd': '{"hello":"world"}'}, opt_options);
   }
 }
 

@@ -6,12 +6,9 @@ angular.module("demo").controller("AdvancedDemoController", function($scope) {
         return index < 10;
     };
 
-    $scope.dropCallback = function(event, index, item, external, type, allowedType) {
+    $scope.dropCallback = function(event, index, item, external, type) {
         $scope.logListEvent('dropped at', event, index, external, type);
-        if (external) {
-            if (allowedType === 'itemType' && !item.label) return false;
-            if (allowedType === 'containerType' && !angular.isArray(item)) return false;
-        }
+        // Return false here to cancel drop. Return true if you insert the item yourself.
         return item;
     };
 

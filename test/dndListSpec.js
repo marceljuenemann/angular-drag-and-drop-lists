@@ -5,72 +5,103 @@ describe('dndList', function() {
     expect(element.children().length).toBe(0);
   });
 
-  it('disallows dropping from external sources', function() {
-    element = compileAndLink('<div dnd-list="[]"></div>');
-    var dragenter = Dragenter.validExternalOn(element);
-    forAllHandlers(dragenter, element, verifyDropCancelled);
-  });
-
-  it('allows dropping from external sources if dnd-external-sources is set', function() {
-    element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-    var dragenter = Dragenter.validExternalOn(element);
-    forAllHandlers(dragenter, element, verifyDropAccepted);
-  });
-
-  it('disallows mimetypes other than text', function() {
-    element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-    var dragenter = Dragenter.externalOn(element, {'text/html': '{}'});
-    forAllHandlers(dragenter, element, verifyDropCancelled);
-  });
-
-  it('allows drop if dataTransfer.types contains "Text"', function() {
-    element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-    var dragenter = Dragenter.externalOn(element, {'image/jpeg': '[]', 'Text': '[]'});
-    forAllHandlers(dragenter, element, verifyDropAccepted);
-  });
-
-  // Old Internet Explorer versions don't have dataTransfer.types.
-  it('allows drop if dataTransfer.types is undefined', function() {
-    element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-    var dragenter = Dragenter.externalOn(element, {'Text': '[]'}, {undefinedTypes: true});
-    forAllHandlers(dragenter, element, verifyDropAccepted);
-  });
-
   it('disallows dropping if dnd-disable-if is true', function() {
     var source = compileAndLink('<div dnd-draggable="{}"></div>');
-    element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
+    var element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
     element.scope().disabled = true;
     forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropCancelled);
   });
 
   it('allows drop if dnd-disable-if is false', function() {
     var source = compileAndLink('<div dnd-draggable="{}"></div>');
-    element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
+    var element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
     forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropAccepted);
+  });
+
+  it('disallows dropping from external sources', function() {
+    var element = compileAndLink('<div dnd-list="[]"></div>');
+    var dragenter = Dragenter.validExternalOn(element);
+    forAllHandlers(dragenter, element, verifyDropCancelled);
+  });
+
+  it('allows dropping from external sources if dnd-external-sources is set', function() {
+    var element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var dragenter = Dragenter.validExternalOn(element);
+    forAllHandlers(dragenter, element, verifyDropAccepted);
+  });
+
+  it('disallows drop without valid mime types', function() {
+    var element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var dragenter = Dragenter.externalOn(element, {'text/plain': '{}'});
+    forAllHandlers(dragenter, element, verifyDropCancelled);
+  });
+
+  // Old Internet Explorer versions don't have dataTransfer.types.
+  it('allows drop if dataTransfer.types is undefined', function() {
+    var element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var data = angular.toJson({item: {}, mimeType: 'application/x-dnd-mytype'});
+    var dragenter = Dragenter.externalOn(element, {'Text': data}, {undefinedTypes: true});
+    forAllHandlers(dragenter, element, verifyDropAccepted);
+  });
+
+  it('allows drop if dataTransfer.types contains "Text"', function() {
+    var element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var data = angular.toJson({item: {}, mimeType: 'application/x-dnd-mytype'});
+    var dragenter = Dragenter.externalOn(element, {'Text': data});
+    forAllHandlers(dragenter, element, verifyDropAccepted);
+  });
+
+  it('allows drop if dataTransfer.types contains "application/json"', function() {
+    var element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var data = angular.toJson({item: {}, mimeType: 'application/x-dnd-mytype'});
+    var dragenter = Dragenter.externalOn(element, {'x-pdf': '{}', 'application/json': data});
+    forAllHandlers(dragenter, element, verifyDropAccepted);
   });
 
   it('disallows dropping untyped elements if dnd-allowed-types is set', function() {
     var source = compileAndLink('<div dnd-draggable="{}"></div>');
-    element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+    var element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
     forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropCancelled);
   });
 
-  it('disallows dropping elements of the wrong type if dnd-allowed-types is set', function() {
-    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'othertype\'"></div>');
-    element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-    forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropCancelled);
-  });
-
-  it('allows dropping elements of the correct type if dnd-allowed-types is set', function() {
-    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
-    element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+  it('allows dropping typed elements if dnd-allowed-types is not set', function() {
+    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'sometype\'"></div>');
+    var element = compileAndLink('<div dnd-list="[]"></div>');
     forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropAccepted);
   });
 
-  it('allows dropping external elements even if dnd-allowed-types is set', function() {
-    element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']" ' +
-                             'dnd-external-sources="true"></div>');
-    forAllHandlers(Dragenter.validExternalOn(element), element, verifyDropAccepted);
+  it('disallows dropping elements of the wrong type', function() {
+    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'othertype\'"></div>');
+    var element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+    forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropCancelled);
+  });
+
+  it('allows dropping elements of the correct type', function() {
+    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
+    var element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'MyType\']"></div>');
+    forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropAccepted);
+  });
+
+  it('disallows dropping elements of the wrong type (test for Edge)', function() {
+    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'othertype\'"></div>');
+    var element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+    var dragstart = Dragstart.on(source, {allowedMimeTypes: ['text/plain', 'application/json']});
+    forAllHandlers(dragstart.dragenter(element), element, verifyDropCancelled);
+  });
+
+  it('allows dropping elements of the correct type (test for Edge)', function() {
+    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
+    var element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+    var dragstart = Dragstart.on(source, {allowedMimeTypes: ['text/plain', 'application/json']});
+    forAllHandlers(dragstart.dragenter(element), element, verifyDropAccepted);
+  });
+
+  it('allows dropping external elements if correct type is encoded inside', function() {
+    var element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'myType\']" ' +
+                                 'dnd-external-sources="true"></div>');
+    var data = angular.toJson({item: {}, mimeType: 'application/x-dnd-mytype'});
+    var dragenter = Dragenter.externalOn(element, {'application/json': data});
+    forAllHandlers(dragenter, element, verifyDropAccepted);
   });
 
   describe('dragover handler', function() {
@@ -123,22 +154,46 @@ describe('dndList', function() {
       expect(element.scope().dragover.item).toBeUndefined();
     });
 
-    it('invokes dnd-dragover callback with correct type', function() {
+    it('invokes dnd-dragover with correct type', function() {
       source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
       element = createListWithItemsAndCallbacks();
       Dragstart.on(source).dragover(element);
       expect(element.scope().dragover.type).toBe('mytype');
+      expect(element.scope().dragover.external).toBe(false);
     });
 
-    it('invokes dnd-dragover callback for external elements', function() {
+    it('invokes dnd-dragover with correct type (test for IE)', function() {
+      source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
       element = createListWithItemsAndCallbacks();
-      Dragenter.validExternalOn(element).dragover(element);
+      Dragstart.on(source, {allowedMimeTypes: ['Text']}).dragover(element);
+      expect(element.scope().dragover.type).toBe('mytype');
+      expect(element.scope().dragover.external).toBe(false);
+    });
+
+    it('invokes dnd-dragover with correct type for external drops', function() {
+      element = createListWithItemsAndCallbacks();
+      Dragenter.externalOn(element, {'application/x-dnd-mytype': {}}).dragover(element);
+      expect(element.scope().dragover.type).toBe('mytype');
+      expect(element.scope().dragover.external).toBe(true);
+    });
+
+    it('invokes dnd-dragover with undefined type for external drops from IE', function() {
+      element = createListWithItemsAndCallbacks();
+      Dragenter.externalOn(element, {'Text': 'unaccessible'}).dragover(element);
+      expect(element.scope().dragover.type).toBeUndefined();
       expect(element.scope().dragover.external).toBe(true);
     });
 
     it('dnd-dragover callback can cancel the drop', function() {
       element = compileAndLink('<div dnd-list="list" dnd-dragover="false"></div>');
       verifyDropCancelled(Dragstart.on(source).dragover(element), element);
+    });
+
+    it('allows all external drops with Text mime type', function() {
+      element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'myType\']" ' +
+                               'dnd-external-sources="true"></div>');
+      var dragenter = Dragenter.externalOn(element, {'Text': 'unaccessible'});
+      verifyDropAccepted(dragenter.dragover(element), element);
     });
 
     describe('placeholder positioning (vertical)', positioningTests(false, false));
@@ -253,24 +308,50 @@ describe('dndList', function() {
       source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
       Dragstart.on(source).dragover(element).drop(element);
       expect(element.scope().drop.type).toBe('mytype');
+      expect(element.scope().drop.external).toBe(false);
       expect(element.scope().inserted.type).toBe('mytype');
+      expect(element.scope().inserted.external).toBe(false);
     });
 
-    it('invokes callbacks for external elements', function() {
-      var dragenter = Dragenter.validExternalOn(element);
+    it('invokes callbacks with correct type for Edge', function() {
+      source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
+      Dragstart.on(source, {allowedMimeTypes: ['application/json']}).dragover(element).drop(element);
+      expect(element.scope().drop.type).toBe('mytype');
+      expect(element.scope().drop.external).toBe(false);
+      expect(element.scope().inserted.type).toBe('mytype');
+      expect(element.scope().inserted.external).toBe(false);
+    });
+
+    it('invokes callbacks with correct type for external elements', function() {
+      var dragenter = Dragenter.externalOn(element, {'application/x-dnd-mytype': '{}'});
       verifyDropAccepted(dragenter.dragover(element).drop(element), element);
+      expect(element.scope().drop.type).toBe('mytype');
       expect(element.scope().drop.external).toBe(true);
+      expect(element.scope().inserted.type).toBe('mytype');
       expect(element.scope().inserted.external).toBe(true);
     });
 
-    it('can handle Text mime type', function() {
-      var dragenter = Dragenter.externalOn(element, {'Text': '{"lorem":"ipsum"}'});
+    it('invokes callbacks with correct type for external elements (test for Edge)', function() {
+      var data = angular.toJson({item: [1, 2, 3], mimeType: 'application/x-dnd-mytype'});
+      var dragenter = Dragenter.externalOn(element, {'application/json': data});
       verifyDropAccepted(dragenter.dragover(element).drop(element), element);
-      expect(element.scope().list[3]).toEqual({lorem: 'ipsum'});
+      expect(element.scope().drop.type).toBe('mytype');
+      expect(element.scope().drop.external).toBe(true);
+      expect(element.scope().inserted.type).toBe('mytype');
+      expect(element.scope().inserted.external).toBe(true);
+      expect(element.scope().inserted.item).toEqual([1, 2, 3]);
+    });
+
+    it('disallows drops with wrong type encoded inside (test for Edge)', function() {
+      element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'myType\']" ' +
+                               'dnd-external-sources="true"></div>');
+      var data = angular.toJson({item: [], mimeType: 'application/x-dnd-othertype'});
+      var dragenter = Dragenter.externalOn(element, {'application/json': data});
+      verifyDropCancelled(dragenter.dragover(element).drop(element), element, true);
     });
 
     it('cancels drop when JSON is invalid', function() {
-      var dragenter = Dragenter.externalOn(element, {'text/plain': 'Lorem ipsum'});
+      var dragenter = Dragenter.externalOn(element, {'application/x-dnd': 'Lorem ipsum'});
       verifyDropCancelled(dragenter.dragover(element).drop(element), element, true, 3);
     });
 

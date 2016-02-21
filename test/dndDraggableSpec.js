@@ -30,7 +30,33 @@ describe('dndDraggable', function() {
     });
 
     it('calls setData with serialized data', function() {
-      expect(Dragstart.on(element).data).toEqual({'Text': '{"hello":"world"}'});
+      expect(Dragstart.on(element).data).toEqual({'application/x-dnd': '{"hello":"world"}'});
+    });
+
+    it('includes the dnd-type in the mime type', function() {
+      element = compileAndLink('<div dnd-draggable="{}" dnd-type="\'foo\'"></div>');
+      expect(Dragstart.on(element).data).toEqual({'application/x-dnd-foo': '{}'});
+    });
+
+    it('converts the dnd-type to lower case', function() {
+      element = compileAndLink('<div dnd-draggable="{}" dnd-type="\'Foo\'"></div>');
+      expect(Dragstart.on(element).data).toEqual({'application/x-dnd-foo': '{}'});
+    });
+
+    it('uses application/json mime type if custom types are not allowed', function() {
+      element = compileAndLink('<div dnd-draggable="[1]"></div>');
+      var dragstart = Dragstart.on(element, {allowedMimeTypes: ['Text', 'application/json']});
+      expect(dragstart.data).toEqual({
+        'application/json': '{"item":[1],"mimeType":"application/x-dnd"}'
+      });
+    });
+
+    it('uses Text mime type in Internet Explorer', function() {
+      element = compileAndLink('<div dnd-draggable="{}" dnd-type="\'Foo\'"></div>');
+      var dragstart = Dragstart.on(element, {allowedMimeTypes: ['URL', 'Text']});
+      expect(dragstart.data).toEqual({
+        'Text': '{"item":{},"mimeType":"application/x-dnd-foo"}'
+      });
     });
 
     it('stops propagation', function() {
