@@ -23,36 +23,31 @@ describe('dndDraggable', function() {
   });
 
   describe('dragstart handler', function() {
-    var element, event;
+    var element;
 
     beforeEach(function() {
       element = compileAndLink(SIMPLE_HTML);
-      event = createEvent('dragstart');
     });
 
     it('calls setData with serialized data', function() {
-      event._triggerOn(element);
-      expect(event._data).toEqual({'Text': '{"hello":"world"}'});
+      expect(Dragstart.on(element).data).toEqual({'Text': '{"hello":"world"}'});
     });
 
     it('stops propagation', function() {
-      event._triggerOn(element);
-      expect(event._propagationStopped).toBe(true);
+      expect(Dragstart.on(element).propagationStopped).toBe(true);
     });
 
     it('sets effectAllowed to move by default', function() {
-      event._triggerOn(element);
-      expect(event._dt.effectAllowed).toBe('move');
+      expect(Dragstart.on(element).effectAllowed).toBe('move');
     });
 
     it('sets effectAllowed from dnd-effect-allowed', function() {
       element = compileAndLink('<div dnd-draggable dnd-effect-allowed="copyMove"></div>');
-      event._triggerOn(element);
-      expect(event._dt.effectAllowed).toBe('copyMove');
+      expect(Dragstart.on(element).effectAllowed).toBe('copyMove');
     });
 
     it('adds CSS classes to element', inject(function($timeout) {
-      event._triggerOn(element);
+      Dragstart.on(element);
       expect(element.hasClass('dndDragging')).toBe(true);
       expect(element.hasClass('dndDraggingSource')).toBe(false);
 
@@ -62,23 +57,21 @@ describe('dndDraggable', function() {
 
     it('invokes dnd-dragstart callback', function() {
       element = compileAndLink('<div dnd-draggable dnd-dragstart="ev = event"></div>');
-      event._triggerOn(element);
-      expect(element.scope().ev).toBe(event.originalEvent);
+      Dragstart.on(element);
+      expect(element.scope().ev).toEqual(jasmine.any(DragEventMock));
     });
 
     it('does not start dragging if dnd-disable-if is true', function() {
       element = compileAndLink('<div dnd-draggable dnd-disable-if="true"></div>');
-      expect(event._triggerOn(element)).toBe(true);
-      expect(event._defaultPrevented).toBe(false);
-      expect(event._propagationStopped).toBe(false);
+      var dragstart = Dragstart.on(element);
+      expect(dragstart.returnValue).toBe(true);
+      expect(dragstart.defaultPrevented).toBe(false);
+      expect(dragstart.propagationStopped).toBe(false);
     });
 
     it('sets the dragImage if event was triggered on a dnd-handle', function() {
-      var dragImage;
-      event._dt.setDragImage = function(img) { dragImage = img; };
-      event.originalEvent._dndHandle = true;
-      event._triggerOn(element);
-      expect(dragImage).toBe(element[0]);
+      var dragstart = Dragstart.on(element, {allowSetDragImage: true, dndHandle: true});
+      expect(dragstart.dragImage).toBe(element[0]);
     });
   });
 
@@ -133,16 +126,14 @@ describe('dndDraggable', function() {
   describe('click handler', function() {
     it('does nothing if dnd-selected is not set', function() {
       var element = compileAndLink(SIMPLE_HTML);
-      var event = createEvent('click');
-      event._triggerOn(element);
-      expect(event._propagationStopped).toBe(false);
+      var click = new DragEventResult(element, 'click',  new DataTransferMock(), {});
+      expect(click.propagationStopped).toBe(false);
     });
 
     it('invokes dnd-selected callback and stops propagation', function() {
       var element = compileAndLink('<div dnd-draggable dnd-selected="selected = true"></div>');
-      var event = createEvent('click');
-      event._triggerOn(element);
-      expect(event._propagationStopped).toBe(true);
+      var click = new DragEventResult(element, 'click',  new DataTransferMock(), {});
+      expect(click.propagationStopped).toBe(true);
       expect(element.scope().selected).toBe(true);
     });
   });

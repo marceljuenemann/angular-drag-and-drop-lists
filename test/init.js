@@ -15,6 +15,7 @@ function compileAndLink(html) {
   return element;
 }
 
+// TODO: deprecated
 function createEvent(type, dataTransfer) {
   var dataTransfer = dataTransfer || {};
   var event = {

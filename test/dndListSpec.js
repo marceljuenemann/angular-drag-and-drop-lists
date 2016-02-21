@@ -1,19 +1,79 @@
 describe('dndList', function() {
 
-  describe('constructor', function() {
-    it('hides the placeholder element', function() {
-      var element = compileAndLink('<dnd-list><img class="dndPlaceholder"></dnd-list>');
-      expect(element.children().length).toBe(0);
-    });
+  it('hides the placeholder element', function() {
+    var element = compileAndLink('<dnd-list><img class="dndPlaceholder"></dnd-list>');
+    expect(element.children().length).toBe(0);
   });
 
-  describe('dragenter handler', function() {
-    commonTests('dragenter');
+  it('disallows dropping from external sources', function() {
+    element = compileAndLink('<div dnd-list="[]"></div>');
+    var dragenter = Dragenter.validExternalOn(element);
+    forAllHandlers(dragenter, element, verifyDropCancelled);
+  });
+
+  it('allows dropping from external sources if dnd-external-sources is set', function() {
+    element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var dragenter = Dragenter.validExternalOn(element);
+    forAllHandlers(dragenter, element, verifyDropAccepted);
+  });
+
+  it('disallows mimetypes other than text', function() {
+    element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var dragenter = Dragenter.externalOn(element, {'text/html': '{}'});
+    forAllHandlers(dragenter, element, verifyDropCancelled);
+  });
+
+  it('allows drop if dataTransfer.types contains "Text"', function() {
+    element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var dragenter = Dragenter.externalOn(element, {'image/jpeg': '[]', 'Text': '[]'});
+    forAllHandlers(dragenter, element, verifyDropAccepted);
+  });
+
+  // Old Internet Explorer versions don't have dataTransfer.types.
+  it('allows drop if dataTransfer.types is undefined', function() {
+    element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
+    var dragenter = Dragenter.externalOn(element, {'Text': '[]'}, {undefinedTypes: true});
+    forAllHandlers(dragenter, element, verifyDropAccepted);
+  });
+
+  it('disallows dropping if dnd-disable-if is true', function() {
+    var source = compileAndLink('<div dnd-draggable="{}"></div>');
+    element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
+    element.scope().disabled = true;
+    forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropCancelled);
+  });
+
+  it('allows drop if dnd-disable-if is false', function() {
+    var source = compileAndLink('<div dnd-draggable="{}"></div>');
+    element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
+    forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropAccepted);
+  });
+
+  it('disallows dropping untyped elements if dnd-allowed-types is set', function() {
+    var source = compileAndLink('<div dnd-draggable="{}"></div>');
+    element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+    forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropCancelled);
+  });
+
+  it('disallows dropping elements of the wrong type if dnd-allowed-types is set', function() {
+    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'othertype\'"></div>');
+    element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+    forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropCancelled);
+  });
+
+  it('allows dropping elements of the correct type if dnd-allowed-types is set', function() {
+    var source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
+    element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
+    forAllHandlers(Dragstart.on(source).dragenter(element), element, verifyDropAccepted);
+  });
+
+  it('allows dropping external elements even if dnd-allowed-types is set', function() {
+    element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']" ' +
+                             'dnd-external-sources="true"></div>');
+    forAllHandlers(Dragenter.validExternalOn(element), element, verifyDropAccepted);
   });
 
   describe('dragover handler', function() {
-    commonTests('dragover');
-
     var element, event;
 
     beforeEach(function() {
@@ -136,8 +196,6 @@ describe('dndList', function() {
   });
 
   describe('drop handler', function() {
-    commonTests('drop');
-
     var element, dragoverEvent, dropEvent;
 
     beforeEach(function() {
@@ -294,81 +352,38 @@ describe('dndList', function() {
     });
   });
 
-  function commonTests(eventType) {
-    describe('(common tests)', function() {
-      var element, event;
-
-      beforeEach(function() {
-        triggerDragstart();
-        element = compileAndLink('<div dnd-list="[]"></div>');
-        event = createEvent(eventType);
-        event.originalEvent.target = element[0];
-      });
-
-      it('disallows dropping from external sources', function() {
-        triggerDragend();
-        verifyDropDisallowed(element, event);
-      });
-
-      it('allows dropping from external sources if dnd-external-sources is set', function() {
-        triggerDragend();
-        element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-        verifyDropAllowed(element, event);
-      });
-
-      it('disallows mimetypes other than text', function() {
-        event._dt.types = ['text/html'];
-        verifyDropDisallowed(element, event);
-      });
-
-      it('allows drop if dataTransfer.types contains "Text"', function() {
-        event._dt.types = ['image/jpeg', 'Text'];
-        verifyDropAllowed(element, event);
-      });
-
-      // Old Internet Explorer versions don't have dataTransfer.types.
-      it('allows drop if dataTransfer.types is undefined', function() {
-        event._dt.types = undefined;
-        verifyDropAllowed(element, event);
-      });
-
-      it('disallows dropping if dnd-disable-if is true', function() {
-        element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
-        element.scope().disabled = true;
-        verifyDropDisallowed(element, event);
-      });
-
-      it('allows drop if dnd-disable-if is false', function() {
-        element = compileAndLink('<div dnd-list="[]" dnd-disable-if="disabled"></div>');
-        verifyDropAllowed(element, event);
-      });
-
-      it('disallows dropping untyped elements if dnd-allowed-types is set', function() {
-        element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-        verifyDropDisallowed(element, event);
-      });
-
-      it('disallows dropping elements of the wrong type if dnd-allowed-types is set', function() {
-        triggerDragstart('othertype');
-        element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-        verifyDropDisallowed(element, event);
-      });
-
-      it('allows dropping elements of the correct type if dnd-allowed-types is set', function() {
-        triggerDragstart('mytype');
-        element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']"></div>');
-        verifyDropAllowed(element, event);
-      });
-
-      it('allows dropping external elements even if dnd-allowed-types is set', function() {
-        triggerDragend();
-        element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'mytype\']" ' +
-                                 'dnd-external-sources="true"></div>');
-        verifyDropAllowed(element, event);
-      });
-    });
+  function verifyDropAccepted(result) {
+    expect(result.defaultPrevented).toBe(true);
+    if (result.type == 'dragenter') {
+      expect(result.returnValue).toBeUndefined();
+      expect(result.propagationStopped).toBe(false);
+    } else {
+      expect(result.returnValue).toBe(false);
+      expect(result.propagationStopped).toBe(true);
+    }
   }
 
+  function verifyDropCancelled(result, element, opt_defaultPrevented, opt_children) {
+    expect(result.returnValue).toBe(true);
+    expect(result.propagationStopped).toBe(false);
+    expect(result.defaultPrevented).toBe(opt_defaultPrevented || false);
+    expect(element.hasClass("dndDragover")).toBe(false);
+    expect(element.children().length).toBe(opt_children || 0);
+  }
+
+  function forAllHandlers(dragenter, element, verify) {
+    verify(dragenter, element);
+    var dragover = dragenter.dragover(element, {target: element[0]});
+    verify(dragover, element);
+    var dragover2 = dragover.dragover(element);
+    verify(dragover2, element);
+    var drop = dragover2.drop(element);
+    verify(drop, element);
+  }
+
+/*
+ * ALL DEPRECATED
+ */
   function verifyDropAllowed(element, event) {
     if (event.originalEvent.type == 'dragenter') {
       expect(event._triggerOn(element)).toBeUndefined();
@@ -402,6 +417,10 @@ describe('dndList', function() {
     createEvent('dragend')._triggerOn(element);
     return element.scope().result;
   }
+
+/*
+ * / ALL DEPRECATED
+ */
 
   function createListWithItemsAndCallbacks(horizontal) {
     var params = '{event: event, index: index, item: item, external: external, type: type}';
