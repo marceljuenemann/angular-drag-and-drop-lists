@@ -39,21 +39,21 @@ describe('dndList', function() {
   // Old Internet Explorer versions don't have dataTransfer.types.
   it('allows drop if dataTransfer.types is undefined', function() {
     var element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-    var data = angular.toJson({item: {}, mimeType: 'application/x-dnd-mytype'});
+    var data = angular.toJson({item: {}, type: 'mytype'});
     var dragenter = Dragenter.externalOn(element, {'Text': data}, {undefinedTypes: true});
     forAllHandlers(dragenter, element, verifyDropAccepted);
   });
 
   it('allows drop if dataTransfer.types contains "Text"', function() {
     var element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-    var data = angular.toJson({item: {}, mimeType: 'application/x-dnd-mytype'});
+    var data = angular.toJson({item: {}, type: 'mytype'});
     var dragenter = Dragenter.externalOn(element, {'Text': data});
     forAllHandlers(dragenter, element, verifyDropAccepted);
   });
 
   it('allows drop if dataTransfer.types contains "application/json"', function() {
     var element = compileAndLink('<div dnd-list="[]" dnd-external-sources="true"></div>');
-    var data = angular.toJson({item: {}, mimeType: 'application/x-dnd-mytype'});
+    var data = angular.toJson({item: {}, type: 'mytype'});
     var dragenter = Dragenter.externalOn(element, {'x-pdf': '{}', 'application/json': data});
     forAllHandlers(dragenter, element, verifyDropAccepted);
   });
@@ -99,7 +99,7 @@ describe('dndList', function() {
   it('allows dropping external elements if correct type is encoded inside', function() {
     var element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'myType\']" ' +
                                  'dnd-external-sources="true"></div>');
-    var data = angular.toJson({item: {}, mimeType: 'application/x-dnd-mytype'});
+    var data = angular.toJson({item: {}, type: 'mytype'});
     var dragenter = Dragenter.externalOn(element, {'application/json': data});
     forAllHandlers(dragenter, element, verifyDropAccepted);
   });
@@ -177,10 +177,10 @@ describe('dndList', function() {
       expect(element.scope().dragover.external).toBe(true);
     });
 
-    it('invokes dnd-dragover with undefined type for external drops from IE', function() {
+    it('invokes dnd-dragover with null type for external drops from IE', function() {
       element = createListWithItemsAndCallbacks();
       Dragenter.externalOn(element, {'Text': 'unaccessible'}).dragover(element);
-      expect(element.scope().dragover.type).toBeUndefined();
+      expect(element.scope().dragover.type).toBeNull();
       expect(element.scope().dragover.external).toBe(true);
     });
 
@@ -332,7 +332,7 @@ describe('dndList', function() {
     });
 
     it('invokes callbacks with correct type for external elements (test for Edge)', function() {
-      var data = angular.toJson({item: [1, 2, 3], mimeType: 'application/x-dnd-mytype'});
+      var data = angular.toJson({item: [1, 2, 3], type: 'mytype'});
       var dragenter = Dragenter.externalOn(element, {'application/json': data});
       verifyDropAccepted(dragenter.dragover(element).drop(element), element);
       expect(element.scope().drop.type).toBe('mytype');
@@ -345,7 +345,7 @@ describe('dndList', function() {
     it('disallows drops with wrong type encoded inside (test for Edge)', function() {
       element = compileAndLink('<div dnd-list="[]" dnd-allowed-types="[\'myType\']" ' +
                                'dnd-external-sources="true"></div>');
-      var data = angular.toJson({item: [], mimeType: 'application/x-dnd-othertype'});
+      var data = angular.toJson({item: [], type: 'othertype'});
       var dragenter = Dragenter.externalOn(element, {'application/json': data});
       verifyDropCancelled(dragenter.dragover(element).drop(element), element, true);
     });

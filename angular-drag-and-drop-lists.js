@@ -93,18 +93,18 @@
         if (element.attr('draggable') == 'false') return true;
 
         // Initialize global state.
-        var type = attr.dndType && '-' + scope.$eval(attr.dndType);
         dndState.dropEffect = "none";
         dndState.isDragging = true;
-        dndState.mimeType = MIME_TYPE + (type ? type.toLowerCase() : '');
+        dndState.itemType = attr.dndType && scope.$eval(attr.dndType).toLowerCase();
 
         // Internet Explorer and Microsoft Edge don't support custom mime types, see design doc:
         // https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design
         var item = scope.$eval(attr.dndDraggable);
+        var mimeType = MIME_TYPE + (dndState.itemType ? ('-' + dndState.itemType) : '');
         try {
-          event.dataTransfer.setData(dndState.mimeType, angular.toJson(item));
+          event.dataTransfer.setData(mimeType, angular.toJson(item));
         } catch (e) {
-          var data = angular.toJson({item: item, mimeType: dndState.mimeType});
+          var data = angular.toJson({item: item, type: dndState.itemType});
           try {
             event.dataTransfer.setData(EDGE_MIME_TYPE, data);
           } catch (e) {
@@ -214,11 +214,13 @@
    *                        not allowed to be dropped. The following variables will be available:
    *                        - event: The original dragover event sent by the browser.
    *                        - index: The position in the list at which the element would be dropped.
-   *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
-   *                          Will be undefined for drops from external sources in IE and Edge.
+   *                        - type: The dnd-type set on the dnd-draggable, or undefined if non was
+   *                          set. Will be null for drops from external sources in IE and Edge,
+   *                          since we don't know the type in those cases.
    *                        - external: Whether the element was dragged from an external source.
    * - dnd-drop             Optional expression that is invoked when an element is dropped on the
-   *                        list. The same variables as for dnd-dragover will be available. There
+   *                        list. The same variables as for dnd-dragover will be available, with the
+   *                        exception that type is always known and therefore never null. There
    *                        will also be an item variable, which is the transferred object. The
    *                        return value determines the further handling of the drop:
    *                        - falsy: The drop will be canceled and the element won't be inserted.
@@ -273,7 +275,8 @@
           horizontal: attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList)
         };
 
-        if (!getMimeTypeIfDropAllowed(event)) return true;
+        var mimeType = getMimeType(event.dataTransfer.types);
+        if (!mimeType || !isDropAllowed(getItemType(mimeType))) return true;
         event.preventDefault();
       });
 
@@ -285,11 +288,9 @@
         event = event.originalEvent || event;
 
         // Check whether the drop is allowed and determine mime type.
-        var mimeType = getMimeTypeIfDropAllowed(event);
-        if (!mimeType) return true;
-        if (mimeType == MSIE_MIME_TYPE || mimeType == EDGE_MIME_TYPE) {
-          mimeType = dndState.isDragging ? dndState.mimeType : 'unknown';
-        }
+        var mimeType = getMimeType(event.dataTransfer.types);
+        var itemType = getItemType(mimeType);
+        if (!mimeType || !isDropAllowed(itemType)) return true;
 
         // Make sure the placeholder is shown, which is especially important if the list is empty.
         if (placeholderNode.parentNode != listNode) {
@@ -324,7 +325,7 @@
 
         // At this point we invoke the callback, which still can disallow the drop.
         // We can't do this earlier because we want to pass the index of the placeholder.
-        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, mimeType)) {
+        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, itemType)) {
           return stopDragover();
         }
 
@@ -343,8 +344,9 @@
         event = event.originalEvent || event;
 
         // Check whether the drop is allowed and determine mime type.
-        var mimeType = getMimeTypeIfDropAllowed(event);
-        if (!mimeType) return true;
+        var mimeType = getMimeType(event.dataTransfer.types);
+        var itemType = getItemType(mimeType);
+        if (!mimeType || !isDropAllowed(itemType)) return true;
 
         // The default behavior in Firefox is to interpret the dropped element as URL and
         // forward to it. We want to prevent that even if our drop is aborted.
@@ -359,15 +361,15 @@
 
         // Drops with invalid types from external sources might not have been filtered out yet.
         if (mimeType == MSIE_MIME_TYPE || mimeType == EDGE_MIME_TYPE) {
-          mimeType = data.mimeType;
-          if (!isValidMimeType(mimeType)) return stopDragover();
+          itemType = data.type || undefined;
           data = data.item;
+          if (!isDropAllowed(itemType)) return stopDragover();
         }
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         var index = getPlaceholderIndex();
         if (attr.dndDrop) {
-          data = invokeCallback(attr.dndDrop, event, mimeType, index, data);
+          data = invokeCallback(attr.dndDrop, event, itemType, index, data);
           if (!data) return stopDragover();
         }
 
@@ -377,7 +379,7 @@
             scope.$eval(attr.dndList).splice(index, 0, data);
           });
         }
-        invokeCallback(attr.dndInserted, event, mimeType, index, data);
+        invokeCallback(attr.dndInserted, event, itemType, index, data);
 
         // In Chrome on Windows the dropEffect will always be none...
         // We have to determine the actual effect manually from the allowed effects
@@ -449,58 +451,51 @@
       /**
        * Invokes a callback with some interesting parameters and returns the callbacks return value.
        */
-      function invokeCallback(expression, event, mimeType, index, item) {
+      function invokeCallback(expression, event, itemType, index, item) {
         return $parse(expression)(scope, {
           event: event,
           index: index !== undefined ? index : getPlaceholderIndex(),
           item: item || undefined,
           external: !dndState.isDragging,
-          type: mimeType.substr(MIME_TYPE.length + 1) || undefined
+          type: itemType
         });
       }
 
       /**
-       * Checks various conditions that must be fulfilled for a drop to be allowed. The only thing
-       * we can't check here is dnd-allowed-types if the drop comes from an external source and we
-       * are using Internet Explorer or Microsoft Edge. If the drop is allowed, the mime type for
-       * dataTransfer.getData is returned.
+       * Given the types array from the DataTransfer object, returns the first valid mime type.
+       * A type is valid if it starts with MIME_TYPE, or it equals MSIE_MIME_TYPE or EDGE_MIME_TYPE.
        */
-      function getMimeTypeIfDropAllowed(event) {
-        // Check whether droping is disabled completely
-        if (listSettings.disabled) return false;
-
-        // Disallow drop from external source unless it's allowed explicitly.
-        if (!dndState.isDragging && !listSettings.externalSources) return false;
-
-        // Determine mime type and check dnd-type for internal drops in IE and Edge.
-        var mimeType = getFirstValidMimeType(event.dataTransfer.types);
-        if (mimeType == MSIE_MIME_TYPE || mimeType == EDGE_MIME_TYPE) {
-          if (dndState.isDragging && !isValidMimeType(dndState.mimeType)) return false;
-        }
-
-        return mimeType;
-      }
-
-      /**
-       * Returns the first mime type that is valid, or null if none is.
-       */
-      function getFirstValidMimeType(types) {
+      function getMimeType(types) {
         if (!types) return MSIE_MIME_TYPE; // IE 9 workaround.
         for (var i = 0; i < types.length; i++) {
-          if (isValidMimeType(types[i])) return types[i];
+          if (types[i] == MSIE_MIME_TYPE || types[i] == EDGE_MIME_TYPE ||
+              types[i].substr(0, MIME_TYPE.length) == MIME_TYPE) {
+            return types[i];
+          }
         }
         return null;
       }
 
       /**
-       * Checks whether a given mime type is acceptable. This will not check the dnd-allowed-types
-       * for operations in Internet Explorer or Microsoft Edge.
+       * Determines the type of the item from the dndState, or from the mime type for items from
+       * external sources. Returns undefined if no item type was set and null if the item type could
+       * not be determined.
        */
-      function isValidMimeType(mimeType) {
-        if (mimeType == MSIE_MIME_TYPE || mimeType == EDGE_MIME_TYPE) return true;
-        if (mimeType.substr(0, MIME_TYPE.length) != MIME_TYPE) return false;
-        if (!listSettings.allowedTypes) return true;
-        return listSettings.allowedTypes.indexOf(mimeType.substr(MIME_TYPE.length + 1)) != -1;
+      function getItemType(mimeType) {
+        if (dndState.isDragging) return dndState.itemType || undefined;
+        if (mimeType == MSIE_MIME_TYPE || mimeType == EDGE_MIME_TYPE) return null;
+        return (mimeType && mimeType.substr(MIME_TYPE.length + 1)) || undefined;
+      }
+
+      /**
+       * Checks various conditions that must be fulfilled for a drop to be allowed, including the
+       * dnd-allowed-types attribute. If the item Type is unknown (null), the drop will be allowed.
+       */
+      function isDropAllowed(itemType) {
+        if (listSettings.disabled) return false;
+        if (!listSettings.externalSources && !dndState.isDragging) return false;
+        if (!listSettings.allowedTypes || itemType === null) return true;
+        return itemType && listSettings.allowedTypes.indexOf(itemType) != -1;
       }
     };
   }]);
@@ -571,8 +566,8 @@
    *   rely on the dropEffect passed by the browser, since there are various bugs in Chrome and
    *   Safari, and Internet Explorer defaults to copy if effectAllowed is copyMove.
    * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
-   * - mimeType: Set in dragstart. In Internet Explorer we can't pass the dnd-type in the mime type,
-   *   or at least not read it out during dragover. Therefore, we save it here as well.
+   * - itemType: The item type of the dragged element set via dnd-type. This is needed because IE
+   *   and Edge don't support custom mime types that we can use to transfer this information.
    * - onNewDropTarget: Callback managed by the dragover handler to remove parent placeholders.
    */
   var dndState = {};

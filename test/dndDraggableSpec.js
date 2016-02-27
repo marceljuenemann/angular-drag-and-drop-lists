@@ -46,16 +46,14 @@ describe('dndDraggable', function() {
     it('uses application/json mime type if custom types are not allowed', function() {
       element = compileAndLink('<div dnd-draggable="[1]"></div>');
       var dragstart = Dragstart.on(element, {allowedMimeTypes: ['Text', 'application/json']});
-      expect(dragstart.data).toEqual({
-        'application/json': '{"item":[1],"mimeType":"application/x-dnd"}'
-      });
+      expect(dragstart.data).toEqual({'application/json': '{"item":[1]}'});
     });
 
     it('uses Text mime type in Internet Explorer', function() {
       element = compileAndLink('<div dnd-draggable="{}" dnd-type="\'Foo\'"></div>');
       var dragstart = Dragstart.on(element, {allowedMimeTypes: ['URL', 'Text']});
       expect(dragstart.data).toEqual({
-        'Text': '{"item":{},"mimeType":"application/x-dnd-foo"}'
+        'Text': '{"item":{},"type":"foo"}'
       });
     });
 
