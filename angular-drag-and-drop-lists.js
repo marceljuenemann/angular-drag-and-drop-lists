@@ -417,51 +417,6 @@
       });
 
       /**
-       * Small helper function that cleans up if we aborted a drop.
-       */
-      function stopDragover() {
-        placeholder.remove();
-        element.removeClass("dndDragover");
-        return true;
-      }
-
-      /**
-       * Tries to find a child element that has the dndPlaceholder class set. If none was found, a
-       * new li element is created.
-       */
-      function getPlaceholderElement() {
-        var placeholder;
-        angular.forEach(element.children(), function(childNode) {
-          var child = angular.element(childNode);
-          if (child.hasClass('dndPlaceholder')) {
-            placeholder = child;
-          }
-        });
-        return placeholder || angular.element("<li class='dndPlaceholder'></li>");
-      }
-
-      /**
-       * We use the position of the placeholder node to determine at which position of the array the
-       * object needs to be inserted
-       */
-      function getPlaceholderIndex() {
-        return Array.prototype.indexOf.call(listNode.children, placeholderNode);
-      }
-
-      /**
-       * Invokes a callback with some interesting parameters and returns the callbacks return value.
-       */
-      function invokeCallback(expression, event, itemType, index, item) {
-        return $parse(expression)(scope, {
-          event: event,
-          index: index !== undefined ? index : getPlaceholderIndex(),
-          item: item || undefined,
-          external: !dndState.isDragging,
-          type: itemType
-        });
-      }
-
-      /**
        * Given the types array from the DataTransfer object, returns the first valid mime type.
        * A type is valid if it starts with MIME_TYPE, or it equals MSIE_MIME_TYPE or EDGE_MIME_TYPE.
        */
@@ -496,6 +451,51 @@
         if (!listSettings.externalSources && !dndState.isDragging) return false;
         if (!listSettings.allowedTypes || itemType === null) return true;
         return itemType && listSettings.allowedTypes.indexOf(itemType) != -1;
+      }
+
+      /**
+       * Small helper function that cleans up if we aborted a drop.
+       */
+      function stopDragover() {
+        placeholder.remove();
+        element.removeClass("dndDragover");
+        return true;
+      }
+
+      /**
+       * Invokes a callback with some interesting parameters and returns the callbacks return value.
+       */
+      function invokeCallback(expression, event, itemType, index, item) {
+        return $parse(expression)(scope, {
+          event: event,
+          index: index !== undefined ? index : getPlaceholderIndex(),
+          item: item || undefined,
+          external: !dndState.isDragging,
+          type: itemType
+        });
+      }
+
+      /**
+       * We use the position of the placeholder node to determine at which position of the array the
+       * object needs to be inserted
+       */
+      function getPlaceholderIndex() {
+        return Array.prototype.indexOf.call(listNode.children, placeholderNode);
+      }
+
+      /**
+       * Tries to find a child element that has the dndPlaceholder class set. If none was found, a
+       * new li element is created.
+       */
+      function getPlaceholderElement() {
+        var placeholder;
+        angular.forEach(element.children(), function(childNode) {
+          var child = angular.element(childNode);
+          if (child.hasClass('dndPlaceholder')) {
+            placeholder = child;
+          }
+        });
+        return placeholder || angular.element("<li class='dndPlaceholder'></li>");
       }
     };
   }]);
