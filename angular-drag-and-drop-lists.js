@@ -290,9 +290,12 @@ angular.module('dndLists', [])
             // we place it before the child element, otherwise below it.
             if (!isMouseInFirstHalf(event, listItemNode)) {
               listItemNode = listItemNode.nextSibling;
+              if (listItemNode === placeholderNode) {
+                listItemNode = false;
+              }
             }
             
-            if (placeholderNode.lastSibling !== listItemNode) {
+            if (listItemNode && placeholderNode.lastSibling !== listItemNode) {
               placeholderNode.lastSibling = listItemNode;
               listNode.insertBefore(placeholderNode, listItemNode);
             }
