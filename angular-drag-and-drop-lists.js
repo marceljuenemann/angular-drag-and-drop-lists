@@ -294,7 +294,7 @@ angular.module('dndLists', [])
             
             if (placeholderNode.lastSibling !== listItemNode) {
               placeholderNode.lastSibling = listItemNode;
-              listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+              listNode.insertBefore(placeholderNode, listItemNode);
             }
           }
         } else {
