@@ -153,6 +153,31 @@ angular.module('dndLists', [])
         event.stopPropagation();
       });
 
+      if(attr.dndDragover){
+          element.on('dragover', function (event) {
+              if(element.hasClass("dndDragover")){
+                 return;
+              }
+
+              // Invoke callback
+              $parse(attr.dndDragover)(scope, {event: event});
+              element.addClass("dndDragover");
+          });
+      }
+
+        if(attr.dndDragleave){
+            element.on('dragleave', function (event) {
+                if(!element.hasClass('dndDragover')){
+                    return;
+                }
+
+                // Invoke callback
+                $parse(attr.dndDragleave)(scope, {event: event});
+                element.removeClass("dndDragover");
+            });
+        }
+
+
       /**
        * When the element is clicked we invoke the callback function
        * specified with the dnd-selected attribute.
