@@ -160,13 +160,19 @@ angular.module('dndLists', [])
           });
       }
 
-        if(attr.dndDragleave){
-            element.on('dragleave', function (event) {
-                // Invoke callback
-                $parse(attr.dndDragleave)(scope, {event: event});
-            });
-        }
+      if(attr.dndDragleave){
+          element.on('dragleave', function (event) {
+              // Invoke callback
+              $parse(attr.dndDragleave)(scope, {event: event});
+          });
+      }
 
+      if(attr.dndDrop){
+        element.on('drop', function (event) {
+          // Invoke callback
+          $parse(attr.dndDrop)(scope, {event: event});
+        });
+      }
 
       /**
        * When the element is clicked we invoke the callback function
