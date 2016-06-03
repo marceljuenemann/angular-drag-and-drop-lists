@@ -190,13 +190,13 @@ angular.module('dndLists', [])
    * - dnd-list             Required attribute. The value has to be the array in which the data of
    *                        the dropped element should be inserted.
    * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
-   *                        matching dnd-type attribute will be dropable.
-   * - dnd-disable-if       Optional boolean expresssion. When it evaluates to true, no dropping
+   *                        matching dnd-type attribute will be droppable.
+   * - dnd-disable-if       Optional boolean expression. When it evaluates to true, no dropping
    *                        into the list is possible. Note that this also disables rearranging
    *                        items inside the list.
-   * - dnd-horizontal-list  Optional boolean expresssion. When it evaluates to true, the positioning
-   *                        algorithm will use the left and right halfs of the list items instead of
-   *                        the upper and lower halfs.
+   * - dnd-horizontal-list  Optional boolean expression. When it evaluates to true, the positioning
+   *                        algorithm will use the left and right halves of the list items instead of
+   *                        the upper and lower halves.
    * - dnd-dragover         Optional expression that is invoked when an element is dragged over the
    *                        list. If the expression is set, but does not return true, the element is
    *                        not allowed to be dropped. The following variables will be available:
