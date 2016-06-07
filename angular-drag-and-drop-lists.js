@@ -562,12 +562,23 @@ angular.module('dndLists', [])
    * the CSS selector .dndDragging:not(.dndDraggingSource) [dnd-handle] for that.
    */
   .directive('dndHandle', function() {
+    function findDraggableParent(element) {
+      parent = element.parent();
+      if(parent.attr('dnd-draggable')) {
+        return parent;
+      }
+      return findDraggableParent(parent);
+    }
+
     return function(scope, element, attr) {
       element.attr("draggable", "true");
 
       element.on('dragstart dragend', function(event) {
-        event = event.originalEvent || event;
-        event._dndHandle = true;
+        parent = findDraggableParent(element);
+        if(parent.attr('draggable') == 'true') {
+          event = event.originalEvent || event;
+          event._dndHandle = true;
+        }
       });
     };
   })
