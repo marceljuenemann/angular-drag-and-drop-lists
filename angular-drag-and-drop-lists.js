@@ -114,8 +114,6 @@ angular.module('dndLists', [])
 
         // Invoke callback
         $parse(attr.dndDragstart)(scope, {event: event});
-
-        event.stopPropagation();
       });
 
       /**
@@ -150,7 +148,6 @@ angular.module('dndLists', [])
         element.removeClass("dndDragging");
         $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
         dndDragTypeWorkaround.isDragging = false;
-        event.stopPropagation();
       });
 
       /**
@@ -588,3 +585,79 @@ angular.module('dndLists', [])
    * https://code.google.com/p/chromium/issues/detail?id=39399
    */
   .factory('dndDropEffectWorkaround', function(){ return {} });
+
+
+angular.module('dndAutoScroll', [])
+  .run(['$document', '$interval', function($document, $interval) {
+    var autoScrollInterval = null;
+    var autoScrollSpeed = 30;
+    var mousePosition = {
+      x: 0,
+      y: 0
+    };
+
+    /**
+     * Automatically scroll up and down (or left and right) when an item is being dragged over.
+     *
+     * This function is called every 50ms when there is a dragging occuring within the document.
+     *
+     * When an item enters the dragging zone check whether the mouse pointer is within the
+     * boundaries of the window. If it is, auto scroll the window using `window.scrollBy`.
+     * The mouse pointer is updated by the drag event handler.
+     */
+    function handleAutoScroll() {
+      var minBoundary = 1 / 10; /* boundary top or left */
+      var maxBoundary = 9 / 10; /* boundary bottom or right */
+      var windowEdge = {
+        min: {
+          x: window.innerWidth * minBoundary,
+          y: window.innerHeight * minBoundary
+        },
+        max: {
+          x: window.innerWidth * maxBoundary,
+          y: window.innerHeight * maxBoundary
+        }
+      };
+
+      if (mousePosition.y > 0 && mousePosition.y < windowEdge.min.y) {
+        window.scrollBy(0, -autoScrollSpeed);
+      } else if (mousePosition.y > windowEdge.max.y) {
+        window.scrollBy(0, autoScrollSpeed);
+      }
+
+      if (mousePosition.x > 0 && mousePosition.x < windowEdge.min.x) {
+        window.scrollBy(-autoScrollSpeed, 0);
+      } else if (mousePosition.x > windowEdge.max.x) {
+        window.scrollBy(autoScrollSpeed, 0);
+      }
+    }
+
+    function updateMousePosition(event) {
+      mousePosition = {
+        x: event.clientX,
+        y: event.clientY
+      };
+    }
+
+    $document.on('dragstart', function(event) {
+      if (!autoScrollInterval) {
+        // To avoid different scrolling speed based on different browsers, handle the auto
+        // scrolling in an interval.
+        autoScrollInterval = $interval(function() {
+          handleAutoScroll();
+        }, 50);
+
+        // Update the mouse position by listening to the drag event.
+        $document.on('drag', updateMousePosition);
+      }
+    });
+
+    $document.on('dragend', function(event) {
+      if (autoScrollInterval) {
+        $interval.cancel(autoScrollInterval);
+        $document.off('drag', updateMousePosition);
+        autoScrollInterval = null;
+      }
+    });
+  }]);
+

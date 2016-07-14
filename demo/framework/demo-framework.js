@@ -1,4 +1,4 @@
-angular.module("demo", ["ngRoute", "dndLists"])
+angular.module("demo", ["ngRoute", "dndLists", "dndAutoScroll"])
     .config(function($routeProvider) {
         $routeProvider
             .when('/simple', {
@@ -21,6 +21,10 @@ angular.module("demo", ["ngRoute", "dndLists"])
                 templateUrl: 'multi/multi-frame.html',
                 controller: 'MultiDemoController'
             })
+            .when('/autoscroll', {
+                templateUrl: 'autoscroll/autoscroll-frame.html',
+                controller: 'AutoScrollDemoController'
+            })
             .otherwise({redirectTo: '/nested'});
     })
 
@@ -36,6 +40,7 @@ angular.module("demo", ["ngRoute", "dndLists"])
                     {label: "Item Types", href: "#/types"},
                     {label: "Advanced Demo", href: "#/advanced"},
                     {label: "Multiselection", href: "#/multi"},
+                    {label: "Auto Scroll", href: "#/autoscroll"},
                     {label: "Github", href: "https://github.com/marceljuenemann/angular-drag-and-drop-lists"}
                 ];
 

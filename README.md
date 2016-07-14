@@ -19,7 +19,7 @@ Internet Explorer 8 or lower is *not supported*, but all modern browsers are (se
 
 ## Download & Installation
 * Download `angular-drag-and-drop-lists.js` (or the minified version) and include it in your application. If you use bower or npm, just include the `angular-drag-and-drop-lists` package.
-* Add the `dndLists` module as a dependency to your angular app.
+* Add the `dndLists` module as a dependency to your angular app. Optionally, add the `dndAutoScroll` module as a dependency as well to benefit from automatic scrolling within the document. See below for more details.
 
 ## dnd-draggable directive
 Use the dnd-draggable directive to make your element draggable
@@ -99,6 +99,14 @@ Use the `dnd-handle` directive within a `dnd-nodrag` element in order to allow d
 **Note:** Internet Explorer will show the handle element as drag image instead of the `dnd-draggable` element. You can work around this by styling the handle element differently when it is being dragged. Use the CSS selector `.dndDragging:not(.dndDraggingSource) [dnd-handle]` for that.
 
 [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
+
+## dndAutoScroll module
+
+Most browsers don't support scrolling while dragging an element. Some of them do, like Chrome, but even then the experience is not great. You have to find the sweet spot and the scrolling speed may vary.
+
+The `dndAutoScroll` adds the proper event handlers to `$document` in order to handle the scrolling for all browsers in a consistent way. Simply add it as a dependency to your app and that's all there is to it. After that when you drag an element in your page and the mouse gets closer to the edge of the window, the library will automatically scroll accordingly.
+
+By default, the scrolling speed is 30px every 50ms.
 
 ## Required CSS styles
 Both the dnd-list and it's children require relative positioning, so that the directive can determine the mouse position relative to the list and thus calculate the correct drop position.
