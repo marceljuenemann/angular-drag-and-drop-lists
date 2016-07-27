@@ -7,8 +7,12 @@
  *
  * License: MIT
  */
-angular.module('dndLists', [])
+ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.exports === exports) {
+  module.exports = "dndLists";
+}
+(function(angular){
 
+angular.module('dndLists', [])
   /**
    * Use the dnd-draggable attribute to make your element draggable
    *
@@ -588,3 +592,4 @@ angular.module('dndLists', [])
    * https://code.google.com/p/chromium/issues/detail?id=39399
    */
   .factory('dndDropEffectWorkaround', function(){ return {} });
+})(angular);
