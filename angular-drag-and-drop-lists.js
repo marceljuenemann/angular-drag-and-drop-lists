@@ -55,6 +55,8 @@ angular.module('dndLists', [])
    *                      select text or images inside of it. Since a selection is always draggable,
    *                      this breaks your UI. You most likely want to disable user selection via
    *                      CSS (see user-select).
+   * - dnd-serialize-fn   Optional attribute allowing to supply a custom data object serialization
+   *                      function.
    *
    * CSS classes:
    * - dndDragging        This class will be added to the element while the element is being
@@ -79,6 +81,9 @@ angular.module('dndLists', [])
         });
       }
 
+      var serializeFn = attr.dndSerializeFn ?
+          scope.$eval(attr.dndSerializeFn) : angular.toJson;
+
       /**
        * When the drag operation is started we have to prepare the dataTransfer object,
        * which is the primary way we communicate with the target element
@@ -90,7 +95,7 @@ angular.module('dndLists', [])
         if (element.attr('draggable') == 'false') return true;
 
         // Serialize the data associated with this element. IE only supports the Text drag type
-        event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
+        event.dataTransfer.setData("Text", serializeFn(scope.$eval(attr.dndDraggable)));
 
         // Only allow actions specified in dnd-effect-allowed attribute
         event.dataTransfer.effectAllowed = attr.dndEffectAllowed || "move";
@@ -191,10 +196,10 @@ angular.module('dndLists', [])
    *                        the dropped element should be inserted.
    * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
    *                        matching dnd-type attribute will be dropable.
-   * - dnd-disable-if       Optional boolean expresssion. When it evaluates to true, no dropping
+   * - dnd-disable-if       Optional boolean expression. When it evaluates to true, no dropping
    *                        into the list is possible. Note that this also disables rearranging
    *                        items inside the list.
-   * - dnd-horizontal-list  Optional boolean expresssion. When it evaluates to true, the positioning
+   * - dnd-horizontal-list  Optional boolean expression. When it evaluates to true, the positioning
    *                        algorithm will use the left and right halfs of the list items instead of
    *                        the upper and lower halfs.
    * - dnd-dragover         Optional expression that is invoked when an element is dragged over the
@@ -230,6 +235,8 @@ angular.module('dndLists', [])
    *                        implement the dnd-drop callback to check the incoming element for
    *                        sanity. Furthermore, the dnd-type of external sources can not be
    *                        determined, therefore do not rely on restrictions of dnd-allowed-type.
+   * - dnd-deserialize-fn   Optional attribute allowing to supply a custom data object
+   *                        deserialization function.
    *
    * CSS classes:
    * - dndPlaceholder       When an element is dragged over the list, a new placeholder child
@@ -250,6 +257,8 @@ angular.module('dndLists', [])
 
       var horizontal = attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList);
       var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
+      var deserializeFn = attr.dndDeserializeFn ?
+          scope.$eval(attr.dndDeserializeFn) : JSON.parse;
 
       /**
        * The dragenter event is fired when a dragged element or text selection enters a valid drop
@@ -349,7 +358,7 @@ angular.module('dndLists', [])
         var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
         var transferredObject;
         try {
-          transferredObject = JSON.parse(data);
+          transferredObject = deserializeFn(data);
         } catch(e) {
           return stopDragover();
         }
