@@ -261,27 +261,58 @@ describe('dndList', function() {
       event._triggerOn(element);
     });
 
-    it('removes the dndDragover CSS class', function() {
+    it('removes the dndDragover CSS class after a timeout', inject(function($timeout) {
       expect(element.hasClass('dndDragover')).toBe(true);
       createEvent('dragleave')._triggerOn(element);
+      expect(element.hasClass('dndDragover')).toBe(true);
+      $timeout.flush(50);
       expect(element.hasClass('dndDragover')).toBe(false);
-    });
+    }));
 
     it('removes the placeholder after a timeout', inject(function($timeout) {
       expect(element.children().length).toBe(4);
       createEvent('dragleave')._triggerOn(element);
-      $timeout.flush(50);
+      $timeout.flush(25);
       expect(element.children().length).toBe(4);
-      $timeout.flush(50);
+      $timeout.flush(25);
       expect(element.children().length).toBe(3);
     }));
 
-    it('does not remove the placeholder if dndDragover was set again', inject(function($timeout) {
+    //deprecated test based on the fact that we're not looking at "isStillDragging" flag to determine if we should 
+    //remove placeholder
+    xit('does not remove the placeholder if dndDragover was set again', inject(function($timeout) {
       createEvent('dragleave')._triggerOn(element);
       element.addClass('dndDragover');
       $timeout.flush(1000);
       expect(element.children().length).toBe(4);
     }));
+
+    it('does not remove dndDragover CSS class if dragover is called right after dragleave', inject(function($timeout) {
+      expect(element.hasClass('dndDragover')).toBe(true);      
+      createEvent('dragleave')._triggerOn(element);
+      $timeout.flush(10);
+      expect(element.hasClass('dndDragover')).toBe(true); 
+      //simulate dragover again
+      event = createEvent('dragover');
+      event.originalEvent.target = element[0];
+      event._triggerOn(element);
+      
+      $timeout.flush(100);
+      expect(element.hasClass('dndDragover')).toBe(true);   
+    }))
+
+    it('does not remove the placeholder if dragover is called right after dragleave', inject(function($timeout) {
+      createEvent('dragleave')._triggerOn(element);
+      $timeout.flush(10);
+      expect(element.children().length).toBe(4);
+      //simulate dragover again
+      event = createEvent('dragover');
+      event.originalEvent.target = element[0];
+      event._triggerOn(element);
+      
+      $timeout.flush(100);
+      expect(element.children().length).toBe(4);            
+    }))
   });
 
   function commonTests(eventType) {
