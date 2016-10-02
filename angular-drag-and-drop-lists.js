@@ -238,8 +238,8 @@ angular.module('dndLists', [])
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround', 'dndDragUtil',
+                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround, dndDragUtil) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
@@ -250,6 +250,9 @@ angular.module('dndLists', [])
 
       var horizontal = attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList);
       var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
+
+      //needed to handle issues where dragLeave is called when entering child element
+      var isStillDragging = false;
 
       /**
        * The dragenter event is fired when a dragged element or text selection enters a valid drop
@@ -268,6 +271,7 @@ angular.module('dndLists', [])
        * is being dragged over our list, or over an child element.
        */
       element.on('dragover', function(event) {
+        isStillDragging = true;
         event = event.originalEvent || event;
 
         if (!isDropAllowed(event)) return true;
@@ -336,6 +340,7 @@ angular.module('dndLists', [])
        * one child element per array element.
        */
       element.on('drop', function(event) {
+        isStillDragging = false;
         event = event.originalEvent || event;
 
         if (!isDropAllowed(event)) return true;
@@ -398,15 +403,22 @@ angular.module('dndLists', [])
        * again. If it is there, dragover must have been called in the meantime, i.e. the element
        * is still dragging over the list. If you know a better way of doing this, please tell me!
        */
+      function onDragLeaveImpl() {
+        //dragging has actually stopped, we can call this now
+        if(isStillDragging === false) {
+          stopDragover();
+        }
+        
+      }
+
+      var debouncedDragLeave = dndDragUtil.debounce(onDragLeaveImpl, 50);
+
       element.on('dragleave', function(event) {
         event = event.originalEvent || event;
 
-        element.removeClass("dndDragover");
-        $timeout(function() {
-          if (!element.hasClass("dndDragover")) {
-            placeholder.remove();
-          }
-        }, 100);
+        isStillDragging = false;
+
+        debouncedDragLeave();
       });
 
       /**
@@ -571,6 +583,30 @@ angular.module('dndLists', [])
       });
     };
   })
+  .service('dndDragUtil',['$timeout', function($timeout) {
+
+        //From DavidWalsh blog - https://davidwalsh.name/javascript-debounce-function
+    // Returns a function, that, as long as it continues to be invoked, will not
+    // be triggered. The function will be called after it stops being called for
+    // N milliseconds. If `immediate` is passed, trigger the function on the
+    // leading edge, instead of the trailing.
+    function debounce(func, wait, immediate) {
+          var timeout;
+          return function () {
+              var context = this, args = arguments;
+              var later = function () {
+                  timeout = null;
+                  if (!immediate) func.apply(context, args);
+              };
+              var callNow = immediate && !timeout;
+              $timeout.cancel(timeout);
+              timeout = $timeout(later, wait);
+              if (callNow) func.apply(context, args);
+          };
+      };
+
+    return {debounce: debounce}
+  }])
 
   /**
    * This workaround handles the fact that Internet Explorer does not support drag types other than
