@@ -241,6 +241,8 @@ angular.module('dndLists', [])
   .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
                  function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
     return function(scope, element, attr) {
+      var showPlaceholder = !attr.dndNoPlaceholder;
+
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping
       var placeholder = getPlaceholderElement();
@@ -274,46 +276,48 @@ angular.module('dndLists', [])
 
         // First of all, make sure that the placeholder is shown
         // This is especially important if the list is empty
-        if (placeholderNode.parentNode != listNode) {
-          element.append(placeholder);
-        }
-
-        if (event.target !== listNode) {
-          // Try to find the node direct directly below the list node.
-          var listItemNode = event.target;
-          while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
-            listItemNode = listItemNode.parentNode;
+        if (showPlaceholder) {
+          if (placeholderNode.parentNode != listNode) {
+            element.append(placeholder);
           }
 
-          if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
-            // If the mouse pointer is in the upper half of the child element,
-            // we place it before the child element, otherwise below it.
-            if (isMouseInFirstHalf(event, listItemNode)) {
-              listNode.insertBefore(placeholderNode, listItemNode);
-            } else {
-              listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+          if (event.target !== listNode) {
+            // Try to find the node direct directly below the list node.
+            var listItemNode = event.target;
+            while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
+              listItemNode = listItemNode.parentNode;
             }
-          }
-        } else {
-          // This branch is reached when we are dragging directly over the list element.
-          // Usually we wouldn't need to do anything here, but the IE does not fire it's
-          // events for the child element, only for the list directly. Therefore, we repeat
-          // the positioning algorithm for IE here.
-          if (isMouseInFirstHalf(event, placeholderNode, true)) {
-            // Check if we should move the placeholder element one spot towards the top.
-            // Note that display none elements will have offsetTop and offsetHeight set to
-            // zero, therefore we need a special check for them.
-            while (placeholderNode.previousElementSibling
-                 && (isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true)
-                 || placeholderNode.previousElementSibling.offsetHeight === 0)) {
-              listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
+
+            if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
+              // If the mouse pointer is in the upper half of the child element,
+              // we place it before the child element, otherwise below it.
+              if (isMouseInFirstHalf(event, listItemNode)) {
+                listNode.insertBefore(placeholderNode, listItemNode);
+              } else {
+                listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+              }
             }
           } else {
-            // Check if we should move the placeholder element one spot towards the bottom
-            while (placeholderNode.nextElementSibling &&
-                 !isMouseInFirstHalf(event, placeholderNode.nextElementSibling, true)) {
-              listNode.insertBefore(placeholderNode,
-                  placeholderNode.nextElementSibling.nextElementSibling);
+            // This branch is reached when we are dragging directly over the list element.
+            // Usually we wouldn't need to do anything here, but the IE does not fire it's
+            // events for the child element, only for the list directly. Therefore, we repeat
+            // the positioning algorithm for IE here.
+            if (isMouseInFirstHalf(event, placeholderNode, true)) {
+              // Check if we should move the placeholder element one spot towards the top.
+              // Note that display none elements will have offsetTop and offsetHeight set to
+              // zero, therefore we need a special check for them.
+              while (placeholderNode.previousElementSibling
+                  && (isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true)
+                  || placeholderNode.previousElementSibling.offsetHeight === 0)) {
+                listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
+              }
+            } else {
+              // Check if we should move the placeholder element one spot towards the bottom
+              while (placeholderNode.nextElementSibling &&
+                  !isMouseInFirstHalf(event, placeholderNode.nextElementSibling, true)) {
+                listNode.insertBefore(placeholderNode,
+                    placeholderNode.nextElementSibling.nextElementSibling);
+              }
             }
           }
         }
