@@ -278,45 +278,8 @@ angular.module('dndLists', [])
           element.append(placeholder);
         }
 
-        if (event.target !== listNode) {
-          // Try to find the node direct directly below the list node.
-          var listItemNode = event.target;
-          while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
-            listItemNode = listItemNode.parentNode;
-          }
-
-          if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
-            // If the mouse pointer is in the upper half of the child element,
-            // we place it before the child element, otherwise below it.
-            if (isMouseInFirstHalf(event, listItemNode)) {
-              listNode.insertBefore(placeholderNode, listItemNode);
-            } else {
-              listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
-            }
-          }
-        } else {
-          // This branch is reached when we are dragging directly over the list element.
-          // Usually we wouldn't need to do anything here, but the IE does not fire it's
-          // events for the child element, only for the list directly. Therefore, we repeat
-          // the positioning algorithm for IE here.
-          if (isMouseInFirstHalf(event, placeholderNode, true)) {
-            // Check if we should move the placeholder element one spot towards the top.
-            // Note that display none elements will have offsetTop and offsetHeight set to
-            // zero, therefore we need a special check for them.
-            while (placeholderNode.previousElementSibling
-                 && (isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true)
-                 || placeholderNode.previousElementSibling.offsetHeight === 0)) {
-              listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
-            }
-          } else {
-            // Check if we should move the placeholder element one spot towards the bottom
-            while (placeholderNode.nextElementSibling &&
-                 !isMouseInFirstHalf(event, placeholderNode.nextElementSibling, true)) {
-              listNode.insertBefore(placeholderNode,
-                  placeholderNode.nextElementSibling.nextElementSibling);
-            }
-          }
-        }
+        var index = findInsertPoint(event);
+        insertPlaceholderAt(index);
 
         // At this point we invoke the callback, which still can disallow the drop.
         // We can't do this earlier because we want to pass the index of the placeholder.
@@ -329,6 +292,19 @@ angular.module('dndLists', [])
         event.stopPropagation();
         return false;
       });
+
+      /**
+       * Insert the placeholder node at the given index
+       */
+      function insertPlaceholderAt (index) {
+        var children = listChildren();
+
+        if (index <= 0) {
+          angular.element(listNode).prepend(placeholderNode);
+        } else {
+          angular.element(children[index - 1]).after(placeholderNode);
+        }
+      }
 
       /**
        * When the element is dropped, we use the position of the placeholder element as the
@@ -408,6 +384,58 @@ angular.module('dndLists', [])
           }
         }, 100);
       });
+
+      /**
+       * Get the child nodes, excluding the placeholder
+       */
+      function listChildren () {
+        var array = [];
+
+        angular.forEach(element.children(), function (node) {
+          if (node !== placeholderNode) {
+            array.push(node);
+          }
+        });
+
+        return array;
+      }
+
+      /**
+       * Find the insertion point in the list by binary search of the midpoint
+       * of the elements in the list.
+       */
+      function findInsertPoint (event) {
+        var value = horizontal ? event.clientX : event.clientY;
+        var low = 0;
+
+        var array = listChildren();
+
+        var high = array.length;
+
+        while (low < high) {
+          var mid = Math.floor((low + high) / 2);
+          var computed = getMidpoint(array[mid]);
+
+          if (computed < value) {
+            low = mid + 1;
+          } else {
+            high = mid;
+          }
+        }
+        return Math.min(high, Math.pow(2, 32) - 1);
+      }
+      /**
+       * Checks whether the mouse is before the halfway point of a given list node.
+       */
+      function getMidpoint (node) {
+        var rect = node.getBoundingClientRect();
+
+        if (horizontal) {
+          return Math.round((rect.left + rect.right) / 2);
+        } else {
+          return Math.round((rect.top + rect.bottom) / 2);
+        }
+      }
 
       /**
        * Checks whether the mouse pointer is in the first half of the given target element.
