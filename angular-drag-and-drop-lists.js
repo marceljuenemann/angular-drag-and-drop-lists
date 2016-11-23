@@ -96,8 +96,10 @@ angular.module('dndLists', [])
         event.dataTransfer.effectAllowed = attr.dndEffectAllowed || "move";
 
         // Add CSS classes. See documentation above
-        element.addClass("dndDragging");
-        $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
+        $timeout(function() {
+          element.addClass("dndDragging");
+          element.addClass("dndDraggingSource"); 
+        }, 0);
 
         // Workarounds for stupid browsers, see description below
         dndDropEffectWorkaround.dropEffect = "none";
