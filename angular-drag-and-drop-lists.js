@@ -107,9 +107,13 @@ angular.module('dndLists', [])
         // typename, but we have to use "Text" there to support IE
         dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
+        var clientRect = event.target.getBoundingClientRect();
+        var offsetX    = (event.clientX - clientRect.left);
+        var offsetY    = (event.clientY - clientRect.top);
+
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
-          event.dataTransfer.setDragImage(element[0], 0, 0);
+          event.dataTransfer.setDragImage(element[0], offsetX, offsetY);
         }
 
         // Invoke callback

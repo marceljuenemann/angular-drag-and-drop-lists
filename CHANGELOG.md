@@ -1,3 +1,9 @@
+# 1.4.1 (2016-12-11)
+
+## Features
+- calculated setDragImage offset
+
+
 # 1.4.0 (2016-02-06)
 
 ## Features
