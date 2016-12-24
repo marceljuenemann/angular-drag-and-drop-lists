@@ -18,7 +18,8 @@ Internet Explorer 8 or lower is *not supported*, but all modern browsers are (se
 
 
 ## Download & Installation
-Download `angular-drag-and-drop-lists.js` (or the minified version) and include it in your application. If you use bower, you can of course just add it via bower. Add the `dndLists` module as dependency to your angular app.
+* Download `angular-drag-and-drop-lists.js` (or the minified version) and include it in your application. If you use bower or npm, just include the `angular-drag-and-drop-lists` package.
+* Add the `dndLists` module as a dependency to your angular app.
 
 ## dnd-draggable directive
 Use the dnd-draggable directive to make your element draggable
