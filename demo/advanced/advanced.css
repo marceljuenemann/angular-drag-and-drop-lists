@@ -6,7 +6,7 @@
  */
 .advancedDemo ul[dnd-list],
 .advancedDemo ul[dnd-list] > li {
-	position: relative;
+  position: relative;
 }
 
 /***************************** Dropzone Styling *****************************/
@@ -43,11 +43,10 @@
 
 /**
  * The dndDraggingSource class will be applied to the source element of a drag
- * operation. It makes sense to hide it to give the user the feeling that he's
- * actually moving it. Note that the source element has also .dndDragging class.
+ * operation.
  */
 .advancedDemo .dropzone .dndDraggingSource {
-    display: none;
+    opacity: 0.5;
 }
 
 /**
@@ -78,7 +77,7 @@
     margin: 5px;
     padding: 3px;
     text-align: center;
-    width: 50px;
+    width: 80px;
 }
 
 .advancedDemo .dropzone .container-element {

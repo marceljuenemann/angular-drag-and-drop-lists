@@ -2,8 +2,7 @@ angular.module("demo").controller("AdvancedDemoController", function($scope) {
 
     $scope.dragoverCallback = function(event, index, external, type) {
         $scope.logListEvent('dragged over', event, index, external, type);
-        // Disallow dropping in the third row. Could also be done with dnd-disable-if.
-        return index < 10;
+        return index < 10; // Disallow dropping in the third row.
     };
 
     $scope.dropCallback = function(event, index, item, external, type) {
@@ -13,29 +12,25 @@ angular.module("demo").controller("AdvancedDemoController", function($scope) {
     };
 
     $scope.logEvent = function(message, event) {
-        console.log(message, '(triggered by the following', event.type, 'event)');
-        console.log(event);
+        console.log(message);
     };
 
     $scope.logListEvent = function(action, event, index, external, type) {
         var message = external ? 'External ' : '';
-        message += type + ' element is ' + action + ' position ' + index;
+        message += type + ' element was ' + action + ' position ' + index;
         $scope.logEvent(message, event);
     };
 
-    $scope.model = [];
-
     // Initialize model
+    $scope.model = [[], []];
     var id = 10;
-    for (var i = 0; i < 3; ++i) {
-        $scope.model.push([]);
-        for (var j = 0; j < 2; ++j) {
-            $scope.model[i].push([]);
-            for (var k = 0; k < 7; ++k) {
-                $scope.model[i][j].push({label: 'Item ' + id++});
-            }
-        }
-    }
+    angular.forEach(['all', 'move', 'copy', 'link', 'copyLink', 'copyMove'], function(effect, i) {
+      var container = {items: [], effectAllowed: effect};
+      for (var k = 0; k < 7; ++k) {
+        container.items.push({label: effect + ' ' + id++, effectAllowed: effect});
+      }
+      $scope.model[i % $scope.model.length].push(container);
+    });
 
     $scope.$watch('model', function(model) {
         $scope.modelAsJson = angular.toJson(model, true);
