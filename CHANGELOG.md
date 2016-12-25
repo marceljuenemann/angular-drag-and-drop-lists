@@ -98,7 +98,7 @@ Initial release
   - bower.json
   - package.json
   - JS files
-- Minify and test (npm run-script minify)
+- Minify and test (npm run-script minify, check semicolon at EOF)
 - Test different OS & browsers (npm start)
 - Update README and CHANGELOG
 - Merge to master
