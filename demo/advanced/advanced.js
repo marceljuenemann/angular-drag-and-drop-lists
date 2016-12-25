@@ -1,24 +1,24 @@
 angular.module("demo").controller("AdvancedDemoController", function($scope) {
 
-    $scope.dragoverCallback = function(event, index, external, type) {
-        $scope.logListEvent('dragged over', event, index, external, type);
+    $scope.dragoverCallback = function(index, external, type) {
+        $scope.logListEvent('dragged over', index, external, type);
         return index < 10; // Disallow dropping in the third row.
     };
 
-    $scope.dropCallback = function(event, index, item, external, type) {
-        $scope.logListEvent('dropped at', event, index, external, type);
+    $scope.dropCallback = function(index, item, external, type) {
+        $scope.logListEvent('dropped at', index, external, type);
         // Return false here to cancel drop. Return true if you insert the item yourself.
         return item;
     };
 
-    $scope.logEvent = function(message, event) {
+    $scope.logEvent = function(message) {
         console.log(message);
     };
 
-    $scope.logListEvent = function(action, event, index, external, type) {
+    $scope.logListEvent = function(action, index, external, type) {
         var message = external ? 'External ' : '';
         message += type + ' element was ' + action + ' position ' + index;
-        $scope.logEvent(message, event);
+        $scope.logEvent(message);
     };
 
     // Initialize model
