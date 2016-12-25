@@ -34,8 +34,8 @@ Use the dnd-draggable directive to make your element draggable
         * *Not fully supported in Chrome on Windows:* In the Windows version of Chrome the cursor will always be the move cursor. However, when the user drops an element and has the ctrl key pressed, we will perform a copy anyways.
     * HTML5 also specifies the `link` option, but this library does not actively support it yet, so use it at your own risk.
     * [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
-* `dnd-type` Use this attribute if you have different kinds of items in your application and you want to limit which items can be dropped into which lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute should evaluate to a string, although this restriction is not enforced (at the moment). [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
-* `dnd-disable-if` You can use this attribute to dynamically disable the draggability of the element. This is useful if you have certain list items that you don't want to be draggable, or if you want to disable drag & drop completely without having two different code branches (e.g. only allow for admins). *Note*: If your element is not draggable, the user is probably able to select text or images inside of it. Since a selection is always draggable, this breaks your UI. You most likely want to disable user selection via CSS (see [user-select](http://stackoverflow.com/a/4407335)). [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
+* `dnd-type` Use this attribute if you have different kinds of items in your application and you want to limit which items can be dropped into which lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute must be a lower case string. Upper case characters can be used, but will be converted to lower case automatically. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
+* `dnd-disable-if` You can use this attribute to dynamically disable the draggability of the element. This is useful if you have certain list items that you don't want to be draggable, or if you want to disable drag & drop completely without having two different code branches (e.g. only allow for admins). [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 
 **Callbacks**
 * `dnd-moved` Callback that is invoked when the element was moved. Usually you will remove your element from the original list in this callback, since the directive is not doing that for you automatically. The original dragend event will be provided in the local `event` variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
@@ -54,30 +54,23 @@ Use the dnd-draggable directive to make your element draggable
 Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single li element as child with the ng-repeat directive. If you don't do that, we will not be able to position the dropped element correctly. If you want your list to be sortable, also add the dnd-draggable directive to your li element(s).
 
 **Attributes**
-* `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted.
-* `dnd-allowed-types` Optional array of allowed item types. When used, only items that had a matching dnd-type attribute will be dropable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
+* `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted. The value can be blank if used with a custom dnd-drop handler that handles the insertion on its own.
+* `dnd-allowed-types` Optional array of allowed item types. When used, only items that had a matching dnd-type attribute will be dropable. Upper case characters will automatically be converted to lower case. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 * `dnd-disable-if` Optional boolean expression. When it evaluates to true, no dropping into the list is possible. Note that this also disables rearranging items inside the list. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 * `dnd-horizontal-list` Optional boolean expression. When it evaluates to true, the positioning algorithm will use the left and right halfs of the list items instead of the upper and lower halfs. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
-* `dnd-external-sources` Optional boolean expression. When it evaluates to true, the list accepts drops from sources outside of the current browser tab. This allows to drag and drop accross different browser tabs. Note that this will allow to drop arbitrary text into the list, thus it is highly recommended to implement the dnd-drop callback to check the incoming element for sanity. Furthermore, the dnd-type of external sources can not be determined, therefore do not rely on restrictions of dnd-allowed-type. Also note that this feature does not work very well in Internet Explorer. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
+* `dnd-external-sources` Optional boolean expression. When it evaluates to true, the list accepts drops from sources outside of the current browser tab, which allows to drag and drop accross different browser tabs. The only major browser for which this is currently not working is Microsoft Edge. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 
 **Callbacks**
 * `dnd-dragover` Optional expression that is invoked when an element is dragged over the list. If the expression is set, but does not return true, the element is not allowed to be dropped. The following variables will be available:
     * `event` The original dragover event sent by the browser.
     * `index` The position in the list at which the element would be dropped.
-    * `type` The `dnd-type` set on the dnd-draggable, or undefined if unset.
+    * `type` The `dnd-type` set on the dnd-draggable, or undefined if unset. Will be null for drops from external sources in IE and Edge, since we don't know the type in those cases.
     * `external` Whether the element was dragged from an external source. See `dnd-external-sources`.
     * [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
-* `dnd-drop` Optional expression that is invoked when an element is dropped on the list.
-    * The following variables will be available:
-       * `event` The original drop event sent by the browser.
-       * `index` The position in the list at which the element would be dropped.
-       * `item` The transferred object.
-       * `type` The dnd-type set on the dnd-draggable, or undefined if unset.
-       * `external` Whether the element was dragged from an external source. See `dnd-external-sources`.
-    * The return value determines the further handling of the drop:
-      * `false` The drop will be canceled and the element won't be inserted.
-      * `true` Signalises that the drop is allowed, but the dnd-drop callback will take care of inserting the element.
-      * Otherwise: All other return values will be treated as the object to insert into the array. In most cases you simply want to return the `item` parameter, but there are no restrictions on what you can return.
+* `dnd-drop` Optional expression that is invoked when an element is dropped on the list. The same variables as for dnd-dragover will be available, with the exception that type is always known and therefore never null. There will also be an `item` variable, which is the transferred object. The return value determines the further handling of the drop:
+    * `falsy` The drop will be canceled and the element won't be inserted.
+    * `true` Signalises that the drop is allowed, but the dnd-drop callback will take care of inserting the element.
+    * Otherwise: All other return values will be treated as the object to insert into the array. In most cases you simply want to return the `item` parameter, but there are no restrictions on what you can return.
 * `dnd-inserted` Optional expression that is invoked after a drop if the element was actually inserted into the list. The same local variables as for `dnd-drop` will be available. Note that for reorderings inside the same list the old element will still be in the list due to the fact that `dnd-moved` was not called yet. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 
 **CSS classes**
@@ -103,7 +96,7 @@ Use the `dnd-handle` directive within a `dnd-nodrag` element in order to allow d
 ## Recommended CSS styles
 It is recommended that you apply the following CSS styles:
 
-* If your application is about moving elements by drag and drop, it is recommended that you hide the source element during a drag and drop operation, i.e. setting `display: none` on the `.dndDraggingSource` class.
+* If your application is about moving elements by drag and drop, it is recommended that you hide the source element while dragging, i.e. setting `display: none` on the `.dndDraggingSource` class.
 * If your application allows to drop elements into empty lists, you need to ensure that empty lists never have a height or width of zero, e.g. by setting a `min-width`.
 * You should style the `.dndPlaceholder` class accordingly.
 
@@ -112,14 +105,14 @@ It is recommended that you apply the following CSS styles:
 ## Why another drag & drop library?
 There are tons of other drag & drop libraries out there, but none of them met my three requirements:
 
-* **Angular:** If you use angular.js, you really don't want to throw a bunch of jQuery into your app. Instead you want to use libraries that were build the "angular way" and support **two-way data binding** to update your data model automatically.
+* **Angular:** If you use angular.js, you really don't want to throw a bunch of jQuery into your app. Instead you want to use libraries that were built the "angular way" and support **two-way data binding** to update your data model automatically.
 * **Nested lists:** If you want to build a **WYSIWYG editor** or have some fancy **tree structure**, the library has to support nested lists.
-* **HTML5 drag & drop:** Most drag & drop applications you'll find on the internet use pure JavaScript drag & drop. But with the arrival of HTML5 we can delegate most of the work to the browser. For example: If you want to show the user what he's currently dragging, you'll have to update the position of the element all the time and set it below the mouse pointer. In HTML5 the browser will do that for you! But you can not only save code lines, you can also offer a more **native user experience**: If you click on an element in a pure JavaScript drag & drop implementation, it will usually start the drag operation. But remember what happens when you click an icon on your desktop: The icon will be selected, not dragged! This is the native behaviour you can bring to your web application with HTML5.
+* **HTML5 drag & drop:** Most drag & drop applications you'll find on the internet use pure JavaScript drag & drop. But with the arrival of HTML5 we can delegate most of the work to the browser. For example: If you want to show the user what they are currently dragging, you'll have to update the position of the element all the time and set it below the mouse pointer. In HTML5 the browser will do that for you! But you can not only save code lines, you can also offer a more **native user experience**: If you click on an element in a pure JavaScript drag & drop implementation, it will usually start the drag operation. But remember what happens when you click an icon on your desktop: The icon will be selected, not dragged! This is the native behaviour you can bring to your web application with HTML5.
 
 If this doesn't fit your requirements, check out one of the other awesome drag & drop libraries:
 
 * [angular-ui-tree](https://github.com/JimLiu/angular-ui-tree): Very similar to this library, but does not use the HTML5 API. Therefore you need to write some more markup to see what you are dragging and it will create another DOM node that you have to style. However, if you plan to support touch devices this is probably your best choice.
-* [angular-dragdrop](https://github.com/ganarajpr/angular-dragdrop): One of many libraries with the same name. This one uses the HTML5 API, but if you want to build (nested) sortable lists, you're on your own, because it does not calculate the correct element position for you.
+* [angular-dragdrop](https://github.com/angular-dragdrop/angular-dragdrop): One of many libraries with the same name. This one uses the HTML5 API, but if you want to build (nested) sortable lists, you're on your own, because it does not calculate the correct element position for you.
 * [more...](https://www.google.de/search?q=angular+drag+and+drop)
 
 
