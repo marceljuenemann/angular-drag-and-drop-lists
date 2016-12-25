@@ -3,7 +3,7 @@
     dnd-allowed-types="['containerType']"
     dnd-external-sources="true"
     dnd-dragover="dragoverCallback(event, index, external, type)"
-    dnd-drop="dropCallback(event, index, item, external, type, 'containerType')">
+    dnd-drop="dropCallback(event, index, item, external, type)">
     <li ng-repeat="items in containers"
         dnd-draggable="items"
         dnd-type="'containerType'"
@@ -16,7 +16,7 @@
                 dnd-horizontal-list="true"
                 dnd-external-sources="true"
                 dnd-dragover="dragoverCallback(event, index, external, type)"
-                dnd-drop="dropCallback(event, index, item, external, type, 'itemType')"
+                dnd-drop="dropCallback(event, index, item, external, type)"
                 dnd-inserted="logEvent('Element was inserted at position ' + index, event)"
                 class="itemlist">
                 <li ng-repeat="item in items"

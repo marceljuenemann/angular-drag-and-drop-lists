@@ -1,14 +1,3 @@
-/***************************** Required styles *****************************/
-
-/**
- * For the correct positioning of the placeholder element, the dnd-list and
- * it's children must have position: relative
- */
-.nestedDemo ul[dnd-list],
-.nestedDemo ul[dnd-list] > li {
-	position: relative;
-}
-
 /***************************** Dropzone Styling *****************************/
 
 /**
@@ -16,18 +5,11 @@
  * otherwise you can't drop to it once it's empty
  */
 .nestedDemo .dropzone ul[dnd-list] {
-    min-height: 42px;
     margin: 0px;
+    min-height: 42px;
     padding-left: 0px;
 }
 
-/**
- * The dnd-lists's child elements currently MUST have
- * position: relative. Otherwise we can not determine
- * whether the mouse pointer is in the upper or lower
- * half of the element we are dragging over. In other
- * browsers we can use event.offsetY for this.
- */
 .nestedDemo .dropzone li {
     background-color: #fff;
     border: 1px solid #ddd;
@@ -59,9 +41,8 @@
  */
 .nestedDemo .dropzone .dndPlaceholder {
     background-color: #ddd;
-    min-height: 42px;
     display: block;
-    position: relative;
+    min-height: 42px;
 }
 
 /***************************** Element Selection *****************************/
@@ -76,10 +57,10 @@
 }
 
 .nestedDemo .dropzone .selected .box > h3 {
-    color: #3c763d;
     background-color: #dff0d8;
     background-image: linear-gradient(to bottom,#dff0d8 0,#d0e9c6 100%);
     border-color: #d6e9c6;
+    color: #3c763d;
 }
 
 /***************************** Element type specific styles *****************************/
@@ -100,15 +81,15 @@
 /***************************** Toolbox *****************************/
 
 .nestedDemo .toolbox ul {
+    cursor: move;
     list-style: none;
     padding-left: 0px;
-    cursor: move;
 }
 
 .nestedDemo .toolbox button {
     margin: 5px;
-    width: 123px;
     opacity: 1.0;
+    width: 123px;
 }
 
 .nestedDemo .toolbox .dndDragging {
