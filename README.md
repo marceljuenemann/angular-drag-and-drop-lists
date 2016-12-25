@@ -96,7 +96,7 @@ Use the `dnd-handle` directive within a `dnd-nodrag` element in order to allow d
 ## Recommended CSS styles
 It is recommended that you apply the following CSS styles:
 
-* If your application is about moving elements by drag and drop, it is recommended that you hide the source element during a drag and drop operation, i.e. setting `display: none` on the `.dndDraggingSource` class.
+* If your application is about moving elements by drag and drop, it is recommended that you hide the source element while dragging, i.e. setting `display: none` on the `.dndDraggingSource` class.
 * If your application allows to drop elements into empty lists, you need to ensure that empty lists never have a height or width of zero, e.g. by setting a `min-width`.
 * You should style the `.dndPlaceholder` class accordingly.
 
@@ -112,7 +112,7 @@ There are tons of other drag & drop libraries out there, but none of them met my
 If this doesn't fit your requirements, check out one of the other awesome drag & drop libraries:
 
 * [angular-ui-tree](https://github.com/JimLiu/angular-ui-tree): Very similar to this library, but does not use the HTML5 API. Therefore you need to write some more markup to see what you are dragging and it will create another DOM node that you have to style. However, if you plan to support touch devices this is probably your best choice.
-* [angular-dragdrop](https://github.com/ganarajpr/angular-dragdrop): One of many libraries with the same name. This one uses the HTML5 API, but if you want to build (nested) sortable lists, you're on your own, because it does not calculate the correct element position for you.
+* [angular-dragdrop](https://github.com/angular-dragdrop/angular-dragdrop): One of many libraries with the same name. This one uses the HTML5 API, but if you want to build (nested) sortable lists, you're on your own, because it does not calculate the correct element position for you.
 * [more...](https://www.google.de/search?q=angular+drag+and+drop)
 
 
