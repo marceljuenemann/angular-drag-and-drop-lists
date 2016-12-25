@@ -192,9 +192,7 @@
    * Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single
    * li element as child with the ng-repeat directive. If you don't do that, we will not be able to
    * position the dropped element correctly. If you want your list to be sortable, also add the
-   * dnd-draggable directive to your li element(s). Both the dnd-list and it's direct children must
-   * have position: relative CSS style, otherwise the positioning algorithm will not be able to
-   * determine the correct placeholder position in all browsers.
+   * dnd-draggable directive to your li element(s).
    *
    * Attributes:
    * - dnd-list             Required attribute. The value has to be the array in which the data of

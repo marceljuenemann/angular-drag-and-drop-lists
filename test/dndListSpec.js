@@ -441,7 +441,6 @@ describe('dndList', function() {
       return params.item;
     };
     element.scope().list = [1, 2, 3];
-    element.css('position', 'relative');
     return element;
   }
 });

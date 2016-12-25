@@ -51,7 +51,7 @@ Use the dnd-draggable directive to make your element draggable
 
 ## dnd-list directive
 
-Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single li element as child with the ng-repeat directive. If you don't do that, we will not be able to position the dropped element correctly. If you want your list to be sortable, also add the dnd-draggable directive to your li element(s). Both the dnd-list and it's direct children must have position: relative CSS style, otherwise the positioning algorithm will not be able to determine the correct placeholder position in all browsers.
+Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single li element as child with the ng-repeat directive. If you don't do that, we will not be able to position the dropped element correctly. If you want your list to be sortable, also add the dnd-draggable directive to your li element(s).
 
 **Attributes**
 * `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted.
@@ -100,16 +100,14 @@ Use the `dnd-handle` directive within a `dnd-nodrag` element in order to allow d
 
 [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 
-## Required CSS styles
-Both the dnd-list and it's children require relative positioning, so that the directive can determine the mouse position relative to the list and thus calculate the correct drop position.
+## Recommended CSS styles
+It is recommended that you apply the following CSS styles:
 
-<pre>
-ul[dnd-list], ul[dnd-list] > li {
-    position: relative;
-}
-</pre>
+* If your application is about moving elements by drag and drop, it is recommended that you hide the source element during a drag and drop operation, i.e. setting `display: none` on the `.dndDraggingSource` class.
+* If your application allows to drop elements into empty lists, you need to ensure that empty lists never have a height or width of zero, e.g. by setting a `min-width`.
+* You should style the `.dndPlaceholder` class accordingly.
 
-
+**Note:** Previous versions of this directive required `postion: relative` on certain elements, but this is no longer required.
 
 ## Why another drag & drop library?
 There are tons of other drag & drop libraries out there, but none of them met my three requirements:
