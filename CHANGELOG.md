@@ -1,3 +1,23 @@
+# 2.0.0 (2016-12-25)
+
+## Changes
+
+There have been some major changes to how the directive works internally, although these changes should not affect users of the library.
+
+- **Simpler placeholder positioning algorithm**: The logic for placeholder positiong is unchanged, i.e. the placeholder will be placed after an element if the mouse cursor is in the second half of the element it is hovering over, otherwise it is placed before it. However, the implementation of this algorithm was massively simplified by using `getBoundingClientRect`. As a result, developers are no longer required to have `position: relative` on the list and list item elements.
+- **New dataTransfer algorithm**: The directive now uses custom mime types in modern browsers, and falls back to using `Text` in non-standard comform browsers. As a result, dragged elements can no longer be dropped into arbitrary input fields. More details on how this works can be found in the [design document](https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design).
+- **Internal test infrastructure**: The mocks used for drag and drop events in unit tests are now much nicer.
+
+## Tested browsers
+
+- Chrome 55 (Mac, Ubuntu & Windows 10)
+- Firefox 50 (Ubuntu)
+- Safari 10 (Mac)
+- Microsoft Edge 20 (Windows 10)
+- Internet Explorer 11 (Windows 10)
+- Internet Explorer 9 (Windows Vista)
+
+
 # 1.4.0 (2016-02-06)
 
 ## Features
