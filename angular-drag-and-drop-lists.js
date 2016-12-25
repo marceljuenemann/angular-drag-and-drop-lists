@@ -246,7 +246,7 @@
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  dndLists.directive('dndList', ['$parse', function($parse) {
+  dndLists.directive('dndList', ['$parse', '$timeout', function($parse, $timeout) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping.
@@ -295,11 +295,6 @@
         // Make sure the placeholder is shown, which is especially important if the list is empty.
         if (placeholderNode.parentNode != listNode) {
           element.append(placeholder);
-          // In nested lists, the parent list might be showing a placeholder that we have to remove.
-          if (dndState.onNewDropTarget && dndState.onNewDropTarget != stopDragover) {
-            dndState.onNewDropTarget();
-          }
-          dndState.onNewDropTarget = stopDragover;
         }
 
         if (event.target != listNode) {
@@ -403,17 +398,20 @@
       /**
        * We have to remove the placeholder when the element is no longer dragged over our list. The
        * problem is that the dragleave event is not only fired when the element leaves our list,
-       * but also when it leaves a child element. As a workaround we check which element is below
-       * the mouse pointer, and whether it is a descendant. Note that this will not take care of
-       * the case where the drop target was moved to a child dnd-list. That will be handled by
-       * the dragover handler.
+       * but also when it leaves a child element -- so practically it's fired all the time. As a
+       * workaround we wait a few milliseconds and then check if the dndDragover class was added
+       * again. If it is there, dragover must have been called in the meantime, i.e. the element
+       * is still dragging over the list. If you know a better way of doing this, please tell me!
        */
       element.on('dragleave', function(event) {
         event = event.originalEvent || event;
-        var newTarget = document.elementFromPoint(event.clientX, event.clientY);
-        if (!listNode.contains(newTarget)) {
-          stopDragover();
-        }
+
+        element.removeClass("dndDragover");
+        $timeout(function() {
+          if (!element.hasClass("dndDragover")) {
+            placeholder.remove();
+          }
+        }, 100);
       });
 
       /**
@@ -568,7 +566,6 @@
    * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
    * - itemType: The item type of the dragged element set via dnd-type. This is needed because IE
    *   and Edge don't support custom mime types that we can use to transfer this information.
-   * - onNewDropTarget: Callback managed by the dragover handler to remove parent placeholders.
    */
   var dndState = {};
 

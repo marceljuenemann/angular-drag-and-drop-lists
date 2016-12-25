@@ -131,19 +131,6 @@ describe('dndList', function() {
       expect(element.children()[0].tagName).toBe('IMG');
     });
 
-    it('removes placeholder element of parent list', function() {
-      var childList = compileAndLink('<div dnd-list="list"></div>');
-      element.append(childList);
-      // Drag over parent list.
-      var dragover = Dragstart.on(source).dragover(element);
-      expect(element.children().length).toBe(2);
-      expect(childList.children().length).toBe(0);
-      // Drag over child list.
-      dragover.dragover(childList);
-      expect(element.children().length).toBe(1);
-      expect(childList.children().length).toBe(1);
-    });
-
     it('invokes dnd-dragover callback', function() {
       element = createListWithItemsAndCallbacks();
       Dragstart.on(source).dragover(element);
@@ -390,19 +377,26 @@ describe('dndList', function() {
       element.remove();
     });
 
-    it('removes the placeholder and dndDragover class', function() {
+    it('removes the dndDragover class', function() {
       var rect = element.children()[1].getBoundingClientRect();
-      dragover.dragleave(element, {clientX: rect.left + 100, clientY: rect.top + 100});
+      dragover.dragleave(element);
       expect(element.hasClass('dndDragover')).toBe(false);
-      expect(element.children().length).toBe(3);
     });
 
-    it('does nothing if mouse is still inside dnd-list', function() {
-      var rect = element.children()[1].getBoundingClientRect();
-      dragover.dragleave(element, {clientX: rect.left + 2, clientY: rect.top + 2});
-      expect(element.hasClass('dndDragover')).toBe(true);
+    it('removes the placeholder after a timeout', inject(function($timeout) {
+      dragover.dragleave(element);
+      $timeout.flush(50);
       expect(element.children().length).toBe(4);
-    });
+      $timeout.flush(50);
+      expect(element.children().length).toBe(3);
+    }));
+
+    it('does not remove the placeholder if dndDragover was set again', inject(function($timeout) {
+      dragover.dragleave(element);
+      element.addClass('dndDragover')
+      $timeout.flush(200);
+      expect(element.children().length).toBe(4);
+    }));
   });
 
   function verifyDropAccepted(result) {
