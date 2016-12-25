@@ -1,9 +1,8 @@
 describe('dndNodrag', function() {
-  var element, event;
+  var element;
 
   beforeEach(function() {
     element = compileAndLink('<div dnd-nodrag></div>');
-    event = createEvent('dragstart');
   });
 
   it('sets the draggable attribute', function() {
@@ -11,38 +10,32 @@ describe('dndNodrag', function() {
   });
 
   it('stops propagation and prevents default for dragstart events', function() {
-    event._triggerOn(element);
-    expect(event._propagationStopped).toBe(true);
-    expect(event._defaultPrevented).toBe(true);
+    var dragstart = Dragstart.on(element);
+    expect(dragstart.propagationStopped).toBe(true);
+    expect(dragstart.defaultPrevented).toBe(true);
   });
 
   it('does not call preventDefault if dataTransfer is already set', function() {
-    event._dt.types = ['text/plain'];
-    event._triggerOn(element);
-    expect(event._propagationStopped).toBe(true);
-    expect(event._defaultPrevented).toBe(false);
+    var dragstart = Dragstart.on(element, {presetTypes: ['text/plain']});
+    expect(dragstart.propagationStopped).toBe(true);
+    expect(dragstart.defaultPrevented).toBe(false);
   });
 
   it('does nothing in dragstart if the event was triggered on a dnd-handle', function() {
-    event.originalEvent._dndHandle = true;
-    event._triggerOn(element);
-    expect(event._propagationStopped).toBe(false);
-    expect(event._defaultPrevented).toBe(false);
+    var dragstart = Dragstart.on(element, {dndHandle: true});
+    expect(dragstart.propagationStopped).toBe(false);
+    expect(dragstart.defaultPrevented).toBe(false);
   });
 
   it('stops propagation of dragend events', function() {
-    event = createEvent('dragend');
-    event._triggerOn(element);
-
-    expect(event._propagationStopped).toBe(true);
-    expect(event._defaultPrevented).toBe(false);
+    var dragend = Dragend.on(element);
+    expect(dragend.propagationStopped).toBe(true);
+    expect(dragend.defaultPrevented).toBe(false);
   });
 
   it('does nothing in dragend if the event was triggered on a dnd-handle', function() {
-    event = createEvent('dragend');
-    event.originalEvent._dndHandle = true;
-    event._triggerOn(element);
-    expect(event._propagationStopped).toBe(false);
-    expect(event._defaultPrevented).toBe(false);
+    var dragend = Dragend.on(element, {dndHandle: true});
+    expect(dragend.propagationStopped).toBe(false);
+    expect(dragend.defaultPrevented).toBe(false);
   });
 });

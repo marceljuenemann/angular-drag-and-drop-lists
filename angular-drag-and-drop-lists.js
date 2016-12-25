@@ -1,5 +1,5 @@
 /**
- * angular-drag-and-drop-lists v1.4.0
+ * angular-drag-and-drop-lists v2.0.0
  *
  * Copyright (c) 2014 Marcel Juenemann marcel@juenemann.cc
  * Copyright (c) 2014-2016 Google Inc.
@@ -7,7 +7,14 @@
  *
  * License: MIT
  */
-angular.module('dndLists', [])
+(function(dndLists) {
+
+  // In standard-compliant browsers we use a custom mime type and also encode the dnd-type in it.
+  // However, IE and Edge only support a limited number of mime types. The workarounds are described
+  // in https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design
+  var MIME_TYPE = 'application/x-dnd';
+  var EDGE_MIME_TYPE = 'application/json';
+  var MSIE_MIME_TYPE = 'Text';
 
   /**
    * Use the dnd-draggable attribute to make your element draggable
@@ -46,15 +53,12 @@ angular.module('dndLists', [])
    * - dnd-type           Use this attribute if you have different kinds of items in your
    *                      application and you want to limit which items can be dropped into which
    *                      lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute
-   *                      should evaluate to a string, although this restriction is not enforced.
+   *                      must be a lower case string. Upper case characters can be used, but will
+   *                      be converted to lower case automatically.
    * - dnd-disable-if     You can use this attribute to dynamically disable the draggability of the
    *                      element. This is useful if you have certain list items that you don't want
    *                      to be draggable, or if you want to disable drag & drop completely without
    *                      having two different code branches (e.g. only allow for admins).
-   *                      **Note**: If your element is not draggable, the user is probably able to
-   *                      select text or images inside of it. Since a selection is always draggable,
-   *                      this breaks your UI. You most likely want to disable user selection via
-   *                      CSS (see user-select).
    *
    * CSS classes:
    * - dndDragging        This class will be added to the element while the element is being
@@ -66,13 +70,12 @@ angular.module('dndLists', [])
    *                      it's source position, and not the "element" that the user is dragging with
    *                      his mouse pointer.
    */
-  .directive('dndDraggable', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                      function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  dndLists.directive('dndDraggable', ['$parse', '$timeout', function($parse, $timeout) {
     return function(scope, element, attr) {
-      // Set the HTML5 draggable attribute on the element
+      // Set the HTML5 draggable attribute on the element.
       element.attr("draggable", "true");
 
-      // If the dnd-disable-if attribute is set, we have to watch that
+      // If the dnd-disable-if attribute is set, we have to watch that.
       if (attr.dndDisableIf) {
         scope.$watch(attr.dndDisableIf, function(disabled) {
           element.attr("draggable", !disabled);
@@ -89,32 +92,39 @@ angular.module('dndLists', [])
         // Check whether the element is draggable, since dragstart might be triggered on a child.
         if (element.attr('draggable') == 'false') return true;
 
-        // Serialize the data associated with this element. IE only supports the Text drag type
-        event.dataTransfer.setData("Text", angular.toJson(scope.$eval(attr.dndDraggable)));
+        // Initialize global state.
+        dndState.dropEffect = "none";
+        dndState.isDragging = true;
+        dndState.itemType = attr.dndType && scope.$eval(attr.dndType).toLowerCase();
 
-        // Only allow actions specified in dnd-effect-allowed attribute
+        // Internet Explorer and Microsoft Edge don't support custom mime types, see design doc:
+        // https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design
+        var item = scope.$eval(attr.dndDraggable);
+        var mimeType = MIME_TYPE + (dndState.itemType ? ('-' + dndState.itemType) : '');
+        try {
+          event.dataTransfer.setData(mimeType, angular.toJson(item));
+        } catch (e) {
+          var data = angular.toJson({item: item, type: dndState.itemType});
+          try {
+            event.dataTransfer.setData(EDGE_MIME_TYPE, data);
+          } catch (e) {
+            event.dataTransfer.setData(MSIE_MIME_TYPE, data);
+          }
+        }
+
+        // Only allow actions specified in dnd-effect-allowed attribute.
         event.dataTransfer.effectAllowed = attr.dndEffectAllowed || "move";
 
-        // Add CSS classes. See documentation above
+        // Add CSS classes. See documentation above.
         element.addClass("dndDragging");
         $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
-
-        // Workarounds for stupid browsers, see description below
-        dndDropEffectWorkaround.dropEffect = "none";
-        dndDragTypeWorkaround.isDragging = true;
-
-        // Save type of item in global state. Usually, this would go into the dataTransfer
-        // typename, but we have to use "Text" there to support IE
-        dndDragTypeWorkaround.dragType = attr.dndType ? scope.$eval(attr.dndType) : undefined;
 
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
           event.dataTransfer.setDragImage(element[0], 0, 0);
         }
 
-        // Invoke callback
         $parse(attr.dndDragstart)(scope, {event: event});
-
         event.stopPropagation();
       });
 
@@ -130,7 +140,7 @@ angular.module('dndLists', [])
         // the used effect, but Chrome has not implemented that field correctly. On Windows
         // it always sets it to 'none', while Chrome on Linux sometimes sets it to something
         // else when it's supposed to send 'none' (drag operation aborted).
-        var dropEffect = dndDropEffectWorkaround.dropEffect;
+        var dropEffect = dndState.dropEffect;
         scope.$apply(function() {
           switch (dropEffect) {
             case "move":
@@ -149,7 +159,7 @@ angular.module('dndLists', [])
         // Clean up
         element.removeClass("dndDragging");
         $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
-        dndDragTypeWorkaround.isDragging = false;
+        dndState.isDragging = false;
         event.stopPropagation();
       });
 
@@ -176,21 +186,21 @@ angular.module('dndLists', [])
         if (this.dragDrop) this.dragDrop();
       });
     };
-  }])
+  }]);
 
   /**
    * Use the dnd-list attribute to make your list element a dropzone. Usually you will add a single
    * li element as child with the ng-repeat directive. If you don't do that, we will not be able to
    * position the dropped element correctly. If you want your list to be sortable, also add the
-   * dnd-draggable directive to your li element(s). Both the dnd-list and it's direct children must
-   * have position: relative CSS style, otherwise the positioning algorithm will not be able to
-   * determine the correct placeholder position in all browsers.
+   * dnd-draggable directive to your li element(s).
    *
    * Attributes:
    * - dnd-list             Required attribute. The value has to be the array in which the data of
-   *                        the dropped element should be inserted.
+   *                        the dropped element should be inserted. The value can be blank if used
+   *                        with a custom dnd-drop handler that always returns true.
    * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
-   *                        matching dnd-type attribute will be dropable.
+   *                        matching dnd-type attribute will be dropable. Upper case characters will
+   *                        automatically be converted to lower case.
    * - dnd-disable-if       Optional boolean expresssion. When it evaluates to true, no dropping
    *                        into the list is possible. Note that this also disables rearranging
    *                        items inside the list.
@@ -202,17 +212,16 @@ angular.module('dndLists', [])
    *                        not allowed to be dropped. The following variables will be available:
    *                        - event: The original dragover event sent by the browser.
    *                        - index: The position in the list at which the element would be dropped.
-   *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
+   *                        - type: The dnd-type set on the dnd-draggable, or undefined if non was
+   *                          set. Will be null for drops from external sources in IE and Edge,
+   *                          since we don't know the type in those cases.
    *                        - external: Whether the element was dragged from an external source.
    * - dnd-drop             Optional expression that is invoked when an element is dropped on the
-   *                        list. The following variables will be available:
-   *                        - event: The original drop event sent by the browser.
-   *                        - index: The position in the list at which the element would be dropped.
-   *                        - item: The transferred object.
-   *                        - type: The dnd-type set on the dnd-draggable, or undefined if unset.
-   *                        - external: Whether the element was dragged from an external source.
-   *                        The return value determines the further handling of the drop:
-   *                        - false: The drop will be canceled and the element won't be inserted.
+   *                        list. The same variables as for dnd-dragover will be available, with the
+   *                        exception that type is always known and therefore never null. There
+   *                        will also be an item variable, which is the transferred object. The
+   *                        return value determines the further handling of the drop:
+   *                        - falsy: The drop will be canceled and the element won't be inserted.
    *                        - true: Signalises that the drop is allowed, but the dnd-drop
    *                          callback already took care of inserting the element.
    *                        - otherwise: All other return values will be treated as the object to
@@ -225,11 +234,8 @@ angular.module('dndLists', [])
    *                        dnd-moved was not called yet.
    * - dnd-external-sources Optional boolean expression. When it evaluates to true, the list accepts
    *                        drops from sources outside of the current browser tab. This allows to
-   *                        drag and drop accross different browser tabs. Note that this will allow
-   *                        to drop arbitrary text into the list, thus it is highly recommended to
-   *                        implement the dnd-drop callback to check the incoming element for
-   *                        sanity. Furthermore, the dnd-type of external sources can not be
-   *                        determined, therefore do not rely on restrictions of dnd-allowed-type.
+   *                        drag and drop accross different browser tabs. The only major browser
+   *                        that does not support this is currently Microsoft Edge.
    *
    * CSS classes:
    * - dndPlaceholder       When an element is dragged over the list, a new placeholder child
@@ -238,18 +244,16 @@ angular.module('dndLists', [])
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  .directive('dndList', ['$parse', '$timeout', 'dndDropEffectWorkaround', 'dndDragTypeWorkaround',
-                 function($parse,   $timeout,   dndDropEffectWorkaround,   dndDragTypeWorkaround) {
+  dndLists.directive('dndList', ['$parse', '$timeout', function($parse, $timeout) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
-      // at the location where the element would be inserted after dropping
+      // at the location where the element would be inserted after dropping.
       var placeholder = getPlaceholderElement();
-      var placeholderNode = placeholder[0];
-      var listNode = element[0];
       placeholder.remove();
 
-      var horizontal = attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList);
-      var externalSources = attr.dndExternalSources && scope.$eval(attr.dndExternalSources);
+      var placeholderNode = placeholder[0];
+      var listNode = element[0];
+      var listSettings = {};
 
       /**
        * The dragenter event is fired when a dragged element or text selection enters a valid drop
@@ -259,7 +263,18 @@ angular.module('dndLists', [])
        */
       element.on('dragenter', function (event) {
         event = event.originalEvent || event;
-        if (!isDropAllowed(event)) return true;
+
+        // Calculate list properties, so that we don't have to repeat this on every dragover event.
+        var types = attr.dndAllowedTypes && scope.$eval(attr.dndAllowedTypes);
+        listSettings = {
+          allowedTypes: angular.isArray(types) && types.join('|').toLowerCase().split('|'),
+          disabled: attr.dndDisableIf && scope.$eval(attr.dndDisableIf),
+          externalSources: attr.dndExternalSources && scope.$eval(attr.dndExternalSources),
+          horizontal: attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList)
+        };
+
+        var mimeType = getMimeType(event.dataTransfer.types);
+        if (!mimeType || !isDropAllowed(getItemType(mimeType))) return true;
         event.preventDefault();
       });
 
@@ -270,57 +285,40 @@ angular.module('dndLists', [])
       element.on('dragover', function(event) {
         event = event.originalEvent || event;
 
-        if (!isDropAllowed(event)) return true;
+        // Check whether the drop is allowed and determine mime type.
+        var mimeType = getMimeType(event.dataTransfer.types);
+        var itemType = getItemType(mimeType);
+        if (!mimeType || !isDropAllowed(itemType)) return true;
 
-        // First of all, make sure that the placeholder is shown
-        // This is especially important if the list is empty
+        // Make sure the placeholder is shown, which is especially important if the list is empty.
         if (placeholderNode.parentNode != listNode) {
           element.append(placeholder);
         }
 
-        if (event.target !== listNode) {
+        if (event.target != listNode) {
           // Try to find the node direct directly below the list node.
           var listItemNode = event.target;
-          while (listItemNode.parentNode !== listNode && listItemNode.parentNode) {
+          while (listItemNode.parentNode != listNode && listItemNode.parentNode) {
             listItemNode = listItemNode.parentNode;
           }
 
-          if (listItemNode.parentNode === listNode && listItemNode !== placeholderNode) {
-            // If the mouse pointer is in the upper half of the child element,
-            // we place it before the child element, otherwise below it.
-            if (isMouseInFirstHalf(event, listItemNode)) {
-              listNode.insertBefore(placeholderNode, listItemNode);
+          if (listItemNode.parentNode == listNode && listItemNode != placeholderNode) {
+            // If the mouse pointer is in the upper half of the list item element,
+            // we position the placeholder before the list item, otherwise after it.
+            var rect = listItemNode.getBoundingClientRect();
+            if (listSettings.horizontal) {
+              var isFirstHalf = event.clientX < rect.left + rect.width / 2;
             } else {
-              listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+              var isFirstHalf = event.clientY < rect.top + rect.height / 2;
             }
-          }
-        } else {
-          // This branch is reached when we are dragging directly over the list element.
-          // Usually we wouldn't need to do anything here, but the IE does not fire it's
-          // events for the child element, only for the list directly. Therefore, we repeat
-          // the positioning algorithm for IE here.
-          if (isMouseInFirstHalf(event, placeholderNode, true)) {
-            // Check if we should move the placeholder element one spot towards the top.
-            // Note that display none elements will have offsetTop and offsetHeight set to
-            // zero, therefore we need a special check for them.
-            while (placeholderNode.previousElementSibling
-                 && (isMouseInFirstHalf(event, placeholderNode.previousElementSibling, true)
-                 || placeholderNode.previousElementSibling.offsetHeight === 0)) {
-              listNode.insertBefore(placeholderNode, placeholderNode.previousElementSibling);
-            }
-          } else {
-            // Check if we should move the placeholder element one spot towards the bottom
-            while (placeholderNode.nextElementSibling &&
-                 !isMouseInFirstHalf(event, placeholderNode.nextElementSibling, true)) {
-              listNode.insertBefore(placeholderNode,
-                  placeholderNode.nextElementSibling.nextElementSibling);
-            }
+            listNode.insertBefore(placeholderNode,
+                isFirstHalf ? listItemNode : listItemNode.nextSibling);
           }
         }
 
         // At this point we invoke the callback, which still can disallow the drop.
         // We can't do this earlier because we want to pass the index of the placeholder.
-        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, getPlaceholderIndex())) {
+        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, itemType)) {
           return stopDragover();
         }
 
@@ -338,50 +336,55 @@ angular.module('dndLists', [])
       element.on('drop', function(event) {
         event = event.originalEvent || event;
 
-        if (!isDropAllowed(event)) return true;
+        // Check whether the drop is allowed and determine mime type.
+        var mimeType = getMimeType(event.dataTransfer.types);
+        var itemType = getItemType(mimeType);
+        if (!mimeType || !isDropAllowed(itemType)) return true;
 
         // The default behavior in Firefox is to interpret the dropped element as URL and
         // forward to it. We want to prevent that even if our drop is aborted.
         event.preventDefault();
 
-        // Unserialize the data that was serialized in dragstart. According to the HTML5 specs,
-        // the "Text" drag type will be converted to text/plain, but IE does not do that.
-        var data = event.dataTransfer.getData("Text") || event.dataTransfer.getData("text/plain");
-        var transferredObject;
+        // Unserialize the data that was serialized in dragstart.
         try {
-          transferredObject = JSON.parse(data);
+          var data = JSON.parse(event.dataTransfer.getData(mimeType));
         } catch(e) {
           return stopDragover();
+        }
+
+        // Drops with invalid types from external sources might not have been filtered out yet.
+        if (mimeType == MSIE_MIME_TYPE || mimeType == EDGE_MIME_TYPE) {
+          itemType = data.type || undefined;
+          data = data.item;
+          if (!isDropAllowed(itemType)) return stopDragover();
         }
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         var index = getPlaceholderIndex();
         if (attr.dndDrop) {
-          transferredObject = invokeCallback(attr.dndDrop, event, index, transferredObject);
-          if (!transferredObject) {
-            return stopDragover();
-          }
+          data = invokeCallback(attr.dndDrop, event, itemType, index, data);
+          if (!data) return stopDragover();
         }
 
         // Insert the object into the array, unless dnd-drop took care of that (returned true).
-        if (transferredObject !== true) {
+        if (data !== true) {
           scope.$apply(function() {
-            scope.$eval(attr.dndList).splice(index, 0, transferredObject);
+            scope.$eval(attr.dndList).splice(index, 0, data);
           });
         }
-        invokeCallback(attr.dndInserted, event, index, transferredObject);
+        invokeCallback(attr.dndInserted, event, itemType, index, data);
 
         // In Chrome on Windows the dropEffect will always be none...
         // We have to determine the actual effect manually from the allowed effects
         if (event.dataTransfer.dropEffect === "none") {
           if (event.dataTransfer.effectAllowed === "copy" ||
               event.dataTransfer.effectAllowed === "move") {
-            dndDropEffectWorkaround.dropEffect = event.dataTransfer.effectAllowed;
+            dndState.dropEffect = event.dataTransfer.effectAllowed;
           } else {
-            dndDropEffectWorkaround.dropEffect = event.ctrlKey ? "copy" : "move";
+            dndState.dropEffect = event.ctrlKey ? "copy" : "move";
           }
         } else {
-          dndDropEffectWorkaround.dropEffect = event.dataTransfer.dropEffect;
+          dndState.dropEffect = event.dataTransfer.dropEffect;
         }
 
         // Clean up
@@ -410,20 +413,70 @@ angular.module('dndLists', [])
       });
 
       /**
-       * Checks whether the mouse pointer is in the first half of the given target element.
-       *
-       * In Chrome we can just use offsetY, but in Firefox we have to use layerY, which only
-       * works if the child element has position relative. In IE the events are only triggered
-       * on the listNode instead of the listNodeItem, therefore the mouse positions are
-       * relative to the parent element of targetNode.
+       * Given the types array from the DataTransfer object, returns the first valid mime type.
+       * A type is valid if it starts with MIME_TYPE, or it equals MSIE_MIME_TYPE or EDGE_MIME_TYPE.
        */
-      function isMouseInFirstHalf(event, targetNode, relativeToParent) {
-        var mousePointer = horizontal ? (event.offsetX || event.layerX)
-                                      : (event.offsetY || event.layerY);
-        var targetSize = horizontal ? targetNode.offsetWidth : targetNode.offsetHeight;
-        var targetPosition = horizontal ? targetNode.offsetLeft : targetNode.offsetTop;
-        targetPosition = relativeToParent ? targetPosition : 0;
-        return mousePointer < targetPosition + targetSize / 2;
+      function getMimeType(types) {
+        if (!types) return MSIE_MIME_TYPE; // IE 9 workaround.
+        for (var i = 0; i < types.length; i++) {
+          if (types[i] == MSIE_MIME_TYPE || types[i] == EDGE_MIME_TYPE ||
+              types[i].substr(0, MIME_TYPE.length) == MIME_TYPE) {
+            return types[i];
+          }
+        }
+        return null;
+      }
+
+      /**
+       * Determines the type of the item from the dndState, or from the mime type for items from
+       * external sources. Returns undefined if no item type was set and null if the item type could
+       * not be determined.
+       */
+      function getItemType(mimeType) {
+        if (dndState.isDragging) return dndState.itemType || undefined;
+        if (mimeType == MSIE_MIME_TYPE || mimeType == EDGE_MIME_TYPE) return null;
+        return (mimeType && mimeType.substr(MIME_TYPE.length + 1)) || undefined;
+      }
+
+      /**
+       * Checks various conditions that must be fulfilled for a drop to be allowed, including the
+       * dnd-allowed-types attribute. If the item Type is unknown (null), the drop will be allowed.
+       */
+      function isDropAllowed(itemType) {
+        if (listSettings.disabled) return false;
+        if (!listSettings.externalSources && !dndState.isDragging) return false;
+        if (!listSettings.allowedTypes || itemType === null) return true;
+        return itemType && listSettings.allowedTypes.indexOf(itemType) != -1;
+      }
+
+      /**
+       * Small helper function that cleans up if we aborted a drop.
+       */
+      function stopDragover() {
+        placeholder.remove();
+        element.removeClass("dndDragover");
+        return true;
+      }
+
+      /**
+       * Invokes a callback with some interesting parameters and returns the callbacks return value.
+       */
+      function invokeCallback(expression, event, itemType, index, item) {
+        return $parse(expression)(scope, {
+          event: event,
+          index: index !== undefined ? index : getPlaceholderIndex(),
+          item: item || undefined,
+          external: !dndState.isDragging,
+          type: itemType
+        });
+      }
+
+      /**
+       * We use the position of the placeholder node to determine at which position of the array the
+       * object needs to be inserted
+       */
+      function getPlaceholderIndex() {
+        return Array.prototype.indexOf.call(listNode.children, placeholderNode);
       }
 
       /**
@@ -440,77 +493,8 @@ angular.module('dndLists', [])
         });
         return placeholder || angular.element("<li class='dndPlaceholder'></li>");
       }
-
-      /**
-       * We use the position of the placeholder node to determine at which position of the array the
-       * object needs to be inserted
-       */
-      function getPlaceholderIndex() {
-        return Array.prototype.indexOf.call(listNode.children, placeholderNode);
-      }
-
-      /**
-       * Checks various conditions that must be fulfilled for a drop to be allowed
-       */
-      function isDropAllowed(event) {
-        // Disallow drop from external source unless it's allowed explicitly.
-        if (!dndDragTypeWorkaround.isDragging && !externalSources) return false;
-
-        // Check mimetype. Usually we would use a custom drag type instead of Text, but IE doesn't
-        // support that.
-        if (!hasTextMimetype(event.dataTransfer.types)) return false;
-
-        // Now check the dnd-allowed-types against the type of the incoming element. For drops from
-        // external sources we don't know the type, so it will need to be checked via dnd-drop.
-        if (attr.dndAllowedTypes && dndDragTypeWorkaround.isDragging) {
-          var allowed = scope.$eval(attr.dndAllowedTypes);
-          if (angular.isArray(allowed) && allowed.indexOf(dndDragTypeWorkaround.dragType) === -1) {
-            return false;
-          }
-        }
-
-        // Check whether droping is disabled completely
-        if (attr.dndDisableIf && scope.$eval(attr.dndDisableIf)) return false;
-
-        return true;
-      }
-
-      /**
-       * Small helper function that cleans up if we aborted a drop.
-       */
-      function stopDragover() {
-        placeholder.remove();
-        element.removeClass("dndDragover");
-        return true;
-      }
-
-      /**
-       * Invokes a callback with some interesting parameters and returns the callbacks return value.
-       */
-      function invokeCallback(expression, event, index, item) {
-        return $parse(expression)(scope, {
-          event: event,
-          index: index,
-          item: item || undefined,
-          external: !dndDragTypeWorkaround.isDragging,
-          type: dndDragTypeWorkaround.isDragging ? dndDragTypeWorkaround.dragType : undefined
-        });
-      }
-
-      /**
-       * Check if the dataTransfer object contains a drag type that we can handle. In old versions
-       * of IE the types collection will not even be there, so we just assume a drop is possible.
-       */
-      function hasTextMimetype(types) {
-        if (!types) return true;
-        for (var i = 0; i < types.length; i++) {
-          if (types[i] === "Text" || types[i] === "text/plain") return true;
-        }
-
-        return false;
-      }
     };
-  }])
+  }]);
 
   /**
    * Use the dnd-nodrag attribute inside of dnd-draggable elements to prevent them from starting
@@ -518,7 +502,7 @@ angular.module('dndLists', [])
    * dnd-draggable elements or create specific handle elements. Note: This directive does not work
    * in Internet Explorer 9.
    */
-  .directive('dndNodrag', function() {
+  dndLists.directive('dndNodrag', function() {
     return function(scope, element, attr) {
       // Set as draggable so that we can cancel the events explicitly
       element.attr("draggable", "true");
@@ -551,7 +535,7 @@ angular.module('dndLists', [])
         }
       });
     };
-  })
+  });
 
   /**
    * Use the dnd-handle directive within a dnd-nodrag element in order to allow dragging with that
@@ -561,7 +545,7 @@ angular.module('dndLists', [])
    * can work around this by styling the handle element differently when it is being dragged. Use
    * the CSS selector .dndDragging:not(.dndDraggingSource) [dnd-handle] for that.
    */
-  .directive('dndHandle', function() {
+  dndLists.directive('dndHandle', function() {
     return function(scope, element, attr) {
       element.attr("draggable", "true");
 
@@ -570,21 +554,17 @@ angular.module('dndLists', [])
         event._dndHandle = true;
       });
     };
-  })
+  });
 
   /**
-   * This workaround handles the fact that Internet Explorer does not support drag types other than
-   * "Text" and "URL". That means we can not know whether the data comes from one of our elements or
-   * is just some other data like a text selection. As a workaround we save the isDragging flag in
-   * here. When a dropover event occurs, we only allow the drop if we are already dragging, because
-   * that means the element is ours.
+   * For some features we need to maintain global state. This is done here, with these fields:
+   * - dropEffect: Set in dragstart to "none" and to the actual value in the drop handler. We don't
+   *   rely on the dropEffect passed by the browser, since there are various bugs in Chrome and
+   *   Safari, and Internet Explorer defaults to copy if effectAllowed is copyMove.
+   * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
+   * - itemType: The item type of the dragged element set via dnd-type. This is needed because IE
+   *   and Edge don't support custom mime types that we can use to transfer this information.
    */
-  .factory('dndDragTypeWorkaround', function(){ return {} })
+  var dndState = {};
 
-  /**
-   * Chrome on Windows does not set the dropEffect field, which we need in dragend to determine
-   * whether a drag operation was successful. Therefore we have to maintain it in this global
-   * variable. The bug report for that has been open for years:
-   * https://code.google.com/p/chromium/issues/detail?id=39399
-   */
-  .factory('dndDropEffectWorkaround', function(){ return {} });
+})(angular.module('dndLists', []));

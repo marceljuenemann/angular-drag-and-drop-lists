@@ -1,10 +1,10 @@
 {
   "name": "angular-drag-and-drop-lists",
   "main": "angular-drag-and-drop-lists.js",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "homepage": "https://github.com/marceljuenemann/angular-drag-and-drop-lists",
   "authors": [
-    "Marcel Juenemann <mail@marcel-juenemann.de>"
+    "Marcel Juenemann <marcel@juenemann.cc>"
   ],
   "description": "Angular directives for sorting nested lists using the HTML5 Drag & Drop API",
   "keywords": [

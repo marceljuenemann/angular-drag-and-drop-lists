@@ -1,14 +1,3 @@
-/***************************** Required styles *****************************/
-
-/**
- * For the correct positioning of the placeholder element, the dnd-list and
- * it's children must have position: relative
- */
-.advancedDemo ul[dnd-list],
-.advancedDemo ul[dnd-list] > li {
-	position: relative;
-}
-
 /***************************** Dropzone Styling *****************************/
 
 /**
@@ -21,13 +10,6 @@
     padding-left: 0px;
 }
 
-/**
- * The dnd-lists's child elements currently MUST have
- * position: relative. Otherwise we can not determine
- * whether the mouse pointer is in the upper or lower
- * half of the element we are dragging over. In other
- * browsers we can use event.offsetY for this.
- */
 .advancedDemo .dropzone li {
     display: block;
 }
@@ -56,9 +38,8 @@
  */
 .advancedDemo .dropzone .dndPlaceholder {
     background-color: #ddd !important;
-    min-height: 42px;
     display: block;
-    position: relative;
+    min-height: 42px;
 }
 
 /***************************** Element type specific styles *****************************/
