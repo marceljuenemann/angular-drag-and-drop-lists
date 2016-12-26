@@ -381,9 +381,6 @@
         var ignoreDataTransfer = mimeType == MSIE_MIME_TYPE && dndState.isDragging;
         var dropEffect = getDropEffect(event, ignoreDataTransfer);
         if (dropEffect == 'none') return stopDragover();
-        if (!ignoreDataTransfer) {
-          event.dataTransfer.dropEffect = dropEffect;
-        }
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         var index = getPlaceholderIndex();
@@ -392,6 +389,12 @@
           if (!data) return stopDragover();
         }
         dndState.dropEffect = dropEffect;
+
+        // The drop is definitely going to happen now, store the dropEffect.
+        dndState.dropEffect = dropEffect;
+        if (!ignoreDataTransfer) {
+          event.dataTransfer.dropEffect = dropEffect;
+        }
 
         // Insert the object into the array, unless dnd-drop took care of that (returned true).
         if (data !== true) {

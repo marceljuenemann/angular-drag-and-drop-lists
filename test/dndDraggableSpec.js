@@ -70,6 +70,11 @@ describe('dndDraggable', function() {
       expect(Dragstart.on(element).effectAllowed).toBe('copyMove');
     });
 
+    it('sets effectAllowed to single effect in IE', function() {
+      element = compileAndLink('<div dnd-draggable dnd-effect-allowed="copyLink"></div>');
+      expect(Dragstart.on(element, {allowedMimeTypes: ['Text']}).effectAllowed).toBe('copy');
+    });
+
     it('adds CSS classes to element', inject(function($timeout) {
       Dragstart.on(element);
       expect(element.hasClass('dndDragging')).toBe(true);
@@ -124,24 +129,18 @@ describe('dndDraggable', function() {
       expect(element.hasClass('dndDraggingSource')).toBe(false);
     }));
 
-    var dropEffects = {move: 'moved', copy: 'copied', none: 'canceled'};
+    var dropEffects = {move: 'moved', copy: 'copied', link: 'linked', none: 'canceled'};
     angular.forEach(dropEffects, function(callback, dropEffect) {
       it('calls callbacks for dropEffect ' + dropEffect, function() {
-        var html = '<div dnd-draggable="{}" dnd-dragend="de = dropEffect" '
-                 + 'dnd-' + callback + '="ev = event"></div>';
+        var html = '<div dnd-draggable="{}" dnd-effect-allowed="' + dropEffect + '" '
+                 + 'dnd-dragend="returnedDropEffect = dropEffect" '
+                 + 'dnd-' + callback + '="returnedEvent = event"></div>';
         var element = compileAndLink(html);
+        var target = compileAndLink('<div dnd-list="[]"></div>');
+        Dragstart.on(element).dragover(target).drop(target).dragend(element);
 
-        var dragstart = Dragstart.on(element);
-        if (dropEffect != 'none') {
-          var target = compileAndLink('<div dnd-list="[]"></div>');
-          var options = {dropEffect: dropEffect};
-          dragstart.dragover(target, options).drop(target).dragend(element);
-        } else {
-          dragstart.dragend(element);
-        }
-
-        expect(element.scope().ev).toEqual(jasmine.any(DragEventMock));
-        expect(element.scope().de).toBe(dropEffect);
+        expect(element.scope().returnedEvent).toEqual(jasmine.any(DragEventMock));
+        expect(element.scope().returnedDropEffect).toBe(dropEffect);
       });
     });
   });
