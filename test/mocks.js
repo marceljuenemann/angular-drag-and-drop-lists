@@ -79,6 +79,8 @@ class DragEventMock {
   get target() { return this.$options.target || undefined; }
   get type() { return this.$type; }
   get _dndHandle() { return this.$options.dndHandle || undefined; }
+  get _dndPhShown() { return this.$options.phShown || undefined; }
+  set _dndPhShown(value) { this.$results.setDndPhShown = value; }
 
   preventDefault() { this.$results.invokedPreventDefault = true; }
   stopPropagation() { this.$results.invokedStopPropagation = true; }
@@ -96,6 +98,7 @@ class DragEventResult {
 
   get propagationStopped() { return !!this.$results.invokedStopPropagation; }
   get defaultPrevented() { return !!this.$results.invokedPreventDefault; }
+  get dndPhShownSet() { return this.$results.setDndPhShown || false; }
   get returnValue() { return this.$results.returnValue; }
   get dropEffect() { return this.$results.dataTransfer.dropEffect; }
   get type() { return this.$type; }

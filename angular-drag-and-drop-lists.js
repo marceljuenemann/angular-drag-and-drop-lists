@@ -250,7 +250,7 @@
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  dndLists.directive('dndList', ['$parse', '$timeout', function($parse, $timeout) {
+  dndLists.directive('dndList', ['$parse', function($parse) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping.
@@ -413,20 +413,19 @@
       /**
        * We have to remove the placeholder when the element is no longer dragged over our list. The
        * problem is that the dragleave event is not only fired when the element leaves our list,
-       * but also when it leaves a child element -- so practically it's fired all the time. As a
-       * workaround we wait a few milliseconds and then check if the dndDragover class was added
-       * again. If it is there, dragover must have been called in the meantime, i.e. the element
-       * is still dragging over the list. If you know a better way of doing this, please tell me!
+       * but also when it leaves a child element. Therefore, we determine whether the mouse cursor
+       * is still pointing to an element inside the list or not.
        */
       element.on('dragleave', function(event) {
         event = event.originalEvent || event;
 
-        element.removeClass("dndDragover");
-        $timeout(function() {
-          if (!element.hasClass("dndDragover")) {
-            placeholder.remove();
-          }
-        }, 100);
+        var newTarget = document.elementFromPoint(event.clientX, event.clientY);
+        if (listNode.contains(newTarget) && !event._dndPhShown) {
+          // Signalize to potential parent lists that a placeholder is already shown.
+          event._dndPhShown = true;
+        } else {
+          stopDragover();
+        }
       });
 
       /**

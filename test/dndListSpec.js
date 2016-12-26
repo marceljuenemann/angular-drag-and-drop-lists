@@ -359,26 +359,27 @@ describe('dndList', function() {
       element.remove();
     });
 
-    it('removes the dndDragover class', function() {
-      var rect = element.children()[1].getBoundingClientRect();
-      dragover.dragleave(element);
+    it('removes the placeholder and dndDragover class', function() {
+      var rect = element[0].getBoundingClientRect();
+      dragover.dragleave(element, {clientX: rect.left - 2, clientY: rect.top - 2});
       expect(element.hasClass('dndDragover')).toBe(false);
+      expect(element.children().length).toBe(3);
     });
 
-    it('removes the placeholder after a timeout', inject(function($timeout) {
-      dragover.dragleave(element);
-      $timeout.flush(50);
-      expect(element.children().length).toBe(4);
-      $timeout.flush(50);
+    it('removes the placeholder and dndDragover if child placeholder is already set', function() {
+      var rect = element[0].getBoundingClientRect();
+      dragover.dragleave(element, {clientX: rect.left + 2, clientY: rect.top + 2, phShown: true});
+      expect(element.hasClass('dndDragover')).toBe(false);
       expect(element.children().length).toBe(3);
-    }));
+    });
 
-    it('does not remove the placeholder if dndDragover was set again', inject(function($timeout) {
-      dragover.dragleave(element);
-      element.addClass('dndDragover')
-      $timeout.flush(200);
+    it('sets _dndPhShown if mouse is still inside', function() {
+      var rect = element[0].getBoundingClientRect();
+      var result = dragover.dragleave(element, {clientX: rect.left + 2, clientY: rect.top + 2});
+      expect(element.hasClass('dndDragover')).toBe(true);
       expect(element.children().length).toBe(4);
-    }));
+      expect(result.dndPhShownSet).toBe(true);
+    });
   });
 
   describe('dropEffect', function() {
