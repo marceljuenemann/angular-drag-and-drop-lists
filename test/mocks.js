@@ -50,8 +50,8 @@ class DropzoneDataTransfer extends DataTransferMock {
     this.$types = options.undefinedTypes ? undefined : Object.keys(data);
   }
 
-  get dropEffect() { return this.$dropEffect; }
-  set dropEffect(value) { throw "Unexcepted dropEffect setter invocation"; }
+  get dropEffect() { throw "Unexcepted dropEffect getter invocation"; }
+  set dropEffect(value) { this.$results.dropEffect = value; }
   get effectAllowed() { return this.$effectAllowed; }
   set effectAllowed(value) { throw "Unexcepted effectAllowed setter invocation"; }
   get types() { return this.$types; }
@@ -109,7 +109,8 @@ class Dragstart extends DragEventResult {
   get effectAllowed() { return this.$results.dataTransfer.effectAllowed; }
 
   dragenter(element, opt_options) {
-    return new Dragenter(element, this.$results.dataTransfer.data, opt_options || {});
+    var options = $.extend({effectAllowed: this.effectAllowed}, opt_options);
+    return new Dragenter(element, this.$results.dataTransfer.data, options);
   }
 
   dragover(element, opt_options) {
