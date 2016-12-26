@@ -157,10 +157,13 @@
         });
 
         // Clean up
-        element.removeClass("dndDragging");
-        $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
         dndState.isDragging = false;
+        element.removeClass("dndDragging");
+        element.removeClass("dndDraggingSource");
         event.stopPropagation();
+
+        // In IE9 it is possible that the timeout from dragstart triggers after the dragend handler.
+        $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
       });
 
       /**

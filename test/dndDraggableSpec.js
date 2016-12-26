@@ -123,9 +123,20 @@ describe('dndDraggable', function() {
 
       dragstart.dragend(element);
       expect(element.hasClass('dndDragging')).toBe(false);
-      expect(element.hasClass('dndDraggingSource')).toBe(true);
+      expect(element.hasClass('dndDraggingSource')).toBe(false);
+    }));
+
+    it('removes dndDraggingSource after a timeout', inject(function($timeout) {
+      // IE 9 might not flush the $timeout before invoking the dragend handler.
+      expect(element.hasClass('dndDragging')).toBe(true);
+      expect(element.hasClass('dndDraggingSource')).toBe(false);
+
+      dragstart.dragend(element);
+      expect(element.hasClass('dndDragging')).toBe(false);
+      expect(element.hasClass('dndDraggingSource')).toBe(false);
 
       $timeout.flush(0);
+      expect(element.hasClass('dndDragging')).toBe(false);
       expect(element.hasClass('dndDraggingSource')).toBe(false);
     }));
 
