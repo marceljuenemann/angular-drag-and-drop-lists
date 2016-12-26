@@ -73,6 +73,7 @@ class DragEventMock {
   get clientX() { return this.$options.clientX || 0; }
   get clientY() { return this.$options.clientY || 0; }
   get ctrlKey() { return this.$options.ctrlKey || false; }
+  get altKey() { return this.$options.altKey || false; }
   get dataTransfer() { return this.$dataTransfer; }
   get originalEvent() { return this; }
   get target() { return this.$options.target || undefined; }
@@ -96,6 +97,7 @@ class DragEventResult {
   get propagationStopped() { return !!this.$results.invokedStopPropagation; }
   get defaultPrevented() { return !!this.$results.invokedPreventDefault; }
   get returnValue() { return this.$results.returnValue; }
+  get dropEffect() { return this.$results.dataTransfer.dropEffect; }
   get type() { return this.$type; }
 }
 

@@ -199,17 +199,17 @@
    *                        the dropped element should be inserted. The value can be blank if used
    *                        with a custom dnd-drop handler that always returns true.
    * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
-   *                        matching dnd-type attribute will be dropable. Upper case characters will
-   *                        automatically be converted to lower case.
+   *                        matching dnd-type attribute will be droppable. Upper case characters
+   *                        will automatically be converted to lower case.
    * - dnd-effect-allowed   Optional string expression that limits the drop effects that can be
    *                        performed in the list. See dnd-effect-allowed on dnd-draggable for more
    *                        details on allowed options. The default value is all.
-   * - dnd-disable-if       Optional boolean expresssion. When it evaluates to true, no dropping
+   * - dnd-disable-if       Optional boolean expression. When it evaluates to true, no dropping
    *                        into the list is possible. Note that this also disables rearranging
    *                        items inside the list.
-   * - dnd-horizontal-list  Optional boolean expresssion. When it evaluates to true, the positioning
-   *                        algorithm will use the left and right halfs of the list items instead of
-   *                        the upper and lower halfs.
+   * - dnd-horizontal-list  Optional boolean expression. When it evaluates to true, the positioning
+   *                        algorithm will use the left and right halves of the list items instead
+   *                        of the upper and lower halves.
    * - dnd-external-sources Optional boolean expression. When it evaluates to true, the list accepts
    *                        drops from sources outside of the current browser tab. This allows to
    *                        drag and drop accross different browser tabs. The only major browser
@@ -381,9 +381,6 @@
         var ignoreDataTransfer = mimeType == MSIE_MIME_TYPE && dndState.isDragging;
         var dropEffect = getDropEffect(event, ignoreDataTransfer);
         if (dropEffect == 'none') return stopDragover();
-        if (!ignoreDataTransfer) {
-          event.dataTransfer.dropEffect = dropEffect;
-        }
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         var index = getPlaceholderIndex();
@@ -391,7 +388,12 @@
           data = invokeCallback(attr.dndDrop, event, dropEffect, itemType, index, data);
           if (!data) return stopDragover();
         }
+
+        // The drop is definitely going to happen now, store the dropEffect.
         dndState.dropEffect = dropEffect;
+        if (!ignoreDataTransfer) {
+          event.dataTransfer.dropEffect = dropEffect;
+        }
 
         // Insert the object into the array, unless dnd-drop took care of that (returned true).
         if (data !== true) {
