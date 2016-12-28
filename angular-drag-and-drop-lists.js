@@ -386,6 +386,11 @@
         } else {
           dndState.dropEffect = event.dataTransfer.dropEffect;
         }
+        
+        // Underlying collection is updated, execute callback function
+        if (attr.onDropCompleted){
+          $parse(attr.onDropSuccess)(scope, {$event: event});
+        }
 
         // Clean up
         stopDragover();
