@@ -97,6 +97,10 @@
         dndState.isDragging = true;
         dndState.itemType = attr.dndType && scope.$eval(attr.dndType).toLowerCase();
 
+	// Record the height and width of the element being dragged
+	dndState.clientHeight = element[0].clientHeight;
+	dndState.clientWidth = element[0].clientWidth;
+
         // Internet Explorer and Microsoft Edge don't support custom mime types, see design doc:
         // https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design
         var item = scope.$eval(attr.dndDraggable);
@@ -289,6 +293,9 @@
         var mimeType = getMimeType(event.dataTransfer.types);
         var itemType = getItemType(mimeType);
         if (!mimeType || !isDropAllowed(itemType)) return true;
+
+	// Set the height of the placeholder to the height of the drgagged element.
+	placeholder.css('height', dndState.clientHeight + 'px');
 
         // Make sure the placeholder is shown, which is especially important if the list is empty.
         if (placeholderNode.parentNode != listNode) {
