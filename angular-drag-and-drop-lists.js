@@ -99,11 +99,11 @@
         dndState.isDragging = true;
         dndState.itemType = attr.dndType && scope.$eval(attr.dndType).toLowerCase();
 
-	// Record the height and width of the element being dragged
+	// Record the height of the element being dragged
 	// If the dnd-disable-if attribute is set, we have to watch that.
       	if (scope.$eval(attr.dndDynamicPlaceholderSize)) {
+          dndState.dynamicPlaceholder = true;
 	  dndState.clientHeight = element[0].clientHeight;
-	  dndState.clientWidth = element[0].clientWidth;
       	}
 	
 
@@ -300,7 +300,7 @@
         var itemType = getItemType(mimeType);
         if (!mimeType || !isDropAllowed(itemType)) return true;
 
-      	if (scope.$eval(attr.dndDynamicPlaceholderSize)) {
+      	if (dndState.dynamicPlaceholder) {
 	  // Set the height of the placeholder to the height of the drgagged element.
 	  placeholder.css('height', dndState.clientHeight + 'px');
 	}
@@ -579,6 +579,10 @@
    * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
    * - itemType: The item type of the dragged element set via dnd-type. This is needed because IE
    *   and Edge don't support custom mime types that we can use to transfer this information.
+   * - dynamicPlaceholder: Boolean flag set in dragstart indicating whether placeholder height should 
+   *   be dynamic or not
+   * - clientHeight: If the placeholder height is to be dynamic, the height of the element being dragged 
+   *   is stored here, which would be the height of placeholder during dragging.
    */
   var dndState = {};
 
