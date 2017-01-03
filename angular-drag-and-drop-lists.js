@@ -20,45 +20,47 @@
    * Use the dnd-draggable attribute to make your element draggable
    *
    * Attributes:
-   * - dnd-draggable      Required attribute. The value has to be an object that represents the data
-   *                      of the element. In case of a drag and drop operation the object will be
-   *                      serialized and unserialized on the receiving end.
-   * - dnd-selected       Callback that is invoked when the element was clicked but not dragged.
-   *                      The original click event will be provided in the local event variable.
-   * - dnd-effect-allowed Use this attribute to limit the operations that can be performed. Options:
-   *                      - "move": The drag operation will move the element. This is the default.
-   *                      - "copy": The drag operation will copy the element. Shows a copy cursor.
-   *                      - "copyMove": The user can choose between copy and move by pressing the
-   *                        ctrl or shift key. *Not supported in IE:* In Internet Explorer this
-   *                        option will be the same as "copy". *Not fully supported in Chrome on
-   *                        Windows:* In the Windows version of Chrome the cursor will always be the
-   *                        move cursor. However, when the user drops an element and has the ctrl
-   *                        key pressed, we will perform a copy anyways.
-   *                      - HTML5 also specifies the "link" option, but this library does not
-   *                        actively support it yet, so use it at your own risk.
-   * - dnd-moved          Callback that is invoked when the element was moved. Usually you will
-   *                      remove your element from the original list in this callback, since the
-   *                      directive is not doing that for you automatically. The original dragend
-   *                      event will be provided in the local event variable.
-   * - dnd-canceled       Callback that is invoked if the element was dragged, but the operation was
-   *                      canceled and the element was not dropped. The original dragend event will
-   *                      be provided in the local event variable.
-   * - dnd-copied         Same as dnd-moved, just that it is called when the element was copied
-   *                      instead of moved. The original dragend event will be provided in the local
-   *                      event variable.
-   * - dnd-dragstart      Callback that is invoked when the element was dragged. The original
-   *                      dragstart event will be provided in the local event variable.
-   * - dnd-dragend        Callback that is invoked when the drag operation ended. Available local
-   *                      variables are event and dropEffect.
-   * - dnd-type           Use this attribute if you have different kinds of items in your
-   *                      application and you want to limit which items can be dropped into which
-   *                      lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute
-   *                      must be a lower case string. Upper case characters can be used, but will
-   *                      be converted to lower case automatically.
-   * - dnd-disable-if     You can use this attribute to dynamically disable the draggability of the
-   *                      element. This is useful if you have certain list items that you don't want
-   *                      to be draggable, or if you want to disable drag & drop completely without
-   *                      having two different code branches (e.g. only allow for admins).
+   * - dnd-draggable                 Required attribute. The value has to be an object that represents the data
+   *                                 of the element. In case of a drag and drop operation the object will be
+   *                                 serialized and unserialized on the receiving end.
+   * - dnd-selected                  Callback that is invoked when the element was clicked but not dragged.
+   *                                 The original click event will be provided in the local event variable.
+   * - dnd-effect-allowed            Use this attribute to limit the operations that can be performed. Options:
+   *                                 - "move": The drag operation will move the element. This is the default.
+   *                                 - "copy": The drag operation will copy the element. Shows a copy cursor.
+   *                                 - "copyMove": The user can choose between copy and move by pressing the
+   *                                   ctrl or shift key. *Not supported in IE:* In Internet Explorer this
+   *                                   option will be the same as "copy". *Not fully supported in Chrome on
+   *                                   Windows:* In the Windows version of Chrome the cursor will always be the
+   *                                   move cursor. However, when the user drops an element and has the ctrl
+   *                                   key pressed, we will perform a copy anyways.
+   *                                 - HTML5 also specifies the "link" option, but this library does not
+   *                                   actively support it yet, so use it at your own risk.
+   * - dnd-moved                     Callback that is invoked when the element was moved. Usually you will
+   *                                 remove your element from the original list in this callback, since the
+   *                                 directive is not doing that for you automatically. The original dragend
+   *                                 event will be provided in the local event variable.
+   * - dnd-canceled                  Callback that is invoked if the element was dragged, but the operation was
+   *                                 canceled and the element was not dropped. The original dragend event will
+   *                                 be provided in the local event variable.
+   * - dnd-copied                    Same as dnd-moved, just that it is called when the element was copied
+   *                                 instead of moved. The original dragend event will be provided in the local
+   *                                 event variable.
+   * - dnd-dragstart                 Callback that is invoked when the element was dragged. The original
+   *                                 dragstart event will be provided in the local event variable.
+   * - dnd-dragend                   Callback that is invoked when the drag operation ended. Available local
+   *                                 variables are event and dropEffect.
+   * - dnd-type                      Use this attribute if you have different kinds of items in your
+   *                                 application and you want to limit which items can be dropped into which
+   *                                 lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute
+   *                                 must be a lower case string. Upper case characters can be used, but will
+   *                                 be converted to lower case automatically.
+   * - dnd-disable-if                You can use this attribute to dynamically disable the draggability of the
+   *                                 element. This is useful if you have certain list items that you don't want
+   *                                 to be draggable, or if you want to disable drag & drop completely without
+   *                                 having two different code branches (e.g. only allow for admins).
+   * - dnd-dynamic-placeholder-size  You can use this attribute to decide if the placeholder generated during drag
+   *                                 has a dynamic height, i.e. Height of the element being dragged or a fixed height.
    *
    * CSS classes:
    * - dndDragging        This class will be added to the element while the element is being
@@ -96,6 +98,14 @@
         dndState.dropEffect = "none";
         dndState.isDragging = true;
         dndState.itemType = attr.dndType && scope.$eval(attr.dndType).toLowerCase();
+
+	// Record the height of the element being dragged
+	// If the dnd-disable-if attribute is set, we have to watch that.
+      	if (scope.$eval(attr.dndDynamicPlaceholderSize)) {
+          dndState.dynamicPlaceholder = true;
+	  dndState.clientHeight = element[0].clientHeight;
+      	}
+	
 
         // Internet Explorer and Microsoft Edge don't support custom mime types, see design doc:
         // https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design
@@ -289,6 +299,11 @@
         var mimeType = getMimeType(event.dataTransfer.types);
         var itemType = getItemType(mimeType);
         if (!mimeType || !isDropAllowed(itemType)) return true;
+
+      	if (dndState.dynamicPlaceholder) {
+	  // Set the height of the placeholder to the height of the drgagged element.
+	  placeholder.css('height', dndState.clientHeight + 'px');
+	}
 
         // Make sure the placeholder is shown, which is especially important if the list is empty.
         if (placeholderNode.parentNode != listNode) {
@@ -564,6 +579,10 @@
    * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
    * - itemType: The item type of the dragged element set via dnd-type. This is needed because IE
    *   and Edge don't support custom mime types that we can use to transfer this information.
+   * - dynamicPlaceholder: Boolean flag set in dragstart indicating whether placeholder height should 
+   *   be dynamic or not
+   * - clientHeight: If the placeholder height is to be dynamic, the height of the element being dragged 
+   *   is stored here, which would be the height of placeholder during dragging.
    */
   var dndState = {};
 
