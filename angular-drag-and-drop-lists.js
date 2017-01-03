@@ -102,6 +102,7 @@
 	// Record the height and width of the element being dragged
 	// If the dnd-disable-if attribute is set, we have to watch that.
       	if (scope.$eval(attr.dndDynamicPlaceholderSize)) {
+          dndState.dynamicPlaceholder = true;
 	  dndState.clientHeight = element[0].clientHeight;
 	  dndState.clientWidth = element[0].clientWidth;
       	}
@@ -300,7 +301,7 @@
         var itemType = getItemType(mimeType);
         if (!mimeType || !isDropAllowed(itemType)) return true;
 
-      	if (scope.$eval(attr.dndDynamicPlaceholderSize)) {
+      	if (dndState.dynamicPlaceholder) {
 	  // Set the height of the placeholder to the height of the drgagged element.
 	  placeholder.css('height', dndState.clientHeight + 'px');
 	}
