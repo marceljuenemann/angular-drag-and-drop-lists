@@ -369,7 +369,24 @@
         // Insert the object into the array, unless dnd-drop took care of that (returned true).
         if (data !== true) {
           scope.$apply(function() {
-            scope.$eval(attr.dndList).splice(index, 0, data);
+            var list = scope.$eval(attr.dndList);
+            var trackedProperty = attr.dndTrackedProperty;
+            var fakeProperty = '$$fakeProp';
+
+            // If using track by in the ngRepeat, one could specify the tracked property. This way,
+            // before moving the element, we set its value to a "fake property" and delete the original
+            // to avoid duplicates. After moving the element we simply move this value back.
+            if (trackedProperty) {
+              data[fakeProperty] = data[trackedProperty];
+              delete data[trackedProperty];
+
+              setTimeout(function() {
+                data[trackedProperty] = data[fakeProperty];
+                delete data[fakeProperty];
+              }, 50);
+            }
+
+            list.splice(index, 0, data);
           });
         }
         invokeCallback(attr.dndInserted, event, itemType, index, data);

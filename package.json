@@ -1,21 +1,21 @@
 {
-    "name": "angular-drag-and-drop-lists",
-    "main": "angular-drag-and-drop-lists.js",
-    "version": "2.0.0",
-    "description": "Angular directives for sorting nested lists using the HTML5 Drag and Drop API",
-    "repository": "https://github.com/marceljuenemann/angular-drag-and-drop-lists",
-    "license": "MIT",
-    "main": "angular-drag-and-drop-lists.js",
-    "devDependencies": {
-        "angular": "~1.4.9",
-        "angular-mocks": "~1.4.9",
-        "http-server": "~0.6.1",
-        "minifier": "~0.7.1",
-        "jasmine-core": "~2.4.1",
-        "jquery": "~2.2.0"
-    },
-    "scripts": {
-        "minify": "minify angular-drag-and-drop-lists.js",
-        "start": "http-server -p 8000"
-    }
+  "name": "angular-drag-and-drop-lists",
+  "main": "angular-drag-and-drop-lists.js",
+  "version": "2.0.0",
+  "description": "Angular directives for sorting nested lists using the HTML5 Drag and Drop API",
+  "repository": "https://github.com/marceljuenemann/angular-drag-and-drop-lists",
+  "license": "MIT",
+  "devDependencies": {
+    "angular": "~1.4.9",
+    "angular-mocks": "~1.4.9",
+    "http-server": "~0.6.1",
+    "jasmine-core": "~2.4.1",
+    "jquery": "~2.2.0",
+    "minifier": "~0.7.1",
+    "minify": "^2.0.13"
+  },
+  "scripts": {
+    "minify": "minify angular-drag-and-drop-lists.js > angular-drag-and-drop-lists.min.js",
+    "start": "http-server -p 8000"
+  }
 }
