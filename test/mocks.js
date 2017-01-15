@@ -50,8 +50,8 @@ class DropzoneDataTransfer extends DataTransferMock {
     this.$types = options.undefinedTypes ? undefined : Object.keys(data);
   }
 
-  get dropEffect() { return this.$dropEffect; }
-  set dropEffect(value) { throw "Unexcepted dropEffect setter invocation"; }
+  get dropEffect() { throw "Unexcepted dropEffect getter invocation"; }
+  set dropEffect(value) { this.$results.dropEffect = value; }
   get effectAllowed() { return this.$effectAllowed; }
   set effectAllowed(value) { throw "Unexcepted effectAllowed setter invocation"; }
   get types() { return this.$types; }
@@ -73,11 +73,14 @@ class DragEventMock {
   get clientX() { return this.$options.clientX || 0; }
   get clientY() { return this.$options.clientY || 0; }
   get ctrlKey() { return this.$options.ctrlKey || false; }
+  get altKey() { return this.$options.altKey || false; }
   get dataTransfer() { return this.$dataTransfer; }
   get originalEvent() { return this; }
   get target() { return this.$options.target || undefined; }
   get type() { return this.$type; }
   get _dndHandle() { return this.$options.dndHandle || undefined; }
+  get _dndPhShown() { return this.$options.phShown || undefined; }
+  set _dndPhShown(value) { this.$results.setDndPhShown = value; }
 
   preventDefault() { this.$results.invokedPreventDefault = true; }
   stopPropagation() { this.$results.invokedStopPropagation = true; }
@@ -95,7 +98,9 @@ class DragEventResult {
 
   get propagationStopped() { return !!this.$results.invokedStopPropagation; }
   get defaultPrevented() { return !!this.$results.invokedPreventDefault; }
+  get dndPhShownSet() { return this.$results.setDndPhShown || false; }
   get returnValue() { return this.$results.returnValue; }
+  get dropEffect() { return this.$results.dataTransfer.dropEffect; }
   get type() { return this.$type; }
 }
 
@@ -109,7 +114,8 @@ class Dragstart extends DragEventResult {
   get effectAllowed() { return this.$results.dataTransfer.effectAllowed; }
 
   dragenter(element, opt_options) {
-    return new Dragenter(element, this.$results.dataTransfer.data, opt_options || {});
+    var options = $.extend({effectAllowed: this.effectAllowed}, opt_options);
+    return new Dragenter(element, this.$results.dataTransfer.data, options);
   }
 
   dragover(element, opt_options) {
