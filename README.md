@@ -116,7 +116,7 @@ If this doesn't fit your requirements, check out one of the other awesome drag &
 
 Copyright (c) 2014 [Marcel Juenemann](mailto:marcel@juenemann.cc)
 
-Copyright (c) 2014-2016 Google Inc.
+Copyright (c) 2014-2017 Google Inc.
 
 This is not an official Google product (experimental or otherwise), it is just code that happens to be owned by Google.
 
