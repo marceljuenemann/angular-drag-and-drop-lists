@@ -171,6 +171,20 @@ describe('dndList', function() {
       expect(element.scope().dragover.external).toBe(true);
     });
 
+    it('invokes dnd-dragover with undefined callback', function() {
+      element = createListWithItemsAndCallbacks();
+      Dragstart.on(source).dragover(element);
+      expect(element.scope().dragover.callback).toBeUndefined();
+    });
+
+    it('invokes dnd-dragover with callback set on dragstart', function() {
+      source = compileAndLink('<div dnd-draggable="{}" dnd-callback="a*b"></div>');
+      source.scope().a = 2;
+      element = compileAndLink('<ul dnd-list="[]" dnd-dragover="result = callback({b: 3});"></ul>');
+      Dragstart.on(source).dragover(element);
+      expect(element.scope().result).toBe(6)
+    });
+
     it('dnd-dragover callback can cancel the drop', function() {
       element = compileAndLink('<div dnd-list="list" dnd-dragover="false"></div>');
       verifyDropCancelled(Dragstart.on(source).dragover(element), element);
@@ -291,6 +305,21 @@ describe('dndList', function() {
       expect(element.scope().list).toEqual([1, 2, 3]);
     });
 
+    it('invokes dnd-drop with undefined callback', function() {
+      element = createListWithItemsAndCallbacks();
+      Dragstart.on(source).dragover(element).drop(element);
+      expect(element.scope().drop.callback).toBeUndefined();
+    });
+
+    it('invokes dnd-drop with callback set on dragstart', function() {
+      source = compileAndLink('<div dnd-draggable="{}" dnd-callback="a*b"></div>');
+      source.scope().a = 2;
+      element = compileAndLink('<ul dnd-list="list" dnd-drop="callback({b: 3});"></ul>');
+      element.scope().list = [];
+      Dragstart.on(source).dragover(element).drop(element);
+      expect(element.scope().list).toEqual([6])
+    });
+
     it('invokes callbacks with correct type', function() {
       source = compileAndLink('<div dnd-draggable="{}" dnd-type="\'mytype\'"></div>');
       Dragstart.on(source).dragover(element).drop(element);
@@ -341,24 +370,6 @@ describe('dndList', function() {
       var dragenter = Dragenter.externalOn(element, {'application/x-dnd': 'Lorem ipsum'});
       verifyDropCancelled(dragenter.dragover(element).drop(element), element, true, 3);
     });
-
-    describe('dropEffect calculation', function() {
-      testDropEffect('move', 'move');
-      testDropEffect('blub', 'blub');
-      testDropEffect('copy', 'none', 'copy');
-      testDropEffect('move', 'none', 'move');
-      testDropEffect('move', 'none', 'link');
-      testDropEffect('copy', 'none', 'link', true);
-
-      function testDropEffect(expected, dropEffect, effectAllowed, ctrlKey) {
-        it('stores ' + expected + ' for ' + [dropEffect, effectAllowed, ctrlKey], function() {
-          var src = compileAndLink('<div dnd-draggable="{}" dnd-dragend="eff = dropEffect"></div>');
-          var options = { dropEffect: dropEffect, effectAllowed: effectAllowed, ctrlKey: ctrlKey };
-          Dragstart.on(src).dragover(element, options).drop(element).dragend(src);
-          expect(src.scope().eff).toBe(expected);
-        });
-      }
-    });
   });
 
   describe('dragleave handler', function() {
@@ -377,26 +388,142 @@ describe('dndList', function() {
       element.remove();
     });
 
-    it('removes the dndDragover class', function() {
-      var rect = element.children()[1].getBoundingClientRect();
-      dragover.dragleave(element);
+    it('removes the placeholder and dndDragover class', function() {
+      var rect = element[0].getBoundingClientRect();
+      dragover.dragleave(element, {clientX: rect.left - 2, clientY: rect.top - 2});
       expect(element.hasClass('dndDragover')).toBe(false);
+      expect(element.children().length).toBe(3);
     });
 
-    it('removes the placeholder after a timeout', inject(function($timeout) {
-      dragover.dragleave(element);
-      $timeout.flush(50);
-      expect(element.children().length).toBe(4);
-      $timeout.flush(50);
+    it('removes the placeholder and dndDragover if child placeholder is already set', function() {
+      var rect = element[0].getBoundingClientRect();
+      dragover.dragleave(element, {clientX: rect.left + 2, clientY: rect.top + 2, phShown: true});
+      expect(element.hasClass('dndDragover')).toBe(false);
       expect(element.children().length).toBe(3);
-    }));
+    });
 
-    it('does not remove the placeholder if dndDragover was set again', inject(function($timeout) {
-      dragover.dragleave(element);
-      element.addClass('dndDragover')
-      $timeout.flush(200);
+    it('sets _dndPhShown if mouse is still inside', function() {
+      var rect = element[0].getBoundingClientRect();
+      var result = dragover.dragleave(element, {clientX: rect.left + 2, clientY: rect.top + 2});
+      expect(element.hasClass('dndDragover')).toBe(true);
       expect(element.children().length).toBe(4);
-    }));
+      expect(result.dndPhShownSet).toBe(true);
+    });
+  });
+
+  describe('dropEffect', function() {
+    // This matrix shows the expected drop effect, given two effectAllowed values.
+    var ALL = [  'all',  'move', 'copy', 'link', 'copyLink', 'copyMove', 'linkMove'];
+    var EXPECTED_MATRIX = {
+      move:     ['move', 'move', 'none', 'none', 'none',     'move',     'move'],
+      copy:     ['copy', 'none', 'copy', 'none', 'copy',     'copy',     'none'],
+      link:     ['link', 'none', 'none', 'link', 'link',     'none',     'link'],
+      copyLink: ['copy', 'none', 'copy', 'link', 'copy',     'copy',     'link'],
+      copyMove: ['move', 'move', 'copy', 'none', 'copy',     'move',     'move'],
+      linkMove: ['move', 'move', 'none', 'link', 'link',     'move',     'move'],
+      all:      ['move', 'move', 'copy', 'link', 'copy',     'move',     'move'],
+      '':       ['move', 'move', 'copy', 'link', 'copy',     'move',     'move'],
+    };
+    angular.forEach(ALL, function(sourceEffectAllowed, index) {
+      angular.forEach(EXPECTED_MATRIX, function(expected, targetEffectAllowed) {
+        expected = expected[index];
+        it('is ' + expected + ' for effect-allowed ' + sourceEffectAllowed
+            + ' and ' + targetEffectAllowed, function() {
+          var src = compileAndLink('<div dnd-draggable="{}" dnd-dragend="result = dropEffect" '
+                                 + 'dnd-effect-allowed="' + sourceEffectAllowed + '"></div>');
+          var target = createListWithItemsAndCallbacks(false, targetEffectAllowed);
+          expect(Dragstart.on(src).effectAllowed).toBe(sourceEffectAllowed);
+          if (expected != 'none') {
+            // Verify dragover.
+            expect(Dragstart.on(src).dragover(target).dropEffect).toBe(expected);
+            expect(target.scope().dragover.dropEffect).toBe(expected);
+            // Verify drop.
+            expect(Dragstart.on(src).dragover(target).drop(target).dropEffect).toBe(expected);
+            expect(target.scope().drop.dropEffect).toBe(expected);
+            // Verify dragend.
+            Dragstart.on(src).dragover(target).drop(target).dragend(src);
+            expect(src.scope().result).toBe(expected);
+          } else {
+            verifyDropCancelled(Dragstart.on(src).dragover(target), target, false, 3);
+            verifyDropCancelled(Dragstart.on(src).dragover(target).drop(target), target, true, 3);
+            Dragstart.on(src).dragend(src);
+            expect(src.scope().result).toBe('none');
+          }
+        });
+      });
+    });
+
+    // In Safari dataTransfer.effectAllowed is always 'all', ignoring the value set in dragstart.
+    it('is determined from internal state in Safari', function() {
+      var src = compileAndLink('<div dnd-draggable="{}" dnd-effect-allowed="link"></div>');
+      var target = createListWithItemsAndCallbacks(false, 'copyLink');
+      var options = {effectAllowed: 'all'};
+      Dragstart.on(src).dragover(target, options).drop(target, options);
+      expect(target.scope().dragover.dropEffect).toBe('link');
+      expect(target.scope().drop.dropEffect).toBe('link');
+    });
+
+    // On MacOS, modifiers automatically limit the effectAllowed passed to dragover and drop.
+    it('is limited by modifier keys on MacOS', function() {
+      var src = compileAndLink('<div dnd-draggable="{}" dnd-effect-allowed="all"></div>');
+      var target = createListWithItemsAndCallbacks();
+      Dragstart.on(src).dragover(target, {effectAllowed: 'copyLink'}).drop(target);
+      expect(target.scope().dragover.dropEffect).toBe('copy');
+      expect(target.scope().drop.dropEffect).toBe('copy');
+    });
+
+    it('is copy if Ctrl key is pressed', function() {
+      var src = compileAndLink('<div dnd-draggable="{}" dnd-effect-allowed="all"></div>');
+      var target = createListWithItemsAndCallbacks();
+      Dragstart.on(src).dragover(target, {ctrlKey: true}).drop(target);
+      expect(target.scope().dragover.dropEffect).toBe('copy');
+      expect(target.scope().drop.dropEffect).toBe('copy');
+    });
+
+    it('is link if Alt key is pressed', function() {
+      var src = compileAndLink('<div dnd-draggable="{}" dnd-effect-allowed="all"></div>');
+      var target = createListWithItemsAndCallbacks();
+      Dragstart.on(src).dragover(target, {altKey: true}).drop(target);
+      expect(target.scope().dragover.dropEffect).toBe('link');
+      expect(target.scope().drop.dropEffect).toBe('link');
+    });
+
+    it('ignores Ctrl key if copy is not possible', function() {
+      var src = compileAndLink('<div dnd-draggable="{}" dnd-effect-allowed="linkMove"></div>');
+      var target = createListWithItemsAndCallbacks();
+      Dragstart.on(src).dragover(target, {ctrlKey: true}).drop(target);
+      expect(target.scope().dragover.dropEffect).toBe('move');
+      expect(target.scope().drop.dropEffect).toBe('move');
+    });
+
+    it('respects effectAllowed from external drops', function() {
+      var target = createListWithItemsAndCallbacks();
+      Dragenter.validExternalOn(target, {effectAllowed: 'copyLink'}).dragover(target).drop(target);
+      expect(target.scope().dragover.dropEffect).toBe('copy');
+      expect(target.scope().drop.dropEffect).toBe('copy');
+    });
+
+    it('respects effectAllowed from external drops in IE', function() {
+      var target = createListWithItemsAndCallbacks();
+      Dragenter.externalOn(target, {'Text': '{}'}, {effectAllowed: 'copyLink'})
+               .dragover(target).drop(target);
+      expect(target.scope().dragover.dropEffect).toBe('move');
+      expect(target.scope().drop.dropEffect).toBe('move');
+    });
+
+    it('ignores effectAllowed from internal drops in IE', function() {
+      var src = compileAndLink('<div dnd-draggable="{}" dnd-effect-allowed="copyLink"></div>');
+      var target = createListWithItemsAndCallbacks();
+      Dragstart.on(src, {allowedMimeTypes: ['Text']}).dragover(target, {altKey: true});
+      expect(target.scope().dragover.dropEffect).toBe('link');
+    });
+
+    it('does not set dropEffect in IE', function() {
+      var src = compileAndLink('<div dnd-draggable="{}" dnd-effect-allowed="copyLink"></div>');
+      var target = createListWithItemsAndCallbacks();
+      var dragover = Dragstart.on(src, {allowedMimeTypes: ['Text']}).dragover(target);
+      expect(dragover.dropEffect).toBeUndefined();
+    });
   });
 
   function verifyDropAccepted(result) {
@@ -414,6 +541,7 @@ describe('dndList', function() {
     expect(result.returnValue).toBe(true);
     expect(result.propagationStopped).toBe(false);
     expect(result.defaultPrevented).toBe(opt_defaultPrevented || false);
+    expect(result.dropEffect).toBeUndefined();
     expect(element.hasClass("dndDragover")).toBe(false);
     expect(element.children().length).toBe(opt_children || 0);
   }
@@ -428,10 +556,12 @@ describe('dndList', function() {
     verify(drop, element);
   }
 
-  function createListWithItemsAndCallbacks(horizontal) {
-    var params = '{event: event, index: index, item: item, external: external, type: type}';
+  function createListWithItemsAndCallbacks(horizontal, effectAllowed) {
+    var params = '{event: event, dropEffect: dropEffect, index: index, '
+               + 'item: item, external: external, type: type, callback: callback}';
     var element = compileAndLink('<ul dnd-list="list" dnd-external-sources="true" ' +
                   'dnd-horizontal-list="' + (horizontal || 'false') + '" ' +
+                  (effectAllowed ? 'dnd-effect-allowed="' + effectAllowed + '" ' : '') +
                   'dnd-dragover="dragover = ' + params + '" ' +
                   'dnd-drop="dropHandler(' + params + ')" ' +
                   'dnd-inserted="inserted = ' + params + '">' +

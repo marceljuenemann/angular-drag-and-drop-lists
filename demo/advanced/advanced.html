@@ -1,33 +1,33 @@
 <h3>Dropzone {{$index + 1}}</h3>
 <ul dnd-list="containers"
-    dnd-allowed-types="['containerType']"
+    dnd-allowed-types="['container']"
     dnd-external-sources="true"
-    dnd-dragover="dragoverCallback(event, index, external, type)"
-    dnd-drop="dropCallback(event, index, item, external, type)">
-    <li ng-repeat="items in containers"
-        dnd-draggable="items"
-        dnd-type="'containerType'"
+    dnd-dragover="dragoverCallback(index, external, type, callback)"
+    dnd-drop="dropCallback(index, item, external, type)">
+    <li ng-repeat="container in containers"
+        dnd-draggable="container"
+        dnd-type="'container'"
         dnd-effect-allowed="copyMove"
-        dnd-moved="containers.splice($index, 1)">
+        dnd-moved="containers.splice($index, 1)"
+        dnd-callback="container.items.length">
         <div class="container-element box box-blue">
-            <h3>Container</h3>
-            <ul dnd-list="items"
-                dnd-allowed-types="['itemType']"
+            <h3>Container (effects allowed: {{container.effectAllowed}})</h3>
+            <ul dnd-list="container.items"
+                dnd-allowed-types="['item']"
                 dnd-horizontal-list="true"
                 dnd-external-sources="true"
-                dnd-dragover="dragoverCallback(event, index, external, type)"
-                dnd-drop="dropCallback(event, index, item, external, type)"
-                dnd-inserted="logEvent('Element was inserted at position ' + index, event)"
+                dnd-effect-allowed="{{container.effectAllowed}}"
+                dnd-dragover="dragoverCallback(index, external, type)"
+                dnd-drop="dropCallback(index, item, external, type)"
+                dnd-inserted="logListEvent('inserted at', index, external, type)"
                 class="itemlist">
-                <li ng-repeat="item in items"
+                <li ng-repeat="item in container.items"
                     dnd-draggable="item"
-                    dnd-type="'itemType'"
-                    dnd-effect-allowed="copyMove"
-                    dnd-dragstart="logEvent('Started to drag an item', event)"
-                    dnd-moved="items.splice($index, 1); logEvent('Item moved', event)"
-                    dnd-copied="logEvent('Item copied', event)"
-                    dnd-canceled="logEvent('Drag operation canceled', event)"
-                    dnd-dragend="logEvent('Drag operation ended', event)">
+                    dnd-type="'item'"
+                    dnd-effect-allowed="{{item.effectAllowed}}"
+                    dnd-dragstart="logEvent('Started to drag an item')"
+                    dnd-moved="container.items.splice($index, 1)"
+                    dnd-dragend="logEvent('Drag operation ended. Drop effect: ' + dropEffect)">
                     {{item.label}}
                 </li>
             </ul>

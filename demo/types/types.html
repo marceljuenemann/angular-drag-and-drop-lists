@@ -7,7 +7,6 @@
         dnd-type="person.type"
         dnd-disable-if="person.type == 'unknown'"
         dnd-moved="list.people.splice($index, 1)"
-        dnd-effect-allowed="move"
         class="background-{{person.type}}"
         >
         <dnd-nodrag>
