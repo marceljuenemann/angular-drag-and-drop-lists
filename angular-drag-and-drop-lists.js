@@ -1,8 +1,8 @@
 /**
- * angular-drag-and-drop-lists v2.0.0
+ * angular-drag-and-drop-lists v2.1.0
  *
  * Copyright (c) 2014 Marcel Juenemann marcel@juenemann.cc
- * Copyright (c) 2014-2016 Google Inc.
+ * Copyright (c) 2014-2017 Google Inc.
  * https://github.com/marceljuenemann/angular-drag-and-drop-lists
  *
  * License: MIT
@@ -16,6 +16,9 @@
   var EDGE_MIME_TYPE = 'application/json';
   var MSIE_MIME_TYPE = 'Text';
 
+  // All valid HTML5 drop effects, in the order in which we prefer to use them.
+  var ALL_EFFECTS = ['move', 'copy', 'link'];
+
   /**
    * Use the dnd-draggable attribute to make your element draggable
    *
@@ -23,33 +26,13 @@
    * - dnd-draggable      Required attribute. The value has to be an object that represents the data
    *                      of the element. In case of a drag and drop operation the object will be
    *                      serialized and unserialized on the receiving end.
-   * - dnd-selected       Callback that is invoked when the element was clicked but not dragged.
-   *                      The original click event will be provided in the local event variable.
-   * - dnd-effect-allowed Use this attribute to limit the operations that can be performed. Options:
-   *                      - "move": The drag operation will move the element. This is the default.
-   *                      - "copy": The drag operation will copy the element. Shows a copy cursor.
-   *                      - "copyMove": The user can choose between copy and move by pressing the
-   *                        ctrl or shift key. *Not supported in IE:* In Internet Explorer this
-   *                        option will be the same as "copy". *Not fully supported in Chrome on
-   *                        Windows:* In the Windows version of Chrome the cursor will always be the
-   *                        move cursor. However, when the user drops an element and has the ctrl
-   *                        key pressed, we will perform a copy anyways.
-   *                      - HTML5 also specifies the "link" option, but this library does not
-   *                        actively support it yet, so use it at your own risk.
-   * - dnd-moved          Callback that is invoked when the element was moved. Usually you will
-   *                      remove your element from the original list in this callback, since the
-   *                      directive is not doing that for you automatically. The original dragend
-   *                      event will be provided in the local event variable.
-   * - dnd-canceled       Callback that is invoked if the element was dragged, but the operation was
-   *                      canceled and the element was not dropped. The original dragend event will
-   *                      be provided in the local event variable.
-   * - dnd-copied         Same as dnd-moved, just that it is called when the element was copied
-   *                      instead of moved. The original dragend event will be provided in the local
-   *                      event variable.
-   * - dnd-dragstart      Callback that is invoked when the element was dragged. The original
-   *                      dragstart event will be provided in the local event variable.
-   * - dnd-dragend        Callback that is invoked when the drag operation ended. Available local
-   *                      variables are event and dropEffect.
+   * - dnd-effect-allowed Use this attribute to limit the operations that can be performed. Valid
+   *                      options are "move", "copy" and "link", as well as "all", "copyMove",
+   *                      "copyLink" and "linkMove". The semantics of these operations are up to you
+   *                      and have to be implemented using the callbacks described below. If you
+   *                      allow multiple options, the user can choose between them by using the
+   *                      modifier keys (OS specific). The cursor will be changed accordingly,
+   *                      expect for IE and Edge, where this is not supported.
    * - dnd-type           Use this attribute if you have different kinds of items in your
    *                      application and you want to limit which items can be dropped into which
    *                      lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute
@@ -59,6 +42,28 @@
    *                      element. This is useful if you have certain list items that you don't want
    *                      to be draggable, or if you want to disable drag & drop completely without
    *                      having two different code branches (e.g. only allow for admins).
+   *
+   * Callbacks:
+   * - dnd-dragstart      Callback that is invoked when the element was dragged. The original
+   *                      dragstart event will be provided in the local event variable.
+   * - dnd-moved          Callback that is invoked when the element was moved. Usually you will
+   *                      remove your element from the original list in this callback, since the
+   *                      directive is not doing that for you automatically. The original dragend
+   *                      event will be provided in the local event variable.
+   * - dnd-copied         Same as dnd-moved, just that it is called when the element was copied
+   *                      instead of moved, so you probably want to implement a different logic.
+   * - dnd-linked         Same as dnd-moved, just that it is called when the element was linked
+   *                      instead of moved, so you probably want to implement a different logic.
+   * - dnd-canceled       Callback that is invoked if the element was dragged, but the operation was
+   *                      canceled and the element was not dropped. The original dragend event will
+   *                      be provided in the local event variable.
+   * - dnd-dragend        Callback that is invoked when the drag operation ended. Available local
+   *                      variables are event and dropEffect.
+   * - dnd-selected       Callback that is invoked when the element was clicked but not dragged.
+   *                      The original click event will be provided in the local event variable.
+   * - dnd-callback       Custom callback that is passed to dropzone callbacks and can be used to
+   *                      communicate between source and target scopes. The dropzone can pass user
+   *                      defined variables to this callback.
    *
    * CSS classes:
    * - dndDragging        This class will be added to the element while the element is being
@@ -93,9 +98,13 @@
         if (element.attr('draggable') == 'false') return true;
 
         // Initialize global state.
-        dndState.dropEffect = "none";
         dndState.isDragging = true;
         dndState.itemType = attr.dndType && scope.$eval(attr.dndType).toLowerCase();
+
+        // Set the allowed drop effects. See below for special IE handling.
+        dndState.dropEffect = "none";
+        dndState.effectAllowed = attr.dndEffectAllowed || ALL_EFFECTS[0];
+        event.dataTransfer.effectAllowed = dndState.effectAllowed;
 
         // Internet Explorer and Microsoft Edge don't support custom mime types, see design doc:
         // https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design
@@ -104,16 +113,19 @@
         try {
           event.dataTransfer.setData(mimeType, angular.toJson(item));
         } catch (e) {
+          // Setting a custom MIME type did not work, we are probably in IE or Edge.
           var data = angular.toJson({item: item, type: dndState.itemType});
           try {
             event.dataTransfer.setData(EDGE_MIME_TYPE, data);
           } catch (e) {
+            // We are in Internet Explorer and can only use the Text MIME type. Also note that IE
+            // does not allow changing the cursor in the dragover event, therefore we have to choose
+            // the one we want to display now by setting effectAllowed.
+            var effectsAllowed = filterEffects(ALL_EFFECTS, dndState.effectAllowed);
+            event.dataTransfer.effectAllowed = effectsAllowed[0];
             event.dataTransfer.setData(MSIE_MIME_TYPE, data);
           }
         }
-
-        // Only allow actions specified in dnd-effect-allowed attribute.
-        event.dataTransfer.effectAllowed = attr.dndEffectAllowed || "move";
 
         // Add CSS classes. See documentation above.
         element.addClass("dndDragging");
@@ -124,7 +136,13 @@
           event.dataTransfer.setDragImage(element[0], 0, 0);
         }
 
+        // Invoke dragstart callback and prepare extra callback for dropzone.
         $parse(attr.dndDragstart)(scope, {event: event});
+        if (attr.dndCallback) {
+          var callback = $parse(attr.dndCallback);
+          dndState.callback = function(params) { return callback(scope, params || {}); };
+        }
+
         event.stopPropagation();
       });
 
@@ -140,27 +158,22 @@
         // the used effect, but Chrome has not implemented that field correctly. On Windows
         // it always sets it to 'none', while Chrome on Linux sometimes sets it to something
         // else when it's supposed to send 'none' (drag operation aborted).
-        var dropEffect = dndState.dropEffect;
         scope.$apply(function() {
-          switch (dropEffect) {
-            case "move":
-              $parse(attr.dndMoved)(scope, {event: event});
-              break;
-            case "copy":
-              $parse(attr.dndCopied)(scope, {event: event});
-              break;
-            case "none":
-              $parse(attr.dndCanceled)(scope, {event: event});
-              break;
-          }
+          var dropEffect = dndState.dropEffect;
+          var cb = {copy: 'dndCopied', link: 'dndLinked', move: 'dndMoved', none: 'dndCanceled'};
+          $parse(attr[cb[dropEffect]])(scope, {event: event});
           $parse(attr.dndDragend)(scope, {event: event, dropEffect: dropEffect});
         });
 
         // Clean up
-        element.removeClass("dndDragging");
-        $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
         dndState.isDragging = false;
+        dndState.callback = undefined;
+        element.removeClass("dndDragging");
+        element.removeClass("dndDraggingSource");
         event.stopPropagation();
+
+        // In IE9 it is possible that the timeout from dragstart triggers after the dragend handler.
+        $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
       });
 
       /**
@@ -201,12 +214,21 @@
    * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
    *                        matching dnd-type attribute will be dropable. Upper case characters will
    *                        automatically be converted to lower case.
+   * - dnd-effect-allowed   Optional string expression that limits the drop effects that can be
+   *                        performed in the list. See dnd-effect-allowed on dnd-draggable for more
+   *                        details on allowed options. The default value is all.
    * - dnd-disable-if       Optional boolean expresssion. When it evaluates to true, no dropping
    *                        into the list is possible. Note that this also disables rearranging
    *                        items inside the list.
    * - dnd-horizontal-list  Optional boolean expresssion. When it evaluates to true, the positioning
    *                        algorithm will use the left and right halfs of the list items instead of
    *                        the upper and lower halfs.
+   * - dnd-external-sources Optional boolean expression. When it evaluates to true, the list accepts
+   *                        drops from sources outside of the current browser tab. This allows to
+   *                        drag and drop accross different browser tabs. The only major browser
+   *                        that does not support this is currently Microsoft Edge.
+   *
+   * Callbacks:
    * - dnd-dragover         Optional expression that is invoked when an element is dragged over the
    *                        list. If the expression is set, but does not return true, the element is
    *                        not allowed to be dropped. The following variables will be available:
@@ -215,7 +237,14 @@
    *                        - type: The dnd-type set on the dnd-draggable, or undefined if non was
    *                          set. Will be null for drops from external sources in IE and Edge,
    *                          since we don't know the type in those cases.
+   *                        - dropEffect: One of move, copy or link, see dnd-effect-allowed.
    *                        - external: Whether the element was dragged from an external source.
+   *                        - callback: If dnd-callback was set on the source element, this is a
+   *                          function reference to the callback. The callback can be invoked with
+   *                          custom variables like this: callback({var1: value1, var2: value2}).
+   *                          The callback will be executed on the scope of the source element. If
+   *                          dnd-external-sources was set and external is true, this callback will
+   *                          not be available.
    * - dnd-drop             Optional expression that is invoked when an element is dropped on the
    *                        list. The same variables as for dnd-dragover will be available, with the
    *                        exception that type is always known and therefore never null. There
@@ -232,10 +261,6 @@
    *                        dnd-drop will be available. Note that for reorderings inside the same
    *                        list the old element will still be in the list due to the fact that
    *                        dnd-moved was not called yet.
-   * - dnd-external-sources Optional boolean expression. When it evaluates to true, the list accepts
-   *                        drops from sources outside of the current browser tab. This allows to
-   *                        drag and drop accross different browser tabs. The only major browser
-   *                        that does not support this is currently Microsoft Edge.
    *
    * CSS classes:
    * - dndPlaceholder       When an element is dragged over the list, a new placeholder child
@@ -244,7 +269,7 @@
    *                        by creating a child element with dndPlaceholder class.
    * - dndDragover          Will be added to the list while an element is dragged over the list.
    */
-  dndLists.directive('dndList', ['$parse', '$timeout', function($parse, $timeout) {
+  dndLists.directive('dndList', ['$parse', function($parse) {
     return function(scope, element, attr) {
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping.
@@ -316,14 +341,27 @@
           }
         }
 
+        // In IE we set a fake effectAllowed in dragstart to get the correct cursor, we therefore
+        // ignore the effectAllowed passed in dataTransfer. We must also not access dataTransfer for
+        // drops from external sources, as that throws an exception.
+        var ignoreDataTransfer = mimeType == MSIE_MIME_TYPE;
+        var dropEffect = getDropEffect(event, ignoreDataTransfer);
+        if (dropEffect == 'none') return stopDragover();
+
         // At this point we invoke the callback, which still can disallow the drop.
         // We can't do this earlier because we want to pass the index of the placeholder.
-        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, itemType)) {
+        if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, dropEffect, itemType)) {
           return stopDragover();
         }
 
-        element.addClass("dndDragover");
+        // Set dropEffect to modify the cursor shown by the browser, unless we're in IE, where this
+        // is not supported. This must be done after preventDefault in Firefox.
         event.preventDefault();
+        if (!ignoreDataTransfer) {
+          event.dataTransfer.dropEffect = dropEffect;
+        }
+
+        element.addClass("dndDragover");
         event.stopPropagation();
         return false;
       });
@@ -359,11 +397,22 @@
           if (!isDropAllowed(itemType)) return stopDragover();
         }
 
+        // Special handling for internal IE drops, see dragover handler.
+        var ignoreDataTransfer = mimeType == MSIE_MIME_TYPE;
+        var dropEffect = getDropEffect(event, ignoreDataTransfer);
+        if (dropEffect == 'none') return stopDragover();
+
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         var index = getPlaceholderIndex();
         if (attr.dndDrop) {
-          data = invokeCallback(attr.dndDrop, event, itemType, index, data);
+          data = invokeCallback(attr.dndDrop, event, dropEffect, itemType, index, data);
           if (!data) return stopDragover();
+        }
+
+        // The drop is definitely going to happen now, store the dropEffect.
+        dndState.dropEffect = dropEffect;
+        if (!ignoreDataTransfer) {
+          event.dataTransfer.dropEffect = dropEffect;
         }
 
         // Insert the object into the array, unless dnd-drop took care of that (returned true).
@@ -372,20 +421,7 @@
             scope.$eval(attr.dndList).splice(index, 0, data);
           });
         }
-        invokeCallback(attr.dndInserted, event, itemType, index, data);
-
-        // In Chrome on Windows the dropEffect will always be none...
-        // We have to determine the actual effect manually from the allowed effects
-        if (event.dataTransfer.dropEffect === "none") {
-          if (event.dataTransfer.effectAllowed === "copy" ||
-              event.dataTransfer.effectAllowed === "move") {
-            dndState.dropEffect = event.dataTransfer.effectAllowed;
-          } else {
-            dndState.dropEffect = event.ctrlKey ? "copy" : "move";
-          }
-        } else {
-          dndState.dropEffect = event.dataTransfer.dropEffect;
-        }
+        invokeCallback(attr.dndInserted, event, dropEffect, itemType, index, data);
 
         // Clean up
         stopDragover();
@@ -396,20 +432,19 @@
       /**
        * We have to remove the placeholder when the element is no longer dragged over our list. The
        * problem is that the dragleave event is not only fired when the element leaves our list,
-       * but also when it leaves a child element -- so practically it's fired all the time. As a
-       * workaround we wait a few milliseconds and then check if the dndDragover class was added
-       * again. If it is there, dragover must have been called in the meantime, i.e. the element
-       * is still dragging over the list. If you know a better way of doing this, please tell me!
+       * but also when it leaves a child element. Therefore, we determine whether the mouse cursor
+       * is still pointing to an element inside the list or not.
        */
       element.on('dragleave', function(event) {
         event = event.originalEvent || event;
 
-        element.removeClass("dndDragover");
-        $timeout(function() {
-          if (!element.hasClass("dndDragover")) {
-            placeholder.remove();
-          }
-        }, 100);
+        var newTarget = document.elementFromPoint(event.clientX, event.clientY);
+        if (listNode.contains(newTarget) && !event._dndPhShown) {
+          // Signalize to potential parent lists that a placeholder is already shown.
+          event._dndPhShown = true;
+        } else {
+          stopDragover();
+        }
       });
 
       /**
@@ -450,6 +485,36 @@
       }
 
       /**
+       * Determines which drop effect to use for the given event. In Internet Explorer we have to
+       * ignore the effectAllowed field on dataTransfer, since we set a fake value in dragstart.
+       * In those cases we rely on dndState to filter effects. Read the design doc for more details:
+       * https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design
+       */
+      function getDropEffect(event, ignoreDataTransfer) {
+        var effects = ALL_EFFECTS;
+        if (!ignoreDataTransfer) {
+          effects = filterEffects(effects, event.dataTransfer.effectAllowed);
+        }
+        if (dndState.isDragging) {
+          effects = filterEffects(effects, dndState.effectAllowed);
+        }
+        if (attr.dndEffectAllowed) {
+          effects = filterEffects(effects, attr.dndEffectAllowed);
+        }
+        // MacOS automatically filters dataTransfer.effectAllowed depending on the modifier keys,
+        // therefore the following modifier keys will only affect other operating systems.
+        if (!effects.length) {
+          return 'none';
+        } else if (event.ctrlKey && effects.indexOf('copy') != -1) {
+          return 'copy';
+        } else if (event.altKey && effects.indexOf('link') != -1) {
+          return 'link';
+        } else {
+          return effects[0];
+        }
+      }
+
+      /**
        * Small helper function that cleans up if we aborted a drop.
        */
       function stopDragover() {
@@ -461,12 +526,14 @@
       /**
        * Invokes a callback with some interesting parameters and returns the callbacks return value.
        */
-      function invokeCallback(expression, event, itemType, index, item) {
+      function invokeCallback(expression, event, dropEffect, itemType, index, item) {
         return $parse(expression)(scope, {
+          callback: dndState.callback,
+          dropEffect: dropEffect,
           event: event,
+          external: !dndState.isDragging,
           index: index !== undefined ? index : getPlaceholderIndex(),
           item: item || undefined,
-          external: !dndState.isDragging,
           type: itemType
         });
       }
@@ -557,10 +624,23 @@
   });
 
   /**
+   * Filters an array of drop effects using a HTML5 effectAllowed string.
+   */
+  function filterEffects(effects, effectAllowed) {
+    if (effectAllowed == 'all') return effects;
+    return effects.filter(function(effect) {
+      return effectAllowed.toLowerCase().indexOf(effect) != -1;
+    });
+  }
+
+  /**
    * For some features we need to maintain global state. This is done here, with these fields:
+   * - callback: A callback function set at dragstart that is passed to internal dropzone handlers.
    * - dropEffect: Set in dragstart to "none" and to the actual value in the drop handler. We don't
    *   rely on the dropEffect passed by the browser, since there are various bugs in Chrome and
    *   Safari, and Internet Explorer defaults to copy if effectAllowed is copyMove.
+   * - effectAllowed: Set in dragstart based on dnd-effect-allowed. This is needed for IE because
+   *   setting effectAllowed on dataTransfer might result in an undesired cursor.
    * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
    * - itemType: The item type of the dragged element set via dnd-type. This is needed because IE
    *   and Edge don't support custom mime types that we can use to transfer this information.

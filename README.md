@@ -26,24 +26,19 @@ Use the dnd-draggable directive to make your element draggable
 
 **Attributes**
 * `dnd-draggable` Required attribute. The value has to be an object that represents the data of the element. In case of a drag and drop operation the object will be serialized and unserialized on the receiving end.
-* `dnd-effect-allowed` Use this attribute to limit the operations that can be performed. Options are:
-    * `move` The drag operation will move the element. This is the default
-    * `copy` The drag operation will copy the element. There will be a copy cursor.
-    * `copyMove` The user can choose between copy and move by pressing the ctrl or shift key.
-        * *Not supported in IE:* In Internet Explorer this option will be the same as `copy`.
-        * *Not fully supported in Chrome on Windows:* In the Windows version of Chrome the cursor will always be the move cursor. However, when the user drops an element and has the ctrl key pressed, we will perform a copy anyways.
-    * HTML5 also specifies the `link` option, but this library does not actively support it yet, so use it at your own risk.
-    * [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
+* `dnd-effect-allowed` Use this attribute to limit the operations that can be performed. Valid options are `move`, `copy` and `link`, as well as `all`, `copyMove`, `copyLink` and `linkMove`, while `move` is the default value. The semantics of these operations are up to you and have to be implemented using the callbacks described below. If you allow multiple options, the user can choose between them by using the modifier keys (OS specific). The cursor will be changed accordingly, expect for IE and Edge, where this is not supported. Note that the implementation of this attribute is very buggy in IE9. This attribute works together with `dnd-external-sources` except on Safari and IE, where the restriction will be lost when dragging accross browser tabs. [Design document](https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Drop-Effects-Design) [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-type` Use this attribute if you have different kinds of items in your application and you want to limit which items can be dropped into which lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute must be a lower case string. Upper case characters can be used, but will be converted to lower case automatically. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 * `dnd-disable-if` You can use this attribute to dynamically disable the draggability of the element. This is useful if you have certain list items that you don't want to be draggable, or if you want to disable drag & drop completely without having two different code branches (e.g. only allow for admins). [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 
 **Callbacks**
+* `dnd-dragstart` Callback that is invoked when the element was dragged. The original dragstart event will be provided in the local `event` variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-moved` Callback that is invoked when the element was moved. Usually you will remove your element from the original list in this callback, since the directive is not doing that for you automatically. The original dragend event will be provided in the local `event` variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-copied` Same as dnd-moved, just that it is called when the element was copied instead of moved. The original dragend event will be provided in the local `event` variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
+* `dnd-linked` Same as dnd-moved, just that it is called when the element was linked instead of moved. The original dragend event will be provided in the local `event` variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-canceled` Callback that is invoked if the element was dragged, but the operation was canceled and the element was not dropped. The original dragend event will be provided in the local event variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
-* `dnd-dragstart` Callback that is invoked when the element was dragged. The original dragstart event will be provided in the local `event` variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-dragend` Callback that is invoked when the drag operation ended. Available local variables are `event` and `dropEffect`. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-selected` Callback that is invoked when the element was clicked but not dragged. The original click event will be provided in the local `event` variable. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/nested)
+* `dnd-callback` Custom callback that is passed to dropzone callbacks and can be used to communicate between source and target scopes. The dropzone can pass user defined variables to this callback. This can be used to transfer objects without serialization, see [Demo](https://jsfiddle.net/Ldxffyod/1/).
 
 **CSS classes**
 * `dndDragging` This class will be added to the element while the element is being dragged. It will affect both the element you see while dragging and the source element that stays at it's position. Do not try to hide the source element with this class, because that will abort the drag operation.
@@ -56,6 +51,7 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 **Attributes**
 * `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted. The value can be blank if used with a custom dnd-drop handler that handles the insertion on its own.
 * `dnd-allowed-types` Optional array of allowed item types. When used, only items that had a matching dnd-type attribute will be dropable. Upper case characters will automatically be converted to lower case. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
+* `dnd-effect-allowed` Optional string expression that limits the drop effects that can be performed on the list. See dnd-effect-allowed on dnd-draggable for more details on allowed options. The default value is `all`.
 * `dnd-disable-if` Optional boolean expression. When it evaluates to true, no dropping into the list is possible. Note that this also disables rearranging items inside the list. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 * `dnd-horizontal-list` Optional boolean expression. When it evaluates to true, the positioning algorithm will use the left and right halfs of the list items instead of the upper and lower halfs. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-external-sources` Optional boolean expression. When it evaluates to true, the list accepts drops from sources outside of the current browser tab, which allows to drag and drop accross different browser tabs. The only major browser for which this is currently not working is Microsoft Edge. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
@@ -66,6 +62,8 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
     * `index` The position in the list at which the element would be dropped.
     * `type` The `dnd-type` set on the dnd-draggable, or undefined if unset. Will be null for drops from external sources in IE and Edge, since we don't know the type in those cases.
     * `external` Whether the element was dragged from an external source. See `dnd-external-sources`.
+    * `dropEffect` The dropEffect that is going to be performed, see dnd-effect-allowed.
+    * `callback` If dnd-callback was set on the source element, this is a function reference to the callback. The callback can be invoked with custom variables like this: `callback({var1: value1, var2: value2})`. The callback will be executed on the scope of the source element. If dnd-external-sources was set and external is true, this callback will not be available.
     * [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-drop` Optional expression that is invoked when an element is dropped on the list. The same variables as for dnd-dragover will be available, with the exception that type is always known and therefore never null. There will also be an `item` variable, which is the transferred object. The return value determines the further handling of the drop:
     * `falsy` The drop will be canceled and the element won't be inserted.
@@ -120,7 +118,7 @@ If this doesn't fit your requirements, check out one of the other awesome drag &
 
 Copyright (c) 2014 [Marcel Juenemann](mailto:marcel@juenemann.cc)
 
-Copyright (c) 2014-2016 Google Inc.
+Copyright (c) 2014-2017 Google Inc.
 
 This is not an official Google product (experimental or otherwise), it is just code that happens to be owned by Google.
 

@@ -1,3 +1,22 @@
+# 2.1.0 (2017-01-15)
+
+## Changes
+
+- **Custom callbacks with dnd-callback**: The new `dnd-callback` attribute allows for communication between the source and target scopes. For example, this can be used to access information about the object being dragged during dragover, or to transfer objects without serialization, which allows to use complex objects that contain functions references and prototypes. [Demo](https://jsfiddle.net/Ldxffyod/1/)
+- **Drop effects fixed and extended**: Most of the bugs around drop effect have been fixed. You can now use move, copy and link, or a combination of them. Drop effects can be restricted using `dnd-effect-allowed` on both the source and target element, and if there are multiple options, the user can choose one using modifier keys (Ctrl or Alt). See the [design document](https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Drop-Effects-Design) for more details. Drop effects don't work on IE9. They do work accross browser tabs if `dnd-external-sources` is activated, although the source restrictions are lost in Safari and IE.
+- **New dragleave handler**: Previously, the dragleave handler used a timeout to determine whether the placeholder needs to be removed from a `dnd-list`. The new implementation utilizes `document.elementFromPoint` to determine whether the mouse cursor is outside the target list.
+- **Remove dndDraggingSource without timeout**: Fixes problems with ngAnimate (#121).
+
+## Tested browsers
+
+- Chrome 55 (Mac, Ubuntu & Windows 7)
+- Firefox 50 (Ubuntu)
+- Safari 10 (MacOS)
+- Microsoft Edge 20 (Windows 10 emulator)
+- Internet Explorer 11 (Windows 7)
+- Internet Explorer 9 (Windows 7 emulator)
+
+
 # 2.0.0 (2016-12-25)
 
 ## Changes
@@ -5,7 +24,7 @@
 There have been some major changes to how the directive works internally, although these changes should not affect users of the library.
 
 - **Simpler placeholder positioning algorithm**: The logic for placeholder positiong is unchanged, i.e. the placeholder will be placed after an element if the mouse cursor is in the second half of the element it is hovering over, otherwise it is placed before it. However, the implementation of this algorithm was massively simplified by using `getBoundingClientRect`. As a result, developers are no longer required to have `position: relative` on the list and list item elements.
-- **New dataTransfer algorithm**: The directive now uses custom mime types in modern browsers, and falls back to using `Text` in non-standard comform browsers. As a result, dragged elements can no longer be dropped into arbitrary input fields. More details on how this works can be found in the [design document](https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design).
+- **New dataTransfer algorithm**: The directive now uses custom mime types in modern browsers, and falls back to using `Text` in non-standard comform browsers. As a result, dragged elements can no longer be dropped into arbitrary input fields. More details on how this works can be found in the [design document](https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Data-Transfer-Design). **Breaking change:** As mime types are used, all dnd-type attributes are automatically converted to lower case.
 - **Internal test infrastructure**: The mocks used for drag and drop events in unit tests are now much nicer.
 
 ## Tested browsers
