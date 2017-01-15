@@ -503,12 +503,12 @@ describe('dndList', function() {
       expect(target.scope().drop.dropEffect).toBe('copy');
     });
 
-    it('respects effectAllowed from external drops even in IE', function() {
+    it('respects effectAllowed from external drops in IE', function() {
       var target = createListWithItemsAndCallbacks();
       Dragenter.externalOn(target, {'Text': '{}'}, {effectAllowed: 'copyLink'})
                .dragover(target).drop(target);
-      expect(target.scope().dragover.dropEffect).toBe('copy');
-      expect(target.scope().drop.dropEffect).toBe('copy');
+      expect(target.scope().dragover.dropEffect).toBe('move');
+      expect(target.scope().drop.dropEffect).toBe('move');
     });
 
     it('ignores effectAllowed from internal drops in IE', function() {
