@@ -61,6 +61,9 @@
    *                      variables are event and dropEffect.
    * - dnd-selected       Callback that is invoked when the element was clicked but not dragged.
    *                      The original click event will be provided in the local event variable.
+   * - dnd-callback       Custom callback that is passed to dropzone callbacks and can be used to
+   *                      communicate between source and target scopes. The dropzone can pass user
+   *                      defined variables to this callback.
    *
    * CSS classes:
    * - dndDragging        This class will be added to the element while the element is being
@@ -133,7 +136,13 @@
           event.dataTransfer.setDragImage(element[0], 0, 0);
         }
 
+        // Invoke dragstart callback and prepare extra callback for dropzone.
         $parse(attr.dndDragstart)(scope, {event: event});
+        if (attr.dndCallback) {
+          var callback = $parse(attr.dndCallback);
+          dndState.callback = function(params) { return callback(scope, params || {}); };
+        }
+
         event.stopPropagation();
       });
 
@@ -158,6 +167,7 @@
 
         // Clean up
         dndState.isDragging = false;
+        dndState.callback = undefined;
         element.removeClass("dndDragging");
         element.removeClass("dndDraggingSource");
         event.stopPropagation();
@@ -229,6 +239,12 @@
    *                          since we don't know the type in those cases.
    *                        - dropEffect: One of move, copy or link, see dnd-effect-allowed.
    *                        - external: Whether the element was dragged from an external source.
+   *                        - callback: If dnd-callback was set on the source element, this is a
+   *                          function reference to the callback. The callback can be invoked with
+   *                          custom variables like this: callback({var1: value1, var2: value2}).
+   *                          The callback will be executed on the scope of the source element. If
+   *                          dnd-external-sources was set and external is true, this callback will
+   *                          not be available.
    * - dnd-drop             Optional expression that is invoked when an element is dropped on the
    *                        list. The same variables as for dnd-dragover will be available, with the
    *                        exception that type is always known and therefore never null. There
@@ -512,6 +528,7 @@
        */
       function invokeCallback(expression, event, dropEffect, itemType, index, item) {
         return $parse(expression)(scope, {
+          callback: dndState.callback,
           dropEffect: dropEffect,
           event: event,
           external: !dndState.isDragging,
@@ -618,6 +635,7 @@
 
   /**
    * For some features we need to maintain global state. This is done here, with these fields:
+   * - callback: A callback function set at dragstart that is passed to internal dropzone handlers.
    * - dropEffect: Set in dragstart to "none" and to the actual value in the drop handler. We don't
    *   rely on the dropEffect passed by the browser, since there are various bugs in Chrome and
    *   Safari, and Internet Explorer defaults to copy if effectAllowed is copyMove.

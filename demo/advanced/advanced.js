@@ -1,7 +1,11 @@
 angular.module("demo").controller("AdvancedDemoController", function($scope) {
 
-    $scope.dragoverCallback = function(index, external, type) {
+    $scope.dragoverCallback = function(index, external, type, callback) {
         $scope.logListEvent('dragged over', index, external, type);
+        // Invoke callback to origin for container types.
+        if (type == 'container' && !external) {
+            console.log('Container being dragged contains ' + callback() + ' items');
+        }
         return index < 10; // Disallow dropping in the third row.
     };
 
@@ -18,7 +22,7 @@ angular.module("demo").controller("AdvancedDemoController", function($scope) {
     $scope.logListEvent = function(action, index, external, type) {
         var message = external ? 'External ' : '';
         message += type + ' element was ' + action + ' position ' + index;
-        $scope.logEvent(message);
+        console.log(message);
     };
 
     // Initialize model

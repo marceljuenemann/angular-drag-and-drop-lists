@@ -171,6 +171,20 @@ describe('dndList', function() {
       expect(element.scope().dragover.external).toBe(true);
     });
 
+    it('invokes dnd-dragover with undefined callback', function() {
+      element = createListWithItemsAndCallbacks();
+      Dragstart.on(source).dragover(element);
+      expect(element.scope().dragover.callback).toBeUndefined();
+    });
+
+    it('invokes dnd-dragover with callback set on dragstart', function() {
+      source = compileAndLink('<div dnd-draggable="{}" dnd-callback="a*b"></div>');
+      source.scope().a = 2;
+      element = compileAndLink('<ul dnd-list="[]" dnd-dragover="result = callback({b: 3});"></ul>');
+      Dragstart.on(source).dragover(element);
+      expect(element.scope().result).toBe(6)
+    });
+
     it('dnd-dragover callback can cancel the drop', function() {
       element = compileAndLink('<div dnd-list="list" dnd-dragover="false"></div>');
       verifyDropCancelled(Dragstart.on(source).dragover(element), element);
@@ -289,6 +303,21 @@ describe('dndList', function() {
       element.scope().dropHandler = function() { return true; };
       verifyDropAccepted(Dragstart.on(source).dragover(element).drop(element), element);
       expect(element.scope().list).toEqual([1, 2, 3]);
+    });
+
+    it('invokes dnd-drop with undefined callback', function() {
+      element = createListWithItemsAndCallbacks();
+      Dragstart.on(source).dragover(element).drop(element);
+      expect(element.scope().drop.callback).toBeUndefined();
+    });
+
+    it('invokes dnd-drop with callback set on dragstart', function() {
+      source = compileAndLink('<div dnd-draggable="{}" dnd-callback="a*b"></div>');
+      source.scope().a = 2;
+      element = compileAndLink('<ul dnd-list="list" dnd-drop="callback({b: 3});"></ul>');
+      element.scope().list = [];
+      Dragstart.on(source).dragover(element).drop(element);
+      expect(element.scope().list).toEqual([6])
     });
 
     it('invokes callbacks with correct type', function() {
@@ -529,7 +558,7 @@ describe('dndList', function() {
 
   function createListWithItemsAndCallbacks(horizontal, effectAllowed) {
     var params = '{event: event, dropEffect: dropEffect, index: index, '
-               + 'item: item, external: external, type: type}';
+               + 'item: item, external: external, type: type, callback: callback}';
     var element = compileAndLink('<ul dnd-list="list" dnd-external-sources="true" ' +
                   'dnd-horizontal-list="' + (horizontal || 'false') + '" ' +
                   (effectAllowed ? 'dnd-effect-allowed="' + effectAllowed + '" ' : '') +

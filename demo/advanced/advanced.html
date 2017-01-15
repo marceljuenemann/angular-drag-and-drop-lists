@@ -1,18 +1,19 @@
 <h3>Dropzone {{$index + 1}}</h3>
 <ul dnd-list="containers"
-    dnd-allowed-types="['containerType']"
+    dnd-allowed-types="['container']"
     dnd-external-sources="true"
-    dnd-dragover="dragoverCallback(index, external, type)"
+    dnd-dragover="dragoverCallback(index, external, type, callback)"
     dnd-drop="dropCallback(index, item, external, type)">
     <li ng-repeat="container in containers"
         dnd-draggable="container"
-        dnd-type="'containerType'"
+        dnd-type="'container'"
         dnd-effect-allowed="copyMove"
-        dnd-moved="containers.splice($index, 1)">
+        dnd-moved="containers.splice($index, 1)"
+        dnd-callback="container.items.length">
         <div class="container-element box box-blue">
             <h3>Container (effects allowed: {{container.effectAllowed}})</h3>
             <ul dnd-list="container.items"
-                dnd-allowed-types="['itemType']"
+                dnd-allowed-types="['item']"
                 dnd-horizontal-list="true"
                 dnd-external-sources="true"
                 dnd-effect-allowed="{{container.effectAllowed}}"
@@ -22,7 +23,7 @@
                 class="itemlist">
                 <li ng-repeat="item in container.items"
                     dnd-draggable="item"
-                    dnd-type="'itemType'"
+                    dnd-type="'item'"
                     dnd-effect-allowed="{{item.effectAllowed}}"
                     dnd-dragstart="logEvent('Started to drag an item')"
                     dnd-moved="container.items.splice($index, 1)"
