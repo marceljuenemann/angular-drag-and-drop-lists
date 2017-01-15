@@ -408,7 +408,6 @@
           data = invokeCallback(attr.dndDrop, event, dropEffect, itemType, index, data);
           if (!data) return stopDragover();
         }
-        dndState.dropEffect = dropEffect;
 
         // The drop is definitely going to happen now, store the dropEffect.
         dndState.dropEffect = dropEffect;
