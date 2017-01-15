@@ -63,7 +63,7 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
     * `type` The `dnd-type` set on the dnd-draggable, or undefined if unset. Will be null for drops from external sources in IE and Edge, since we don't know the type in those cases.
     * `external` Whether the element was dragged from an external source. See `dnd-external-sources`.
     * `dropEffect` The dropEffect that is going to be performed, see dnd-effect-allowed.
-    * `callback` If dnd-callback was set on the source element, this is a function reference to the callback. The callback can be invoked with custom variables like this: `callback({var1: value1, var2: value2})`.  The callback will be executed on the scope of the source element. If dnd-external-sources was set and external is true, this callback will not be available.
+    * `callback` If dnd-callback was set on the source element, this is a function reference to the callback. The callback can be invoked with custom variables like this: `callback({var1: value1, var2: value2})`. The callback will be executed on the scope of the source element. If dnd-external-sources was set and external is true, this callback will not be available.
     * [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-drop` Optional expression that is invoked when an element is dropped on the list. The same variables as for dnd-dragover will be available, with the exception that type is always known and therefore never null. There will also be an `item` variable, which is the transferred object. The return value determines the further handling of the drop:
     * `falsy` The drop will be canceled and the element won't be inserted.
