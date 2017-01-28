@@ -137,21 +137,22 @@
 
         if(parentIsList){
           dndState.currentDragItem = element;
-          $timeout(angular.noop);
         }else{
           $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
         }
-
-
-
-
+        
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
           event.dataTransfer.setDragImage(element[0], 0, 0);
         }
 
-        // Invoke dragstart callback and prepare extra callback for dropzone.
+        // Invoke dragstart callback
         $parse(attr.dndDragstart)(scope, {event: event});
+
+        // we need to schedule a digest cycle to make sure other bits like ngHide fire
+        scope.$evalAsync();
+
+        // Prepare extra callback for dropzone
         if (attr.dndCallback) {
           var callback = $parse(attr.dndCallback);
           dndState.callback = function(params) { return callback(scope, params || {}); };
