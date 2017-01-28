@@ -23,10 +23,11 @@ describe('dndDraggable', function() {
   });
 
   describe('dragstart handler', function() {
-    var element;
+    var element, target;
 
     beforeEach(function() {
       element = compileAndLink(SIMPLE_HTML);
+      target = compileAndLink('<div dnd-list="[]"></div>');
     });
 
     it('calls setData with serialized data', function() {
@@ -75,12 +76,15 @@ describe('dndDraggable', function() {
       expect(Dragstart.on(element, {allowedMimeTypes: ['Text']}).effectAllowed).toBe('copy');
     });
 
-    it('adds CSS classes to element', inject(function($timeout) {
-      Dragstart.on(element);
+    it('adds CSS classes to element only subsequent dragover', inject(function($timeout) {
+      var dragstart = Dragstart.on(element);
       expect(element.hasClass('dndDragging')).toBe(true);
       expect(element.hasClass('dndDraggingSource')).toBe(false);
 
       $timeout.flush(0);
+      expect(element.hasClass('dndDraggingSource')).toBe(false);
+
+      dragstart.dragover(target);
       expect(element.hasClass('dndDraggingSource')).toBe(true);
     }));
 
@@ -109,6 +113,7 @@ describe('dndDraggable', function() {
 
     beforeEach(function() {
       element = compileAndLink(SIMPLE_HTML);
+      target = compileAndLink('<div dnd-list="[]"></div>');
       dragstart = Dragstart.on(element);
     });
 
@@ -118,6 +123,7 @@ describe('dndDraggable', function() {
 
     it('removes CSS classes from element', inject(function($timeout) {
       $timeout.flush(0);
+      dragstart.dragover(target);
       expect(element.hasClass('dndDragging')).toBe(true);
       expect(element.hasClass('dndDraggingSource')).toBe(true);
 

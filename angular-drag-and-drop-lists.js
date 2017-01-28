@@ -97,6 +97,8 @@
         // Check whether the element is draggable, since dragstart might be triggered on a child.
         if (element.attr('draggable') == 'false') return true;
 
+        var parentIsList = element.parent().length && element.parent()[0].hasAttribute('dnd-list');
+
         // Initialize global state.
         dndState.isDragging = true;
         dndState.itemType = attr.dndType && scope.$eval(attr.dndType).toLowerCase();
@@ -130,9 +132,18 @@
         // Add CSS classes. See documentation above.
         element.addClass("dndDragging");
 
-        // We'll set this now and add the necessary classes to it when we start moving the item.
+        // We'll set this now and add the class 'dndDraggingSource' to it when we start moving the item.
         // This needs to be in sync with the process of insert the placeholder into the list
-        dndState.currentDragItem = element;
+
+        if(parentIsList){
+          dndState.currentDragItem = element;
+          $timeout(angular.noop);
+        }else{
+          $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
+        }
+
+
+
 
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
@@ -171,8 +182,10 @@
         // Clean up
         dndState.isDragging = false;
         dndState.callback = undefined;
+        dndState.currentDragItem = undefined;
         element.removeClass("dndDragging");
         element.removeClass("dndDraggingSource");
+
         event.stopPropagation();
 
         // In IE9 it is possible that the timeout from dragstart triggers after the dragend handler.
@@ -325,7 +338,10 @@
           // We set the class here instead of in the dragstart, because if this class
           // hides the original item, we want to make sure we do that at the same time
           // that we put the placeholder on the dom.  This prevents some UI flashing
-          dndState.currentDragItem.addClass("dndDraggingSource");
+          if(dndState.currentDragItem){
+            dndState.currentDragItem.addClass("dndDraggingSource");
+          }
+
         }
 
         if (event.target != listNode) {
