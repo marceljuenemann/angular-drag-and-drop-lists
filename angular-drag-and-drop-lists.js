@@ -128,8 +128,8 @@
         }
 
         // Add CSS classes. See documentation above.
-        element.addClass("dndDragging");
-        $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
+        element.addClass(dndClasses.Dragging);
+        $timeout(function() { element.addClass(dndClasses.dndDraggingSource); }, 0);
 
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
@@ -168,12 +168,12 @@
         // Clean up
         dndState.isDragging = false;
         dndState.callback = undefined;
-        element.removeClass("dndDragging");
-        element.removeClass("dndDraggingSource");
+        element.removeClass(dndClasses.dndDragging);
+        element.removeClass(dndClasses.dndDraggingSource);
         event.stopPropagation();
 
         // In IE9 it is possible that the timeout from dragstart triggers after the dragend handler.
-        $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
+        $timeout(function() { element.removeClass(dndClasses.dndDraggingSource); }, 0);
       });
 
       /**
@@ -361,7 +361,7 @@
           event.dataTransfer.dropEffect = dropEffect;
         }
 
-        element.addClass("dndDragover");
+        element.addClass(dndClasses.dndDragover);
         event.stopPropagation();
         return false;
       });
@@ -519,7 +519,7 @@
        */
       function stopDragover() {
         placeholder.remove();
-        element.removeClass("dndDragover");
+        element.removeClass(dndClasses.dndDragover);
         return true;
       }
 
@@ -554,11 +554,11 @@
         var placeholder;
         angular.forEach(element.children(), function(childNode) {
           var child = angular.element(childNode);
-          if (child.hasClass('dndPlaceholder')) {
+          if (child.hasClass(dndClasses.dndPlaceholder)) {
             placeholder = child;
           }
         });
-        return placeholder || angular.element("<li class='dndPlaceholder'></li>");
+        return placeholder || angular.element("<li class='" + dndClasses.dndPlaceholder + "'></li>");
       }
     };
   }]);
@@ -646,5 +646,16 @@
    *   and Edge don't support custom mime types that we can use to transfer this information.
    */
   var dndState = {};
+
+  /**
+   * This object has the default class values, but these can be overridden via the dnd-classes attribute.
+   * See above for documentation for each class
+   */
+  var dndClasses = {
+      dndDragging: 'dndDragging',
+      dndDraggingSource: 'dndDraggingSource',
+      dndPlaceholder: 'dndPlaceholder',
+      dndDragover: 'dndDragover'
+  };
 
 })(angular.module('dndLists', []));
