@@ -271,11 +271,17 @@
    */
   dndLists.directive('dndList', ['$parse', function($parse) {
     return function(scope, element, attr) {
+      // If the dnd-classes attribute is set, we'll parse the current value and watch for future changes
+      if (attr.dndClasses) {
+        updateClasses(attr.dndClasses);
+        scope.$watch(attr.dndClasses, updateClasses);
+      }
+
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping.
       var placeholder = getPlaceholderElement();
       placeholder.remove();
-
+      
       var placeholderNode = placeholder[0];
       var listNode = element[0];
       var listSettings = {};
@@ -559,6 +565,18 @@
           }
         });
         return placeholder || angular.element("<li class='" + dndClasses.dndPlaceholder + "'></li>");
+      }
+
+      /**
+       * Update the internal list of classes with a custom override object
+       */
+      function updateClasses(classOverrideValue){
+        var classOverride = scope.$eval(classOverrideValue);
+        for(var key in classOverride){
+          if(dndClasses[key]){
+            dndClasses[key] = classOverride[key];
+          }
+        }
       }
     };
   }]);
