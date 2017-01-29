@@ -345,7 +345,7 @@
         // ignore the effectAllowed passed in dataTransfer. We must also not access dataTransfer for
         // drops from external sources, as that throws an exception. Also, if 'effectAllowed' isn't
         // available on the dataTransfer object, we shouldn't try to read it
-        var ignoreDataTransfer = (mimeType == MSIE_MIME_TYPE | !event.dataTransfer.effectAllowed);
+        var ignoreDataTransfer = (mimeType == MSIE_MIME_TYPE || !event.dataTransfer.effectAllowed);
         var dropEffect = getDropEffect(event, ignoreDataTransfer);
         if (dropEffect == 'none') return stopDragover();
 
@@ -399,7 +399,7 @@
         }
 
         // Special handling for internal IE drops, see dragover handler.
-        var ignoreDataTransfer = (mimeType == MSIE_MIME_TYPE | !event.dataTransfer.effectAllowed);
+        var ignoreDataTransfer = (mimeType == MSIE_MIME_TYPE || !event.dataTransfer.effectAllowed);
         var dropEffect = getDropEffect(event, ignoreDataTransfer);
         if (dropEffect == 'none') return stopDragover();
 
