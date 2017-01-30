@@ -84,6 +84,20 @@ describe('dndDraggable', function() {
       expect(element.hasClass('dndDraggingSource')).toBe(true);
     }));
 
+    it('adds overridden CSS classes to element', inject(function($timeout) {
+      var htmlWithClass = '<div dnd-draggable="{hello: \'world\'}" dnd-class-for-dragging="dnd-dragging" ' +
+        'dnd-class-for-dragging-source="dnd-dragging-source"></div>';
+      element = compileAndLink(htmlWithClass);
+
+      Dragstart.on(element);
+
+      expect(element.hasClass('dnd-dragging')).toBe(true);
+      expect(element.hasClass('dnd-dragging-source')).toBe(false);
+
+      $timeout.flush(0);
+      expect(element.hasClass('dnd-dragging-source')).toBe(true);
+    }));
+
     it('invokes dnd-dragstart callback', function() {
       element = compileAndLink('<div dnd-draggable dnd-dragstart="ev = event"></div>');
       Dragstart.on(element);
@@ -124,6 +138,22 @@ describe('dndDraggable', function() {
       dragstart.dragend(element);
       expect(element.hasClass('dndDragging')).toBe(false);
       expect(element.hasClass('dndDraggingSource')).toBe(false);
+    }));
+
+    it('removes overridden CSS classes from element', inject(function($timeout) {
+      var htmlWithClass = '<div dnd-draggable="{hello: \'world\'}" dnd-class-for-dragging="dnd-dragging" ' +
+        'dnd-class-for-dragging-source="dnd-dragging-source"></div>';
+      element = compileAndLink(htmlWithClass);
+      dragstart = Dragstart.on(element);
+
+      $timeout.flush(0);
+
+      expect(element.hasClass('dnd-dragging')).toBe(true);
+      expect(element.hasClass('dnd-dragging-source')).toBe(true);
+
+      dragstart.dragend(element);
+      expect(element.hasClass('dnd-dragging')).toBe(false);
+      expect(element.hasClass('dnd-dragging-source')).toBe(false);
     }));
 
     it('removes dndDraggingSource after a timeout', inject(function($timeout) {

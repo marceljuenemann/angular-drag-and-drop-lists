@@ -26,6 +26,8 @@ Use the dnd-draggable directive to make your element draggable
 
 **Attributes**
 * `dnd-draggable` Required attribute. The value has to be an object that represents the data of the element. In case of a drag and drop operation the object will be serialized and unserialized on the receiving end.
+* `dnd-class-for-dragging` Optional name of class to add to element while it's being dragged. Defaults to dndDragging.
+* `dnd-class-for-dragging-source` Optional name of class to add to element after drag operation has started. See 'CSS classes' for more details. Defaults to dndDraggingSource.
 * `dnd-effect-allowed` Use this attribute to limit the operations that can be performed. Valid options are `move`, `copy` and `link`, as well as `all`, `copyMove`, `copyLink` and `linkMove`, while `move` is the default value. The semantics of these operations are up to you and have to be implemented using the callbacks described below. If you allow multiple options, the user can choose between them by using the modifier keys (OS specific). The cursor will be changed accordingly, expect for IE and Edge, where this is not supported. Note that the implementation of this attribute is very buggy in IE9. This attribute works together with `dnd-external-sources` except on Safari and IE, where the restriction will be lost when dragging accross browser tabs. [Design document](https://github.com/marceljuenemann/angular-drag-and-drop-lists/wiki/Drop-Effects-Design) [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-type` Use this attribute if you have different kinds of items in your application and you want to limit which items can be dropped into which lists. Combine with dnd-allowed-types on the dnd-list(s). This attribute must be a lower case string. Upper case characters can be used, but will be converted to lower case automatically. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 * `dnd-disable-if` You can use this attribute to dynamically disable the draggability of the element. This is useful if you have certain list items that you don't want to be draggable, or if you want to disable drag & drop completely without having two different code branches (e.g. only allow for admins). [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
@@ -41,8 +43,8 @@ Use the dnd-draggable directive to make your element draggable
 * `dnd-callback` Custom callback that is passed to dropzone callbacks and can be used to communicate between source and target scopes. The dropzone can pass user defined variables to this callback. This can be used to transfer objects without serialization, see [Demo](https://jsfiddle.net/Ldxffyod/1/).
 
 **CSS classes**
-* `dndDragging` This class will be added to the element while the element is being dragged. It will affect both the element you see while dragging and the source element that stays at it's position. Do not try to hide the source element with this class, because that will abort the drag operation.
-* `dndDraggingSource` This class will be added to the element after the drag operation was started, meaning it only affects the original element that is still at it's source position, and not the "element" that the user is dragging with his mouse pointer
+* `dndDragging` This class will be added to the element while the element is being dragged. It will affect both the element you see while dragging and the source element that stays at it's position. Do not try to hide the source element with this class, because that will abort the drag operation. Class name can be overridden (see above).
+* `dndDraggingSource` This class will be added to the element after the drag operation was started, meaning it only affects the original element that is still at it's source position, and not the "element" that the user is dragging with his mouse pointer.  Class name can be overridden (see above).
 
 ## dnd-list directive
 
@@ -51,6 +53,8 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 **Attributes**
 * `dnd-list` Required attribute. The value has to be the array in which the data of the dropped element should be inserted. The value can be blank if used with a custom dnd-drop handler that handles the insertion on its own.
 * `dnd-allowed-types` Optional array of allowed item types. When used, only items that had a matching dnd-type attribute will be dropable. Upper case characters will automatically be converted to lower case. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
+* `dnd-class-for-dragover` Optional name of class to add to list while element is being dragged over it. Defaults to dndDragover.
+* `dnd-class-for-placeholder` Optional name of class to add to placeholder element. Defaults to dndPlaceholder.
 * `dnd-effect-allowed` Optional string expression that limits the drop effects that can be performed on the list. See dnd-effect-allowed on dnd-draggable for more details on allowed options. The default value is `all`.
 * `dnd-disable-if` Optional boolean expression. When it evaluates to true, no dropping into the list is possible. Note that this also disables rearranging items inside the list. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 * `dnd-horizontal-list` Optional boolean expression. When it evaluates to true, the positioning algorithm will use the left and right halfs of the list items instead of the upper and lower halfs. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
@@ -72,8 +76,8 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 * `dnd-inserted` Optional expression that is invoked after a drop if the element was actually inserted into the list. The same local variables as for `dnd-drop` will be available. Note that for reorderings inside the same list the old element will still be in the list due to the fact that `dnd-moved` was not called yet. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 
 **CSS classes**
-* `dndPlaceholder` When an element is dragged over the list, a new placeholder child element will be added. This element is of type `li` and has the class `dndPlaceholder` set. Alternatively, you can define your own placeholder by creating a child element with `dndPlaceholder` class.
-* `dndDragover` This class will be added to the list while an element is being dragged over the list.
+* `dndPlaceholder` When an element is dragged over the list, a new placeholder child element will be added. This element is of type `li` and has the class `dndPlaceholder` set. Alternatively, you can define your own placeholder by creating a child element with `dndPlaceholder` class. Class name can be overridden (see above).
+* `dndDragover` This class will be added to the list while an element is being dragged over the list. Class name can be overridden (see above).
 
 ## dnd-nodrag directive
 

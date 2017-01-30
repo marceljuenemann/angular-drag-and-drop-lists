@@ -77,6 +77,24 @@
    */
   dndLists.directive('dndDraggable', ['$parse', '$timeout', function($parse, $timeout) {
     return function(scope, element, attr) {
+      var classForDragging = 'dndDragging';
+      var classForDraggingSource = 'dndDraggingSource';
+
+      // If the dnd-class* attribute is set, we'll parse the current value and watch for future changes
+      if (attr.dndClassForDragging) {
+        classForDragging = attr.dndClassForDragging;
+        scope.$watch(attr.dndClassForDragging, function(){
+          classForDragging = attr.dndClassForDragging;
+        });
+      }
+
+      if (attr.dndClassForDraggingSource) {
+        classForDraggingSource = attr.dndClassForDraggingSource;
+        scope.$watch(attr.dndClassForDraggingSource, function(){
+          classForDraggingSource = attr.dndClassForDraggingSource;
+        });
+      }
+
       // Set the HTML5 draggable attribute on the element.
       element.attr("draggable", "true");
 
@@ -128,8 +146,8 @@
         }
 
         // Add CSS classes. See documentation above.
-        element.addClass(dndClasses.Dragging);
-        $timeout(function() { element.addClass(dndClasses.dndDraggingSource); }, 0);
+        element.addClass(classForDragging);
+        $timeout(function() { element.addClass(classForDraggingSource); }, 0);
 
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
@@ -168,12 +186,12 @@
         // Clean up
         dndState.isDragging = false;
         dndState.callback = undefined;
-        element.removeClass(dndClasses.dndDragging);
-        element.removeClass(dndClasses.dndDraggingSource);
+        element.removeClass(classForDragging);
+        element.removeClass(classForDraggingSource);
         event.stopPropagation();
 
         // In IE9 it is possible that the timeout from dragstart triggers after the dragend handler.
-        $timeout(function() { element.removeClass(dndClasses.dndDraggingSource); }, 0);
+        $timeout(function() { element.removeClass(classForDraggingSource); }, 0);
       });
 
       /**
@@ -271,10 +289,22 @@
    */
   dndLists.directive('dndList', ['$parse', function($parse) {
     return function(scope, element, attr) {
-      // If the dnd-classes attribute is set, we'll parse the current value and watch for future changes
-      if (attr.dndClasses) {
-        updateClasses(attr.dndClasses);
-        scope.$watch(attr.dndClasses, updateClasses);
+      var classForPlaceholder = 'dndPlaceholder';
+      var classForDragover = 'dndDragover';
+
+      // If the dnd-class* attribute is set, we'll parse the current value and watch for future changes
+      if (attr.dndClassForPlaceholder) {
+        classForPlaceholder = attr.dndClassForPlaceholder;
+        scope.$watch(attr.dndClassForPlaceholder, function(){
+          classForPlaceholder = attr.dndClassForPlaceholder;
+        });
+      }
+
+      if (attr.dndClassForDragover) {
+        classForDragover = attr.dndClassForDragover;
+        scope.$watch(attr.dndClassForDragover, function(){
+          classForDragover = attr.dndClassForDragover;
+        });
       }
 
       // While an element is dragged over the list, this placeholder element is inserted
@@ -367,7 +397,7 @@
           event.dataTransfer.dropEffect = dropEffect;
         }
 
-        element.addClass(dndClasses.dndDragover);
+        element.addClass(classForDragover);
         event.stopPropagation();
         return false;
       });
@@ -525,7 +555,7 @@
        */
       function stopDragover() {
         placeholder.remove();
-        element.removeClass(dndClasses.dndDragover);
+        element.removeClass(classForDragover);
         return true;
       }
 
@@ -560,24 +590,13 @@
         var placeholder;
         angular.forEach(element.children(), function(childNode) {
           var child = angular.element(childNode);
-          if (child.hasClass(dndClasses.dndPlaceholder)) {
+          if (child.hasClass(classForPlaceholder)) {
             placeholder = child;
           }
         });
-        return placeholder || angular.element("<li class='" + dndClasses.dndPlaceholder + "'></li>");
+        return placeholder || angular.element("<li class='" + classForPlaceholder + "'></li>");
       }
 
-      /**
-       * Update the internal list of classes with a custom override object
-       */
-      function updateClasses(classOverrideValue){
-        var classOverride = scope.$eval(classOverrideValue);
-        for(var key in classOverride){
-          if(dndClasses[key]){
-            dndClasses[key] = classOverride[key];
-          }
-        }
-      }
     };
   }]);
 
@@ -664,16 +683,5 @@
    *   and Edge don't support custom mime types that we can use to transfer this information.
    */
   var dndState = {};
-
-  /**
-   * This object has the default class values, but these can be overridden via the dnd-classes attribute.
-   * See above for documentation for each class
-   */
-  var dndClasses = {
-      dndDragging: 'dndDragging',
-      dndDraggingSource: 'dndDraggingSource',
-      dndPlaceholder: 'dndPlaceholder',
-      dndDragover: 'dndDragover'
-  };
 
 })(angular.module('dndLists', []));
