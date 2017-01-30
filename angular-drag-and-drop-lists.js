@@ -26,6 +26,11 @@
    * - dnd-draggable      Required attribute. The value has to be an object that represents the data
    *                      of the element. In case of a drag and drop operation the object will be
    *                      serialized and unserialized on the receiving end.
+   * - dnd-class-for-dragging
+   *                      Optional name of class to add to element while it's being dragged. Defaults to dndDragging.
+   * - dnd-class-for-dragging-source
+   *                      Optional name of class to add to element after drag operation has started. See 'CSS classes'
+   *                      for more details. Defaults to dndDraggingSource.
    * - dnd-effect-allowed Use this attribute to limit the operations that can be performed. Valid
    *                      options are "move", "copy" and "link", as well as "all", "copyMove",
    *                      "copyLink" and "linkMove". The semantics of these operations are up to you
@@ -229,6 +234,11 @@
    * - dnd-list             Required attribute. The value has to be the array in which the data of
    *                        the dropped element should be inserted. The value can be blank if used
    *                        with a custom dnd-drop handler that always returns true.
+   * - dnd-class-for-dragover
+   *                        Optional name of class to add to list while element is being dragged over it.
+   *                        Defaults to dndDragover.
+   * - dnd-class-for-placeholder
+   *                        Optional name of class to add to placeholder element. Defaults to dndPlaceholder.
    * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
    *                        matching dnd-type attribute will be dropable. Upper case characters will
    *                        automatically be converted to lower case.
