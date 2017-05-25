@@ -336,8 +336,15 @@
             } else {
               var isFirstHalf = event.clientY < rect.top + rect.height / 2;
             }
-            listNode.insertBefore(placeholderNode,
-                isFirstHalf ? listItemNode : listItemNode.nextSibling);
+            if(isFirstHalf) {
+              if(listItemNode.previousSibling != placeholderNode) {
+                listNode.insertBefore(placeholderNode, listItemNode);
+              }
+            } else {
+              if(listItemNode.nextSibling != placeholderNode) {
+                listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+              }
+            }
           }
         }
 
