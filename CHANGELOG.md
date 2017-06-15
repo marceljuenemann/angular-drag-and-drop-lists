@@ -1,3 +1,12 @@
+# 2.1.1 (2017-06-15)
+
+##  Spiria's Fork
+This fork from [angular-drag-and-drop-lists](https://github.com/marceljuenemann/angular-drag-and-drop-lists) has for purpose the maintenance of this library that is used in one of our internal projects, considering the fact that the main repository seems to be quite inactive at the moment.
+
+## Changes
+
+- **Performance Issue fix** : [orlandovallejos](https://github.com/orlandovallejos) opened a [PR](https://github.com/marceljuenemann/angular-drag-and-drop-lists/pull/419) whose purpose is to fix a considerable performance issue while dragging elements.
+
 # 2.1.0 (2017-01-15)
 
 ## Changes
