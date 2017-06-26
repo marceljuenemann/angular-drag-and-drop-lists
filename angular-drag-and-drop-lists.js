@@ -348,6 +348,27 @@
         var dropEffect = getDropEffect(event, ignoreDataTransfer);
         if (dropEffect == 'none') return stopDragover();
 
+	// Enable auto-scrolling
+        if (element.attr('dnd-autoscroll')) {
+          var sensitivity = element.attr('dnd-autoscroll-sensitivity');
+          if (!sensitivity) {
+            sensitivity = 150;
+          }
+
+          var speed = element.attr('dnd-autoscroll-speed');
+          if (!speed) {
+            speed = 150;
+          }
+
+          // If they overlap, they cancel eachother
+          if (isMouseAtBeggining(event, element[0], true, sensitivity)) {
+              element[0].scrollLeft += -speed;
+          }
+          if (isMouseAtEnd(event, element[0], true, sensitivity)) {
+              element[0].scrollLeft += speed;
+          }
+        }
+
         // At this point we invoke the callback, which still can disallow the drop.
         // We can't do this earlier because we want to pass the index of the placeholder.
         if (attr.dndDragover && !invokeCallback(attr.dndDragover, event, dropEffect, itemType)) {
@@ -460,6 +481,36 @@
           }
         }
         return null;
+      }
+
+      // See http://www.quirksmode.org/js/events_properties.html#position
+      function getMousePosition(e) {
+        if (!e) var e = window.event;
+        if (e.pageX || e.pageY) {
+          posx = e.pageX;
+          posy = e.pageY;
+        }
+        else if (e.clientX || e.clientY) {
+          posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+          posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        return {x: posx, y: posy};
+      }
+
+      function isMouseAtBeggining(event, targetNode, relativeToParent, sensitivity) {
+        var mousePointer = horizontal ? getMousePosition(event).x : getMousePosition(event).y;
+        var targetPosition = targetNode.getBoundingClientRect();
+        var targetPosition = horizontal ? targetPosition.left : targetPosition.top;
+
+        return mousePointer < targetPosition + sensitivity;
+      }
+
+      function isMouseAtEnd(event, targetNode, relativeToParent, sensitivity) {
+        var mousePointer = horizontal ? getMousePosition(event).x : getMousePosition(event).y;
+        var targetPosition = targetNode.getBoundingClientRect();
+        var targetPosition = horizontal ? targetPosition.right : targetPosition.bottom;
+
+        return mousePointer > targetPosition - sensitivity;
       }
 
       /**
