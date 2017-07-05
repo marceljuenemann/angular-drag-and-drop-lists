@@ -133,7 +133,10 @@
 
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
-          event.dataTransfer.setDragImage(element[0], 0, 0);
+          var elem = angular.element(element);
+          var offestX = event.pageX - elem[0].offsetLeft;
+          var offsetY = event.pageY - elem[0].offsetTop;
+          event.dataTransfer.setDragImage(element[0], offestX, offsetY);
         }
 
         // Invoke dragstart callback and prepare extra callback for dropzone.
