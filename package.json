@@ -1,11 +1,10 @@
 {
-    "name": "angular-drag-and-drop-lists",
+    "name": "angular-drag-and-drop-lists-spiria",
     "main": "angular-drag-and-drop-lists.js",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "description": "Angular directives for sorting nested lists using the HTML5 Drag and Drop API",
-    "repository": "https://github.com/marceljuenemann/angular-drag-and-drop-lists",
+    "repository": "https://github.com/Spiria-Digital/angular-drag-and-drop-lists",
     "license": "MIT",
-    "main": "angular-drag-and-drop-lists.js",
     "devDependencies": {
         "angular": "~1.4.9",
         "angular-mocks": "~1.4.9",

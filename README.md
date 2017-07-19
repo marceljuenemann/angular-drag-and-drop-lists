@@ -2,6 +2,9 @@ angular-drag-and-drop-lists
 ===========================
 Angular directives that allow you to build sortable lists with the native HTML5 drag & drop API. The directives can also be nested to bring drag & drop to your WYSIWYG editor, your tree, or whatever fancy structure you are building.
 
+## This is a fork
+This is a fork from the [original angular-drag-and-drop-lists](https://github.com/marceljuenemann/angular-drag-and-drop-lists).
+
 ## Demo
 * [Nested Lists](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/nested)
 * [Simple Lists](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/simple)
@@ -18,8 +21,10 @@ Internet Explorer 8 or lower is *not supported*, but all modern browsers are (se
 
 
 ## Download & Installation
-* Download `angular-drag-and-drop-lists.js` (or the minified version) and include it in your application. If you use bower or npm, just include the `angular-drag-and-drop-lists` package.
-* Add the `dndLists` module as a dependency to your angular app.
+* Download `angular-drag-and-drop-lists.js` (or the minified version) and include it in your application.
+* OR use bower : `bower install angular-drag-and-drop-lists-spiria`
+* OR use npm : `npm install angular-drag-and-drop-lists-spiria`
+* Add the `dndLists` module as a dependency to your angular app : `angular.module('yourAppName', ['dndLists']);`
 
 ## dnd-draggable directive
 Use the dnd-draggable directive to make your element draggable
