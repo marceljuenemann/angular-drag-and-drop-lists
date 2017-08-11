@@ -223,6 +223,10 @@
    * - dnd-horizontal-list  Optional boolean expresssion. When it evaluates to true, the positioning
    *                        algorithm will use the left and right halfs of the list items instead of
    *                        the upper and lower halfs.
+   * - dnd-invade-mode      Optional boolean expression. When set to true the positioning
+   *                        algorithm will swap the respective list item with the placeholder immediately 
+   *                        when the mouse enters the list item (mouse x is between top/bottom or left/right depending on 
+   *                        dnd-horizontal-list)
    * - dnd-external-sources Optional boolean expression. When it evaluates to true, the list accepts
    *                        drops from sources outside of the current browser tab. This allows to
    *                        drag and drop accross different browser tabs. The only major browser
@@ -295,7 +299,8 @@
           allowedTypes: angular.isArray(types) && types.join('|').toLowerCase().split('|'),
           disabled: attr.dndDisableIf && scope.$eval(attr.dndDisableIf),
           externalSources: attr.dndExternalSources && scope.$eval(attr.dndExternalSources),
-          horizontal: attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList)
+          horizontal: attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList),
+          invade: attr.dndInvadeMode && scope.$eval(attr.dndInvadeMode)
         };
 
         var mimeType = getMimeType(event.dataTransfer.types);
@@ -321,7 +326,7 @@
         }
 
         if (event.target != listNode) {
-          // Try to find the node direct directly below the list node.
+          // Try to find the node directly below the list node.
           var listItemNode = event.target;
           while (listItemNode.parentNode != listNode && listItemNode.parentNode) {
             listItemNode = listItemNode.parentNode;
@@ -332,9 +337,17 @@
             // we position the placeholder before the list item, otherwise after it.
             var rect = listItemNode.getBoundingClientRect();
             if (listSettings.horizontal) {
-              var isFirstHalf = event.clientX < rect.left + rect.width / 2;
+                if (listSettings.invade !== true) {
+                    var isFirstHalf = event.clientX < rect.left + rect.width / 2;
+                } else {
+                    var isFirstHalf = (event.clientX > rect.left) && (event.clientX < rect.left + rect.width);
+                }
             } else {
-              var isFirstHalf = event.clientY < rect.top + rect.height / 2;
+                if (listSettings.invade !== true) {
+                    var isFirstHalf = event.clientY < rect.top + rect.height / 2;
+                } else {
+                    var isFirstHalf = (event.clientY > rect.top) && (event.clientY < rect.top + rect.height);
+                }
             }
             listNode.insertBefore(placeholderNode,
                 isFirstHalf ? listItemNode : listItemNode.nextSibling);
