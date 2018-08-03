@@ -339,6 +339,26 @@
             listNode.insertBefore(placeholderNode,
                 isFirstHalf ? listItemNode : listItemNode.nextSibling);
           }
+        } else {
+        	var listItemNode = null;
+        	for(var i = 0; i < listNode.childNodes.length; i++){
+        		var node = listNode.childNodes[i];
+        		var rect = node.getBoundingClientRect();
+        		if (listSettings.horizontal) {
+        			if(rect.left > event.clientX) {
+        				listItemNode = node;
+        				break;
+        			}
+        		} else {
+        			if(rect.top > event.clientY) {
+        				listItemNode = node;
+        				break;
+        			}
+        		}
+        	}
+        	if(node){
+        		listNode.insertBefore(placeholderNode, node);
+        	}
         }
 
         // In IE we set a fake effectAllowed in dragstart to get the correct cursor, we therefore
