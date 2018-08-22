@@ -291,8 +291,10 @@
 
         // Calculate list properties, so that we don't have to repeat this on every dragover event.
         var types = attr.dndAllowedTypes && scope.$eval(attr.dndAllowedTypes);
+        var nTypes = attr.dndNotAllowedTypes && scope.$eval(attr.dndNotAllowedTypes);
         listSettings = {
           allowedTypes: angular.isArray(types) && types.join('|').toLowerCase().split('|'),
+          notAllowedTypes: angular.isArray(nTypes) && nTypes.join('|').toLowerCase().split('|'),
           disabled: attr.dndDisableIf && scope.$eval(attr.dndDisableIf),
           externalSources: attr.dndExternalSources && scope.$eval(attr.dndExternalSources),
           horizontal: attr.dndHorizontalList && scope.$eval(attr.dndHorizontalList)
@@ -481,7 +483,7 @@
         if (listSettings.disabled) return false;
         if (!listSettings.externalSources && !dndState.isDragging) return false;
         if (!listSettings.allowedTypes || itemType === null) return true;
-        return itemType && listSettings.allowedTypes.indexOf(itemType) != -1;
+        return itemType && listSettings.allowedTypes.indexOf(itemType) != -1 && listSettings.notAllowedTypes.indexOf(itemType) == -1;
       }
 
       /**
