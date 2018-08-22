@@ -482,8 +482,16 @@
       function isDropAllowed(itemType) {
         if (listSettings.disabled) return false;
         if (!listSettings.externalSources && !dndState.isDragging) return false;
-        if (!listSettings.allowedTypes || itemType === null) return true;
-        return itemType && listSettings.allowedTypes.indexOf(itemType) != -1 && listSettings.notAllowedTypes.indexOf(itemType) == -1;
+        if (!listSettings.allowedTypes && !listSettings.notAllowedTypes || itemType === null) return true;
+        if (listSettings.allowedTypes && listSettings.notAllowedTypes) {
+          return itemType && listSettings.allowedTypes.indexOf(itemType) != -1 && listSettings.notAllowedTypes.indexOf(itemType) == -1;
+        }
+        if (listSettings.allowedTypes) {
+          return itemType && listSettings.allowedTypes.indexOf(itemType) != -1;
+        }
+        if (listSettings.notAllowedTypes) {
+          return itemType && listSettings.notAllowedTypes.indexOf(itemType) == -1;
+        }
       }
 
       /**
