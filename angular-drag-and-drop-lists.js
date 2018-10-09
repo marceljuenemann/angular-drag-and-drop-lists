@@ -229,7 +229,7 @@
    *                        that does not support this is currently Microsoft Edge.
    * - dnd-no-placeholder   Optional attribute. When it is defined the list will
    *                        not add child element with class dndPlaceholder and the index in
-   *                        () will always be undefined.
+   *                        callbacks will always be undefined.
    *
    * Callbacks:
    * - dnd-dragover         Optional expression that is invoked when an element is dragged over the
