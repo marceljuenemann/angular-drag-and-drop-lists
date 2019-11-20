@@ -7,7 +7,7 @@
     "license": "MIT",
     "main": "angular-drag-and-drop-lists.js",
     "devDependencies": {
-        "angular": "~1.4.9",
+        "angular": "~1.7.9",
         "angular-mocks": "~1.4.9",
         "http-server": "~0.6.1",
         "minifier": "~0.7.1",
