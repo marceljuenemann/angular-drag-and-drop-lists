@@ -95,8 +95,9 @@
   cursor: move;
   position: absolute;
   top: 14px;
+  right: 15px;
 }
 
 .typesDemo .name {
-  margin-left: 20px;
+  margin-right: 20px;
 }

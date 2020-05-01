@@ -133,7 +133,10 @@
 
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
-          event.dataTransfer.setDragImage(element[0], 0, 0);
+          var elHandle = element[0].querySelectorAll('[dnd-handle]')[0];
+          var offX = (elHandle ? elHandle.offsetLeft : 0) + event.offsetX;
+          var offY = (elHandle ? elHandle.offsetHeight : 0) + event.offsetY;
+          event.dataTransfer.setDragImage(element[0], offX, offY);
         }
 
         // Invoke dragstart callback and prepare extra callback for dropzone.
