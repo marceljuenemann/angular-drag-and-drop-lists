@@ -587,7 +587,7 @@
           if (!(event.dataTransfer.types && event.dataTransfer.types.length)) {
             event.preventDefault();
           }
-          event.stopPropagation();
+          event.stopImmediatePropagation();
         }
       });
 
@@ -598,7 +598,7 @@
       element.on('dragend', function(event) {
         event = event.originalEvent || event;
         if (!event._dndHandle) {
-          event.stopPropagation();
+          event.stopImmediatePropagation();
         }
       });
     };
