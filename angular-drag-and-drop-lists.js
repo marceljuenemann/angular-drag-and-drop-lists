@@ -92,6 +92,13 @@
        * which is the primary way we communicate with the target element
        */
       element.on('dragstart', function(event) {
+        // stop dragging when selection mode is active in browser
+        // if you do not do this, items will vanish in thin air
+        var selObj = window.getSelection();
+        if (selObj.rangeCount > 1){
+            selObj.removeAllRanges();
+            return false;
+        }
         event = event.originalEvent || event;
 
         // Check whether the element is draggable, since dragstart might be triggered on a child.
