@@ -1,6 +1,7 @@
 describe('dndDraggable', function() {
 
   var SIMPLE_HTML = '<div dnd-draggable="{hello: \'world\'}"></div>';
+  var DRAGGABLE_INSIDE_LIST_HTML = '<div dnd-list="[]"><div dnd-draggable="{hello: \'world\'}"></div></div>';
 
   describe('constructor', function() {
     it('sets the draggable attribute', function() {
@@ -75,9 +76,27 @@ describe('dndDraggable', function() {
       expect(Dragstart.on(element, {allowedMimeTypes: ['Text']}).effectAllowed).toBe('copy');
     });
 
-    it('adds CSS classes to element', inject(function($timeout) {
+    it('adds dndDragging class to element', inject(function($timeout) {
       Dragstart.on(element);
       expect(element.hasClass('dndDragging')).toBe(true);
+    }));
+
+    it('adds dndDraggingSource class to element only after subsequent dragover if item is in a list', inject(function($timeout) {
+      var listWithDragItem = compileAndLink(DRAGGABLE_INSIDE_LIST_HTML);
+      element = listWithDragItem.find('[dnd-draggable]');
+
+      var dragstart = Dragstart.on(element);
+      expect(element.hasClass('dndDraggingSource')).toBe(false);
+
+      $timeout.flush(0);
+      expect(element.hasClass('dndDraggingSource')).toBe(false);
+
+      dragstart.dragover(listWithDragItem);
+      expect(element.hasClass('dndDraggingSource')).toBe(true);
+    }));
+
+    it('adds CSS classes to element immediately if item is not in a list', inject(function($timeout) {
+      Dragstart.on(element);
       expect(element.hasClass('dndDraggingSource')).toBe(false);
 
       $timeout.flush(0);
@@ -109,6 +128,7 @@ describe('dndDraggable', function() {
 
     beforeEach(function() {
       element = compileAndLink(SIMPLE_HTML);
+      target = compileAndLink('<div dnd-list="[]"></div>');
       dragstart = Dragstart.on(element);
     });
 
@@ -118,6 +138,7 @@ describe('dndDraggable', function() {
 
     it('removes CSS classes from element', inject(function($timeout) {
       $timeout.flush(0);
+      dragstart.dragover(target);
       expect(element.hasClass('dndDragging')).toBe(true);
       expect(element.hasClass('dndDraggingSource')).toBe(true);
 

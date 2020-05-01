@@ -97,6 +97,8 @@
         // Check whether the element is draggable, since dragstart might be triggered on a child.
         if (element.attr('draggable') == 'false') return true;
 
+        var parentIsList = element.parent().length && element.parent()[0].hasAttribute('dnd-list');
+
         // Initialize global state.
         dndState.isDragging = true;
         dndState.itemType = attr.dndType && scope.$eval(attr.dndType).toLowerCase();
@@ -129,15 +131,28 @@
 
         // Add CSS classes. See documentation above.
         element.addClass("dndDragging");
-        $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
 
+        // We'll set this now and add the class 'dndDraggingSource' to it when we start moving the item.
+        // This needs to be in sync with the process of insert the placeholder into the list
+
+        if(parentIsList){
+          dndState.currentDragItem = element;
+        }else{
+          $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
+        }
+        
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
           event.dataTransfer.setDragImage(element[0], 0, 0);
         }
 
-        // Invoke dragstart callback and prepare extra callback for dropzone.
+        // Invoke dragstart callback
         $parse(attr.dndDragstart)(scope, {event: event});
+
+        // we need to schedule a digest cycle to make sure other bits like ngHide fire
+        scope.$evalAsync();
+
+        // Prepare extra callback for dropzone
         if (attr.dndCallback) {
           var callback = $parse(attr.dndCallback);
           dndState.callback = function(params) { return callback(scope, params || {}); };
@@ -168,8 +183,10 @@
         // Clean up
         dndState.isDragging = false;
         dndState.callback = undefined;
+        dndState.currentDragItem = undefined;
         element.removeClass("dndDragging");
         element.removeClass("dndDraggingSource");
+
         event.stopPropagation();
 
         // In IE9 it is possible that the timeout from dragstart triggers after the dragend handler.
@@ -318,6 +335,14 @@
         // Make sure the placeholder is shown, which is especially important if the list is empty.
         if (placeholderNode.parentNode != listNode) {
           element.append(placeholder);
+
+          // We set the class here instead of in the dragstart, because if this class
+          // hides the original item, we want to make sure we do that at the same time
+          // that we put the placeholder on the dom.  This prevents some UI flashing
+          if(dndState.currentDragItem){
+            dndState.currentDragItem.addClass("dndDraggingSource");
+          }
+
         }
 
         if (event.target != listNode) {
@@ -644,6 +669,8 @@
    * - isDragging: True between dragstart and dragend. Falsy for drops from external sources.
    * - itemType: The item type of the dragged element set via dnd-type. This is needed because IE
    *   and Edge don't support custom mime types that we can use to transfer this information.
+   * - currentDragItem: A reference to the current drag item.  We set this on dragStart and then
+   *   reference it when moving.
    */
   var dndState = {};
 
