@@ -26,6 +26,11 @@
    * - dnd-draggable      Required attribute. The value has to be an object that represents the data
    *                      of the element. In case of a drag and drop operation the object will be
    *                      serialized and unserialized on the receiving end.
+   * - dnd-class-for-dragging
+   *                      Optional name of class to add to element while it's being dragged. Defaults to dndDragging.
+   * - dnd-class-for-dragging-source
+   *                      Optional name of class to add to element after drag operation has started. See 'CSS classes'
+   *                      for more details. Defaults to dndDraggingSource.
    * - dnd-effect-allowed Use this attribute to limit the operations that can be performed. Valid
    *                      options are "move", "copy" and "link", as well as "all", "copyMove",
    *                      "copyLink" and "linkMove". The semantics of these operations are up to you
@@ -77,6 +82,24 @@
    */
   dndLists.directive('dndDraggable', ['$parse', '$timeout', function($parse, $timeout) {
     return function(scope, element, attr) {
+      var classForDragging = 'dndDragging';
+      var classForDraggingSource = 'dndDraggingSource';
+
+      // If the dnd-class* attribute is set, we'll parse the current value and watch for future changes
+      if (attr.dndClassForDragging) {
+        classForDragging = attr.dndClassForDragging;
+        scope.$watch(attr.dndClassForDragging, function(){
+          classForDragging = attr.dndClassForDragging;
+        });
+      }
+
+      if (attr.dndClassForDraggingSource) {
+        classForDraggingSource = attr.dndClassForDraggingSource;
+        scope.$watch(attr.dndClassForDraggingSource, function(){
+          classForDraggingSource = attr.dndClassForDraggingSource;
+        });
+      }
+
       // Set the HTML5 draggable attribute on the element.
       element.attr("draggable", "true");
 
@@ -128,8 +151,8 @@
         }
 
         // Add CSS classes. See documentation above.
-        element.addClass("dndDragging");
-        $timeout(function() { element.addClass("dndDraggingSource"); }, 0);
+        element.addClass(classForDragging);
+        $timeout(function() { element.addClass(classForDraggingSource); }, 0);
 
         // Try setting a proper drag image if triggered on a dnd-handle (won't work in IE).
         if (event._dndHandle && event.dataTransfer.setDragImage) {
@@ -168,12 +191,12 @@
         // Clean up
         dndState.isDragging = false;
         dndState.callback = undefined;
-        element.removeClass("dndDragging");
-        element.removeClass("dndDraggingSource");
+        element.removeClass(classForDragging);
+        element.removeClass(classForDraggingSource);
         event.stopPropagation();
 
         // In IE9 it is possible that the timeout from dragstart triggers after the dragend handler.
-        $timeout(function() { element.removeClass("dndDraggingSource"); }, 0);
+        $timeout(function() { element.removeClass(classForDraggingSource); }, 0);
       });
 
       /**
@@ -211,6 +234,11 @@
    * - dnd-list             Required attribute. The value has to be the array in which the data of
    *                        the dropped element should be inserted. The value can be blank if used
    *                        with a custom dnd-drop handler that always returns true.
+   * - dnd-class-for-dragover
+   *                        Optional name of class to add to list while element is being dragged over it.
+   *                        Defaults to dndDragover.
+   * - dnd-class-for-placeholder
+   *                        Optional name of class to add to placeholder element. Defaults to dndPlaceholder.
    * - dnd-allowed-types    Optional array of allowed item types. When used, only items that had a
    *                        matching dnd-type attribute will be dropable. Upper case characters will
    *                        automatically be converted to lower case.
@@ -271,11 +299,29 @@
    */
   dndLists.directive('dndList', ['$parse', function($parse) {
     return function(scope, element, attr) {
+      var classForPlaceholder = 'dndPlaceholder';
+      var classForDragover = 'dndDragover';
+
+      // If the dnd-class* attribute is set, we'll parse the current value and watch for future changes
+      if (attr.dndClassForPlaceholder) {
+        classForPlaceholder = attr.dndClassForPlaceholder;
+        scope.$watch(attr.dndClassForPlaceholder, function(){
+          classForPlaceholder = attr.dndClassForPlaceholder;
+        });
+      }
+
+      if (attr.dndClassForDragover) {
+        classForDragover = attr.dndClassForDragover;
+        scope.$watch(attr.dndClassForDragover, function(){
+          classForDragover = attr.dndClassForDragover;
+        });
+      }
+
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping.
       var placeholder = getPlaceholderElement();
       placeholder.remove();
-
+      
       var placeholderNode = placeholder[0];
       var listNode = element[0];
       var listSettings = {};
@@ -361,7 +407,7 @@
           event.dataTransfer.dropEffect = dropEffect;
         }
 
-        element.addClass("dndDragover");
+        element.addClass(classForDragover);
         event.stopPropagation();
         return false;
       });
@@ -519,7 +565,7 @@
        */
       function stopDragover() {
         placeholder.remove();
-        element.removeClass("dndDragover");
+        element.removeClass(classForDragover);
         return true;
       }
 
@@ -554,12 +600,13 @@
         var placeholder;
         angular.forEach(element.children(), function(childNode) {
           var child = angular.element(childNode);
-          if (child.hasClass('dndPlaceholder')) {
+          if (child.hasClass(classForPlaceholder)) {
             placeholder = child;
           }
         });
-        return placeholder || angular.element("<li class='dndPlaceholder'></li>");
+        return placeholder || angular.element("<li class='" + classForPlaceholder + "'></li>");
       }
+
     };
   }]);
 

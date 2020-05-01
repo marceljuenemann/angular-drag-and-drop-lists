@@ -118,10 +118,24 @@ describe('dndList', function() {
       expect(element.hasClass('dndDragover')).toBe(true);
     });
 
+    it('adds custom dndDragover CSS class', function() {
+      element = compileAndLink('<div dnd-list="list" dnd-class-for-dragover="dnd-dragover"></div>');
+      Dragstart.on(source).dragover(element);
+      expect(element.hasClass('dnd-dragover')).toBe(true);
+    });
+
     it('adds placeholder element', function() {
       Dragstart.on(source).dragover(element);
       expect(element.children().length).toBe(1);
       expect(element.children()[0].tagName).toBe('LI');
+    });
+
+    it('adds custom dndPlaceholder CSS class', function() {
+      element = compileAndLink('<div dnd-list="list" dnd-class-for-placeholder="dnd-placeholder"></div>');
+      Dragstart.on(source).dragover(element);
+
+      var placeholder = element.find('li');
+      expect(placeholder.hasClass('dnd-placeholder')).toBe(true);
     });
 
     it('reuses custom placeholder element if it exists', function() {
