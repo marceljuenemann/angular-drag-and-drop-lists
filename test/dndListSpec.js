@@ -124,12 +124,29 @@ describe('dndList', function() {
       expect(element.children()[0].tagName).toBe('LI');
     });
 
-    it('reuses custom placeholder element if it exists', function() {
+    it('should use value from dnd-effect-allowed when transferData.effectAllowed is not provided', function() {
+      source = compileAndLink('<div dnd-draggable="{}" dnd-effect-allowed="move"></div>');
       element = compileAndLink('<dnd-list><img class="dndPlaceholder"></dnd-list>');
-      Dragstart.on(source).dragover(element);
+      var options = {
+        effectAllowed: undefined,
+        preventDefaultEffectAllowed: true
+      };
+
+      Dragstart.on(source).dragover(element, options);
       expect(element.children().length).toBe(1);
       expect(element.children()[0].tagName).toBe('IMG');
     });
+
+    it('invokes dnd-dragover callback', function() {
+      element = createListWithItemsAndCallbacks();
+      Dragstart.on(source).dragover(element);
+      expect(element.scope().dragover.event).toEqual(jasmine.any(DragEventMock));
+      expect(element.scope().dragover.index).toBe(3);
+      expect(element.scope().dragover.external).toBe(false);
+      expect(element.scope().dragover.type).toBeUndefined();
+      expect(element.scope().dragover.item).toBeUndefined();
+    });
+
 
     it('invokes dnd-dragover callback', function() {
       element = createListWithItemsAndCallbacks();

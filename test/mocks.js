@@ -46,7 +46,7 @@ class DropzoneDataTransfer extends DataTransferMock {
     super();
     this.$data = data;
     this.$dropEffect = options.dropEffect || 'move';
-    this.$effectAllowed = options.effectAllowed || 'move';
+    this.$effectAllowed = options.preventDefaultEffectAllowed ? options.effectAllowed : options.effectAllowed || 'move';
     this.$types = options.undefinedTypes ? undefined : Object.keys(data);
   }
 
@@ -115,6 +115,7 @@ class Dragstart extends DragEventResult {
 
   dragenter(element, opt_options) {
     var options = $.extend({effectAllowed: this.effectAllowed}, opt_options);
+    options.effectAllowed = options.preventDefaultEffectAllowed ? opt_options.effectAllowed : options.effectAllowed;
     return new Dragenter(element, this.$results.dataTransfer.data, options);
   }
 
