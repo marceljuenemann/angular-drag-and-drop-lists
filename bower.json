@@ -26,5 +26,8 @@
     "*.json",
     "test",
     "tests"
-  ]
+  ],
+    "dependencies": {
+    "angular": "*"
+  }
 }
