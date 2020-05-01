@@ -227,6 +227,9 @@
    *                        drops from sources outside of the current browser tab. This allows to
    *                        drag and drop accross different browser tabs. The only major browser
    *                        that does not support this is currently Microsoft Edge.
+   * - dnd-no-placeholder   Optional attribute. When it is defined the list will
+   *                        not add child element with class dndPlaceholder and the index in
+   *                        callbacks will always be undefined.
    *
    * Callbacks:
    * - dnd-dragover         Optional expression that is invoked when an element is dragged over the
@@ -271,12 +274,14 @@
    */
   dndLists.directive('dndList', ['$parse', function($parse) {
     return function(scope, element, attr) {
+      var doNotUsePlaceholder = 'dndNoPlaceholder' in attr;
       // While an element is dragged over the list, this placeholder element is inserted
       // at the location where the element would be inserted after dropping.
-      var placeholder = getPlaceholderElement();
-      placeholder.remove();
-
-      var placeholderNode = placeholder[0];
+      if (!doNotUsePlaceholder) {
+        var placeholder = getPlaceholderElement();
+        placeholder.remove();
+        var placeholderNode = placeholder[0];
+      }
       var listNode = element[0];
       var listSettings = {};
 
@@ -316,7 +321,7 @@
         if (!mimeType || !isDropAllowed(itemType)) return true;
 
         // Make sure the placeholder is shown, which is especially important if the list is empty.
-        if (placeholderNode.parentNode != listNode) {
+        if (!doNotUsePlaceholder && placeholderNode.parentNode != listNode) {
           element.append(placeholder);
         }
 
@@ -327,7 +332,7 @@
             listItemNode = listItemNode.parentNode;
           }
 
-          if (listItemNode.parentNode == listNode && listItemNode != placeholderNode) {
+          if (!doNotUsePlaceholder && listItemNode.parentNode == listNode && listItemNode != placeholderNode) {
             // If the mouse pointer is in the upper half of the list item element,
             // we position the placeholder before the list item, otherwise after it.
             var rect = listItemNode.getBoundingClientRect();
@@ -518,7 +523,8 @@
        * Small helper function that cleans up if we aborted a drop.
        */
       function stopDragover() {
-        placeholder.remove();
+        if (!doNotUsePlaceholder)
+          placeholder.remove();
         element.removeClass("dndDragover");
         return true;
       }
@@ -543,7 +549,8 @@
        * object needs to be inserted
        */
       function getPlaceholderIndex() {
-        return Array.prototype.indexOf.call(listNode.children, placeholderNode);
+        if (!doNotUsePlaceholder)
+          return Array.prototype.indexOf.call(listNode.children, placeholderNode);
       }
 
       /**

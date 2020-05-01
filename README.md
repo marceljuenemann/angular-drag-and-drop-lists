@@ -64,6 +64,7 @@ Use the dnd-list attribute to make your list element a dropzone. Usually you wil
 * `dnd-disable-if` Optional boolean expression. When it evaluates to true, no dropping into the list is possible. Note that this also disables rearranging items inside the list. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/types)
 * `dnd-horizontal-list` Optional boolean expression. When it evaluates to true, the positioning algorithm will use the left and right halfs of the list items instead of the upper and lower halfs. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
 * `dnd-external-sources` Optional boolean expression. When it evaluates to true, the list accepts drops from sources outside of the current browser tab, which allows to drag and drop accross different browser tabs. The only major browser for which this is currently not working is Microsoft Edge. [Demo](http://marceljuenemann.github.io/angular-drag-and-drop-lists/demo/#/advanced)
+* `dnd-no-placeholder` Optional attribute. When it is defined the list will not add child element with class dndPlaceholder and the index in callbacks will always be undefined.
 
 **Callbacks**
 * `dnd-dragover` Optional expression that is invoked when an element is dragged over the list. If the expression is set, but does not return true, the element is not allowed to be dropped. The following variables will be available:
