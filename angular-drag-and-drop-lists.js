@@ -277,6 +277,7 @@
       placeholder.remove();
 
       var placeholderNode = placeholder[0];
+      var dragDropReplacementElement;
       var listNode = element[0];
       var listSettings = {};
 
@@ -315,11 +316,6 @@
         var itemType = getItemType(mimeType);
         if (!mimeType || !isDropAllowed(itemType)) return true;
 
-        // Make sure the placeholder is shown, which is especially important if the list is empty.
-        if (placeholderNode.parentNode != listNode) {
-          element.append(placeholder);
-        }
-
         if (event.target != listNode) {
           // Try to find the node direct directly below the list node.
           var listItemNode = event.target;
@@ -337,9 +333,9 @@
               var isFirstHalf = event.clientY < rect.top + rect.height / 2;
             }
             if(isFirstHalf) {
-              if(listItemNode.previousSibling != placeholderNode) listNode.insertBefore(placeholderNode, listItemNode);
+              dragDropReplacementElement = listItemNode;
             } else {
-              if(listItemNode.nextSibling != placeholderNode) listNode.insertBefore(placeholderNode, listItemNode.nextSibling);
+              dragDropReplacementElement = listItemNode.nextSibling;
             }
           }
         }
@@ -405,12 +401,15 @@
         var dropEffect = getDropEffect(event, ignoreDataTransfer);
         if (dropEffect == 'none') return stopDragover();
 
+
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         var index = getPlaceholderIndex();
         if (attr.dndDrop) {
           data = invokeCallback(attr.dndDrop, event, dropEffect, itemType, index, data);
           if (!data) return stopDragover();
         }
+
+        listNode.insertBefore(listNode.children[index], data)
 
         // The drop is definitely going to happen now, store the dropEffect.
         dndState.dropEffect = dropEffect;
@@ -546,6 +545,7 @@
        * object needs to be inserted
        */
       function getPlaceholderIndex() {
+        listNode.insertBefore(placeholderNode, dragDropReplacementElement);
         return Array.prototype.indexOf.call(listNode.children, placeholderNode);
       }
 
