@@ -278,6 +278,8 @@
 
       var placeholderNode = placeholder[0];
       var dragDropReplacementElement;
+      var previousTarget;
+      var newTarget;
       var listNode = element[0];
       var listSettings = {};
 
@@ -309,12 +311,28 @@
        * is being dragged over our list, or over an child element.
        */
       element.on('dragover', function(event) {
+        if (!newTarget) {
+          newTarget = event.target
+        }
+        if (event.target != newTarget) {
+          previousTarget = newTarget
+          newTarget = event.target
+          previousTarget.parentNode.style.border = '1px solid #9aa5af'
+        }
+        console.log(`dragover event: ${event}`)
+        // element.on('dragover', _.throttle(dragOver, 50, { leading: true, trailing: false }))
+        // function dragOver(event){
         event = event.originalEvent || event;
 
         // Check whether the drop is allowed and determine mime type.
         var mimeType = getMimeType(event.dataTransfer.types);
         var itemType = getItemType(mimeType);
         if (!mimeType || !isDropAllowed(itemType)) return true;
+
+        // Make sure the placeholder is shown, which is especially important if the list is empty.
+        // if (placeholderNode.parentNode != listNode) {
+        //   element.append('<div>ALALALLALALALAALALL</div>');
+        // }
 
         if (event.target != listNode) {
           // Try to find the node direct directly below the list node.
@@ -324,6 +342,7 @@
           }
 
           if (listItemNode.parentNode == listNode && listItemNode != placeholderNode) {
+            console.log(`listItemNode.children: ${listItemNode.children} listItemNode.parentNode.children: ${listItemNode.parentNode.children}`)
             // If the mouse pointer is in the upper half of the list item element,
             // we position the placeholder before the list item, otherwise after it.
             var rect = listItemNode.getBoundingClientRect();
@@ -334,10 +353,17 @@
             }
             if(isFirstHalf) {
               dragDropReplacementElement = listItemNode;
+              newTarget.style.borderTop = '3px solid blue';
+              // console.log(`dragDropReplacementElement.children(): ${dragDropReplacementElement.children()}`);
+              // listItemNode.css("border-top", "1px solid blue");
             } else {
               dragDropReplacementElement = listItemNode.nextSibling;
+              newTarget.style.borderTop = '3px solid blue';
             }
           }
+        }
+        else {
+          event.target.style.borderTop = '1px solid blue';
         }
 
         // In IE we set a fake effectAllowed in dragstart to get the correct cursor, we therefore
@@ -404,12 +430,15 @@
 
         // Invoke the callback, which can transform the transferredObject and even abort the drop.
         var index = getPlaceholderIndex();
+        // var index = Array.prototype.indexOf.call(listNode.children, dragDropReplacementElement);
         if (attr.dndDrop) {
           data = invokeCallback(attr.dndDrop, event, dropEffect, itemType, index, data);
           if (!data) return stopDragover();
         }
 
-        listNode.insertBefore(listNode.children[index], data)
+        if (data) {
+          listNode.insertBefore(listNode.children[index], data)
+        }
 
         // The drop is definitely going to happen now, store the dropEffect.
         dndState.dropEffect = dropEffect;

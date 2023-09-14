@@ -121,6 +121,10 @@
     filter: none;
 }
 
+.dndDragoverIndicator {
+    border-top: 1px solid blue;
+}
+
 .nestedDemo .trashcan .dndPlaceholder {
     display: none;
 }
