@@ -271,12 +271,6 @@
    */
   dndLists.directive('dndList', ['$parse', function($parse) {
     return function(scope, element, attr) {
-      // While an element is dragged over the list, this placeholder element is inserted
-      // at the location where the element would be inserted after dropping.
-      var placeholder = getPlaceholderElement();
-      placeholder.remove();
-
-      var placeholderNode = placeholder[0];
       var dragDropReplacementElement;
       var previousTarget;
       var newTarget;
@@ -333,7 +327,7 @@
             listItemNode = listItemNode.parentNode;
           }
 
-          if (listItemNode.parentNode == listNode && listItemNode != placeholderNode) {
+          if (listItemNode.parentNode == listNode) {
             // If the mouse pointer is in the upper half of the list item element,
             // we position the placeholder before the list item, otherwise after it.
             var rect = listItemNode.getBoundingClientRect();
@@ -535,7 +529,6 @@
        * Small helper function that cleans up if we aborted a drop.
        */
       function stopDragover() {
-        placeholder.remove();
         element.removeClass("dndDragover");
         return true;
       }
@@ -561,21 +554,6 @@
        */
       function getDropDestinationNeighborIndex() {
         return [...dragDropReplacementElement.parentElement.children].indexOf(dragDropReplacementElement);
-      }
-
-      /**
-       * Tries to find a child element that has the dndPlaceholder class set. If none was found, a
-       * new li element is created.
-       */
-      function getPlaceholderElement() {
-        var placeholder;
-        angular.forEach(element.children(), function(childNode) {
-          var child = angular.element(childNode);
-          if (child.hasClass('dndPlaceholder')) {
-            placeholder = child;
-          }
-        });
-        return placeholder || angular.element("<li class='dndPlaceholder'></li>");
       }
     };
   }]);
