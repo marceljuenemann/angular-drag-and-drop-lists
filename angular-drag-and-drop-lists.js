@@ -311,7 +311,9 @@
         if (event.target != newTarget) {
           previousTarget = newTarget
           newTarget = event.target
-          previousTarget.closest(".item-row").style.borderTop = 'none'
+          if (previousTarget.closest(".item-row")) {
+            previousTarget.closest(".item-row").style.borderTop = 'none'
+          }
         }
         event = event.originalEvent || event;
 
@@ -338,10 +340,14 @@
             }
             if(isFirstHalf) {
               dragDropReplacementElement = listItemNode;
-              newTarget.closest(".item-row").style.borderTop = '3px solid blue';
+              if (newTarget.closest(".item-row")) {
+                newTarget.closest(".item-row").style.borderTop = '3px solid blue';
+              }
             } else {
               dragDropReplacementElement = listItemNode.nextSibling;
-              newTarget.closest(".item-row").style.borderTop = '3px solid blue';
+              if (newTarget.closest(".item-row")) {
+                newTarget.closest(".item-row").style.borderTop = '3px solid blue';
+              }
             }
           }
         }
@@ -378,8 +384,9 @@
        */
       element.on('drop', function(event) {
         event = event.originalEvent || event;
-        newTarget.closest(".item-row").style.borderTop = 'none'
-
+        if (newTarget.closest(".item-row")) {
+          newTarget.closest(".item-row").style.borderTop = 'none'
+        }
         // Check whether the drop is allowed and determine mime type.
         var mimeType = getMimeType(event.dataTransfer.types);
         var itemType = getItemType(mimeType);
