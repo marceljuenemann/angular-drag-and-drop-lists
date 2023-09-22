@@ -560,7 +560,11 @@
        * object needs to be inserted
        */
       function getDropDestinationNeighborIndex() {
-        return [...dragDropReplacementElement.parentElement.children].indexOf(dragDropReplacementElement);
+        if (dragDropReplacementElement) {
+          return [...dragDropReplacementElement.parentElement.children].indexOf(dragDropReplacementElement);
+        } else {
+          return null;
+        }
       }
     };
   }]);
